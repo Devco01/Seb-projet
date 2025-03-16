@@ -49,195 +49,149 @@ const facturesData = [
   },
 ];
 
-export default function Factures() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Toutes');
-  const [factures, setFactures] = useState(facturesData);
-  const [showGuide, setShowGuide] = useState(true);
+export default function FacturesPage() {
+  // Données statiques pour la démonstration
+  const factures = [
+    { id: 1, numero: 'FAC-2025-001', client: 'Dupont SAS', date: '20/01/2025', montantTTC: 2450.50, statut: 'Payée' },
+    { id: 2, numero: 'FAC-2025-002', client: 'Martin Construction', date: '28/01/2025', montantTTC: 3780.00, statut: 'En attente' },
+    { id: 3, numero: 'FAC-2025-003', client: 'Dubois SARL', date: '10/02/2025', montantTTC: 1250.75, statut: 'En retard' },
+    { id: 4, numero: 'FAC-2025-004', client: 'Petit Immobilier', date: '22/02/2025', montantTTC: 5620.30, statut: 'Payée' },
+    { id: 5, numero: 'FAC-2025-005', client: 'Leroy Bâtiment', date: '08/03/2025', montantTTC: 4150.00, statut: 'En attente' },
+  ];
 
-  // Filtrer les factures en fonction du terme de recherche et du statut
-  const filteredFactures = factures.filter(facture => 
-    (facture.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    facture.client.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (statusFilter === 'Toutes' || facture.statut === statusFilter)
-  );
-
-  // Fonction pour supprimer une facture
-  const handleDeleteFacture = (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
-      setFactures(factures.filter(facture => facture.id !== id));
+  // Fonction pour obtenir la couleur du statut
+  const getStatusColor = (statut: string) => {
+    switch (statut) {
+      case 'Payée': return '#22c55e'; // vert
+      case 'En retard': return '#ef4444'; // rouge
+      case 'En attente': return '#f59e0b'; // orange
+      default: return '#6b7280'; // gris
     }
   };
 
-  // Fonction pour marquer une facture comme payée
-  const handleMarkAsPaid = (id: number) => {
-    setFactures(factures.map(facture => 
-      facture.id === id 
-        ? { ...facture, statut: 'Payée', statutColor: 'bg-green-100 text-green-800' } 
-        : facture
-    ));
-  };
-
   return (
-    <MainLayout>
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Factures</h1>
-          <p className="text-gray-600">Gérez vos factures et suivez leur statut</p>
-        </div>
-        <Link 
-          href="/factures/nouveau" 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
-        >
-          <FaPlus className="mr-2" /> Nouvelle facture
-        </Link>
+    <div style={{ 
+      maxWidth: '1200px', 
+      margin: '0 auto', 
+      padding: '20px',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px'
+      }}>
+        <h1 style={{ 
+          fontSize: '24px', 
+          fontWeight: 'bold',
+          color: '#333'
+        }}>Gestion des factures</h1>
+        
+        <a href="/factures/nouveau" style={{
+          padding: '8px 16px',
+          backgroundColor: '#22c55e',
+          color: 'white',
+          borderRadius: '4px',
+          textDecoration: 'none'
+        }}>
+          Nouvelle facture
+        </a>
       </div>
-
-      {showGuide && (
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-md">
-          <div className="flex items-start">
-            <FaInfoCircle className="text-blue-500 mt-1 mr-3" />
-            <div>
-              <h3 className="font-bold text-blue-800">Actions disponibles pour les factures</h3>
-              <ul className="mt-2 text-sm text-blue-800 space-y-1">
-                <li className="flex items-center"><FaPlus className="mr-2" /> Créer une nouvelle facture avec détails client, prestations et conditions de paiement</li>
-                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les détails d'une facture existante</li>
-                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier une facture (uniquement si elle n'est pas encore payée)</li>
-                <li className="flex items-center"><FaFileDownload className="mr-2" /> Télécharger la facture au format PDF</li>
-                <li className="flex items-center"><FaEnvelope className="mr-2" /> Envoyer la facture par email au client</li>
-                <li className="flex items-center"><FaCheck className="mr-2" /> Marquer une facture comme payée (crée automatiquement un paiement)</li>
-                <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer une facture (après confirmation)</li>
-              </ul>
-              <button 
-                onClick={() => setShowGuide(false)} 
-                className="mt-2 text-sm text-blue-600 hover:underline"
-              >
-                Masquer ce guide
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Rechercher une facture..."
-              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex-shrink-0">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Toutes">Toutes les factures</option>
-              <option value="Payée">Payées</option>
-              <option value="En attente">En attente</option>
-              <option value="Impayée">Impayées</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Numéro
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Échéance
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Montant
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Statut
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
+      
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '4px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        overflow: 'hidden'
+      }}>
+        <table style={{
+          width: '100%',
+          borderCollapse: 'collapse'
+        }}>
+          <thead>
+            <tr style={{
+              backgroundColor: '#f9fafb',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Numéro</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Client</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Date</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Montant TTC</th>
+              <th style={{ padding: '12px 16px', textAlign: 'center' }}>Statut</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredFactures.map((facture) => (
-              <tr key={facture.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                  {facture.numero}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {facture.client}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {facture.date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {facture.echeance}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {facture.montant}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${facture.statutColor}`}>
+          <tbody>
+            {factures.map((facture) => (
+              <tr key={facture.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <td style={{ padding: '12px 16px' }}>{facture.numero}</td>
+                <td style={{ padding: '12px 16px' }}>{facture.client}</td>
+                <td style={{ padding: '12px 16px' }}>{facture.date}</td>
+                <td style={{ padding: '12px 16px', textAlign: 'right' }}>{facture.montantTTC.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</td>
+                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '4px 8px',
+                    backgroundColor: getStatusColor(facture.statut),
+                    color: 'white',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }}>
                     {facture.statut}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex justify-end space-x-2">
-                    <Link href={`/factures/${facture.id}`} className="text-blue-600 hover:text-blue-900">
-                      <FaEye />
-                    </Link>
-                    <Link href={`/factures/${facture.id}/modifier`} className="text-green-600 hover:text-green-900">
-                      <FaEdit />
-                    </Link>
-                    <button className="text-purple-600 hover:text-purple-900">
-                      <FaFileDownload />
-                    </button>
-                    <button className="text-blue-600 hover:text-blue-900">
-                      <FaEnvelope />
-                    </button>
-                    {facture.statut !== 'Payée' && (
-                      <button 
-                        onClick={() => handleMarkAsPaid(facture.id)} 
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        <FaCheck />
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => handleDeleteFacture(facture.id)} 
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <FaTrash />
-                    </button>
+                <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                    <a href={`/factures/${facture.id}`} style={{
+                      padding: '4px 8px',
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      borderRadius: '4px',
+                      textDecoration: 'none',
+                      fontSize: '14px'
+                    }}>
+                      Voir
+                    </a>
+                    <a href={`/factures/${facture.id}/modifier`} style={{
+                      padding: '4px 8px',
+                      backgroundColor: '#eab308',
+                      color: 'white',
+                      borderRadius: '4px',
+                      textDecoration: 'none',
+                      fontSize: '14px'
+                    }}>
+                      Modifier
+                    </a>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {filteredFactures.length === 0 && (
-          <div className="p-6 text-center text-gray-500">
-            Aucune facture trouvée.
-          </div>
-        )}
       </div>
-    </MainLayout>
+      
+      <div style={{ marginTop: '24px', textAlign: 'center' }}>
+        <a href="/" style={{
+          padding: '8px 16px',
+          backgroundColor: '#3b82f6',
+          color: 'white',
+          borderRadius: '4px',
+          textDecoration: 'none'
+        }}>
+          Retour à l'accueil
+        </a>
+      </div>
+      
+      <footer style={{ 
+        marginTop: '32px', 
+        paddingTop: '16px', 
+        borderTop: '1px solid #ddd', 
+        textAlign: 'center',
+        color: '#777'
+      }}>
+        <p>© 2025 FacturePro - Peinture en bâtiment</p>
+      </footer>
+    </div>
   );
 } 
