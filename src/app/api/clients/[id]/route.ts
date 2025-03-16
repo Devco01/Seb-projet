@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// Configuration pour le mode standalone
+export const dynamic = 'force-dynamic';
+
 type RouteParams = {
   params: {
     id: string;
@@ -157,7 +160,7 @@ export async function DELETE(
       include: {
         devis: true,
         factures: true,
-        paiements: true,
+        Paiement: true,
       },
     });
     
@@ -169,7 +172,11 @@ export async function DELETE(
     }
     
     // Vérifier si le client a des devis, factures ou paiements associés
-    if (existingClient.devis.length > 0 || existingClient.factures.length > 0 || existingClient.paiements.length > 0) {
+    if (
+      (existingClient.devis && existingClient.devis.length > 0) || 
+      (existingClient.factures && existingClient.factures.length > 0) || 
+      (existingClient.Paiement && existingClient.Paiement.length > 0)
+    ) {
       return NextResponse.json(
         { error: 'Impossible de supprimer un client qui a des devis, factures ou paiements associés' },
         { status: 400 }
