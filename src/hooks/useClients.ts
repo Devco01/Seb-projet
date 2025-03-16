@@ -37,9 +37,13 @@ export function useClients() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Récupérer tous les clients
   const fetchClients = useCallback(async () => {
+    // Éviter les appels multiples si déjà en cours de chargement
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
     console.log("Récupération des clients en cours...");
@@ -53,6 +57,7 @@ export function useClients() {
       } else if (Array.isArray(response.data)) {
         console.log("Clients récupérés avec succès:", response.data);
         setClients(response.data);
+        setIsInitialized(true);
       } else {
         console.error("Format de données inattendu:", response.data);
         setError("Format de données inattendu");
@@ -63,7 +68,7 @@ export function useClients() {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, loading]);
 
   // Récupérer un client par son ID
   const fetchClientById = async (id: number) => {
@@ -166,11 +171,13 @@ export function useClients() {
     }
   };
 
-  // Charger les clients au montage du composant
+  // Charger les clients au montage du composant, une seule fois
   useEffect(() => {
-    console.log("useEffect dans useClients déclenché");
-    fetchClients();
-  }, [fetchClients]);
+    if (!isInitialized) {
+      console.log("useEffect dans useClients déclenché - chargement initial");
+      fetchClients();
+    }
+  }, [fetchClients, isInitialized]);
 
   return {
     clients,

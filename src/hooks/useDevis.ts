@@ -45,9 +45,13 @@ export function useDevis() {
   const [devis, setDevis] = useState<Devis[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Récupérer tous les devis
   const fetchDevis = useCallback(async () => {
+    // Éviter les appels multiples si déjà en cours de chargement
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
     
@@ -58,6 +62,7 @@ export function useDevis() {
         setError(response.error);
       } else if (Array.isArray(response.data)) {
         setDevis(response.data);
+        setIsInitialized(true);
       }
     } catch (err) {
       setError('Erreur lors de la récupération des devis');
@@ -65,7 +70,7 @@ export function useDevis() {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, loading]);
 
   // Récupérer un devis par son ID
   const fetchDevisById = async (id: number) => {
@@ -212,10 +217,12 @@ export function useDevis() {
     return { totalHT, totalTVA, totalTTC };
   };
 
-  // Charger les devis au montage du composant
+  // Charger les devis au montage du composant, une seule fois
   useEffect(() => {
-    fetchDevis();
-  }, [fetchDevis]);
+    if (!isInitialized) {
+      fetchDevis();
+    }
+  }, [fetchDevis, isInitialized]);
 
   return {
     devis,
