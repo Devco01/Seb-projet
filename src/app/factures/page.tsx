@@ -1,82 +1,146 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from '../components/MainLayout';
 import { FaPlus, FaSearch, FaEye, FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaCheck, FaInfoCircle } from 'react-icons/fa';
 import Link from 'next/link';
 
-// Données fictives pour les factures
-const facturesData = [
-  { 
-    id: 1, 
-    numero: 'F-2023-042', 
-    client: 'Dupont SAS', 
-    date: '15/06/2023', 
-    echeance: '15/07/2023',
-    montant: '2 500 €',
-    statut: 'Payée',
-    statutColor: 'bg-green-100 text-green-800'
-  },
-  { 
-    id: 2, 
-    numero: 'F-2023-041', 
-    client: 'Martin Construction', 
-    date: '10/06/2023', 
-    echeance: '10/07/2023',
-    montant: '1 800 €',
-    statut: 'En attente',
-    statutColor: 'bg-yellow-100 text-yellow-800'
-  },
-  { 
-    id: 3, 
-    numero: 'F-2023-040', 
-    client: 'Dubois SARL', 
-    date: '05/06/2023', 
-    echeance: '05/07/2023',
-    montant: '3 200 €',
-    statut: 'Impayée',
-    statutColor: 'bg-red-100 text-red-800'
-  },
-  { 
-    id: 4, 
-    numero: 'F-2023-039', 
-    client: 'Résidences du Parc', 
-    date: '01/06/2023', 
-    echeance: '01/07/2023',
-    montant: '1 950 €',
-    statut: 'Payée',
-    statutColor: 'bg-green-100 text-green-800'
-  },
-];
+// Définir l'interface pour les factures
+interface Client {
+  id: number;
+  nom: string;
+  email: string;
+}
+
+interface Facture {
+  id: number;
+  numero: string;
+  date: string;
+  echeance: string;
+  totalTTC: number;
+  statut: string;
+  client: Client;
+}
 
 export default function Factures() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Toutes');
-  const [factures, setFactures] = useState(facturesData);
+  const [factures, setFactures] = useState<Facture[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(true);
+
+  // Récupérer les factures depuis l'API
+  useEffect(() => {
+    const fetchFactures = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/factures');
+        
+        if (!response.ok) {
+          throw new Error(`Erreur lors de la récupération des factures: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setFactures(data);
+        setError(null);
+      } catch (err) {
+        console.error('Erreur lors du chargement des factures:', err);
+        setError('Impossible de charger les factures. Veuillez réessayer plus tard.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFactures();
+  }, []);
 
   // Filtrer les factures en fonction du terme de recherche et du statut
   const filteredFactures = factures.filter(facture => 
-    (facture.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    facture.client.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (facture.numero?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    facture.client?.nom?.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (statusFilter === 'Toutes' || facture.statut === statusFilter)
   );
 
   // Fonction pour supprimer une facture
-  const handleDeleteFacture = (id: number) => {
+  const handleDeleteFacture = async (id: number) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
-      setFactures(factures.filter(facture => facture.id !== id));
+      try {
+        const response = await fetch(`/api/factures/${id}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erreur lors de la suppression: ${response.status}`);
+        }
+        
+        // Mettre à jour l'état local après suppression
+        setFactures(factures.filter(facture => facture.id !== id));
+      } catch (err) {
+        console.error('Erreur lors de la suppression de la facture:', err);
+        alert('Impossible de supprimer la facture. Veuillez réessayer plus tard.');
+      }
     }
   };
 
   // Fonction pour marquer une facture comme payée
-  const handleMarkAsPaid = (id: number) => {
-    setFactures(factures.map(facture => 
-      facture.id === id 
-        ? { ...facture, statut: 'Payée', statutColor: 'bg-green-100 text-green-800' } 
-        : facture
-    ));
+  const handleMarkAsPaid = async (id: number) => {
+    try {
+      const response = await fetch(`/api/factures/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ statut: 'Payée' }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erreur lors de la mise à jour: ${response.status}`);
+      }
+      
+      const updatedFacture = await response.json();
+      
+      // Mettre à jour l'état local
+      setFactures(factures.map(facture => 
+        facture.id === id ? updatedFacture : facture
+      ));
+    } catch (err) {
+      console.error('Erreur lors de la mise à jour du statut:', err);
+      alert('Impossible de mettre à jour le statut. Veuillez réessayer plus tard.');
+    }
   };
+
+  // Afficher un message de chargement
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Chargement des factures...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Afficher un message d'erreur
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FaInfoCircle className="text-red-500 mt-1" />
+            </div>
+            <div className="ml-3">
+              <p className="text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -182,19 +246,23 @@ export default function Factures() {
                   {facture.numero}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {facture.client}
+                  {facture.client?.nom || 'Client inconnu'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {facture.date}
+                  {new Date(facture.date).toLocaleDateString('fr-FR')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {facture.echeance}
+                  {new Date(facture.echeance).toLocaleDateString('fr-FR')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {facture.montant}
+                  {facture.totalTTC?.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0,00 €'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${facture.statutColor}`}>
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    facture.statut === 'Payée' ? 'bg-green-100 text-green-800' : 
+                    facture.statut === 'En attente' ? 'bg-yellow-100 text-yellow-800' : 
+                    'bg-red-100 text-red-800'
+                  }`}>
                     {facture.statut}
                   </span>
                 </td>
