@@ -74,14 +74,11 @@ export default function Clients() {
 
   return (
     <MainLayout>
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Clients</h1>
-          <p className="text-gray-600">Gérez vos clients et leurs informations</p>
-        </div>
-        <Link 
-          href="/clients/nouveau" 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold">Clients</h2>
+        <Link
+          href="/clients/nouveau"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
         >
           <FaPlus className="mr-2" /> Nouveau client
         </Link>
@@ -115,90 +112,126 @@ export default function Clients() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Rechercher un client..."
-            className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Contact
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Téléphone
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Factures
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Montant total
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredClients.map((client) => (
-              <tr key={client.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="font-medium text-gray-900">{client.nom}</div>
-                  <div className="text-sm text-gray-500">Depuis {client.dateCreation}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {client.contact}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {client.email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {client.telephone}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {client.facturesTotal}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {client.montantTotal}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex justify-end space-x-2">
-                    <Link href={`/clients/${client.id}`} className="text-blue-600 hover:text-blue-900">
-                      <FaEye />
-                    </Link>
-                    <Link href={`/clients/${client.id}/modifier`} className="text-green-600 hover:text-green-900">
-                      <FaEdit />
-                    </Link>
-                    <button 
-                      onClick={() => handleDeleteClient(client.id)} 
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="p-4 border-b">
+          <div className="flex items-center">
+            <div className="relative flex-grow">
+              <input
+                type="text"
+                placeholder="Rechercher un client..."
+                className="w-full px-4 py-2 border rounded-md pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <FaSearch className="absolute left-3 top-3 text-gray-400" />
+            </div>
+          </div>
+        </div>
+
+        {filteredClients.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nom
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Téléphone
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ville
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredClients.map((client) => (
+                  <tr key={client.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900">{client.nom}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{client.contact}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{client.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{client.telephone}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{client.adresse.split(', ')[1]}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
+                        <Link
+                          href={`/clients/${client.id}`}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Voir les détails"
+                        >
+                          <FaEye />
+                        </Link>
+                        <Link
+                          href={`/clients/${client.id}/modifier`}
+                          className="text-yellow-600 hover:text-yellow-900"
+                          title="Modifier"
+                        >
+                          <FaEdit />
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteClient(client.id)}
+                          className="text-red-600 hover:text-red-900"
+                          title="Supprimer"
+                        >
+                          <FaTrash />
+                        </button>
+                        <Link
+                          href={`/devis/nouveau?clientId=${client.id}`}
+                          className="text-green-600 hover:text-green-900"
+                          title="Créer un devis"
+                        >
+                          <FaFileContract />
+                        </Link>
+                        <Link
+                          href={`/factures/nouveau?clientId=${client.id}`}
+                          className="text-indigo-600 hover:text-indigo-900"
+                          title="Créer une facture"
+                        >
+                          <FaFileInvoiceDollar />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-6 text-center text-gray-500">
+            Aucun client trouvé. Voulez-vous{" "}
+            <Link href="/clients/nouveau" className="text-blue-600 hover:text-blue-800">
+              en créer un nouveau
+            </Link>
+            ?
+          </div>
+        )}
+
+        <div className="px-6 py-4 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Affichage de <span className="font-medium">{filteredClients.length}</span> clients
+            </div>
+          </div>
+        </div>
       </div>
     </MainLayout>
   );
