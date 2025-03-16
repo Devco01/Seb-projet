@@ -34,6 +34,7 @@ export default function NouveauPaiement() {
   const [isLoadingFactures, setIsLoadingFactures] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [formInitialized, setFormInitialized] = useState(false);
 
   // Méthodes de paiement disponibles
   const methodesPaiement = [
@@ -68,6 +69,32 @@ export default function NouveauPaiement() {
 
     fetchFactures();
   }, []);
+
+  // Charger les données du formulaire depuis le localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !formInitialized) {
+      const savedForm = localStorage.getItem('nouveauPaiementForm');
+      if (savedForm) {
+        try {
+          const parsedForm = JSON.parse(savedForm);
+          setFormData(prevData => ({
+            ...prevData,
+            ...parsedForm
+          }));
+        } catch (err) {
+          console.error('Erreur lors du chargement du formulaire:', err);
+        }
+      }
+      setFormInitialized(true);
+    }
+  }, [formInitialized]);
+
+  // Sauvegarder les données du formulaire dans le localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && formInitialized) {
+      localStorage.setItem('nouveauPaiementForm', JSON.stringify(formData));
+    }
+  }, [formData, formInitialized]);
 
   // Gestion des changements dans le formulaire
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -134,6 +161,9 @@ export default function NouveauPaiement() {
       
       const data = await response.json();
       setSuccessMessage('Paiement enregistré avec succès');
+      
+      // Effacer les données du localStorage après création réussie
+      localStorage.removeItem('nouveauPaiementForm');
       
       // Rediriger vers la page de détails du paiement après 2 secondes
       setTimeout(() => {

@@ -46,6 +46,7 @@ export default function NouvelleFacture() {
   const [isLoadingDevis, setIsLoadingDevis] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [formInitialized, setFormInitialized] = useState(false);
 
   // Récupérer les clients depuis l'API
   useEffect(() => {
@@ -94,10 +95,50 @@ export default function NouvelleFacture() {
 
   // Calcul de la date d'échéance par défaut (30 jours après la date actuelle)
   useEffect(() => {
-    const dateObj = new Date();
-    dateObj.setDate(dateObj.getDate() + 30);
-    setEcheance(dateObj.toISOString().split('T')[0]);
-  }, []);
+    if (!echeance) {
+      const dateObj = new Date();
+      dateObj.setDate(dateObj.getDate() + 30);
+      setEcheance(dateObj.toISOString().split('T')[0]);
+    }
+  }, [echeance]);
+
+  // Charger les données du formulaire depuis le localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !formInitialized) {
+      const savedForm = localStorage.getItem('nouvelleFactureForm');
+      if (savedForm) {
+        try {
+          const parsedForm = JSON.parse(savedForm);
+          if (parsedForm.clientId) setClientId(parsedForm.clientId);
+          if (parsedForm.date) setDate(parsedForm.date);
+          if (parsedForm.echeance) setEcheance(parsedForm.echeance);
+          if (parsedForm.devisId) setDevisId(parsedForm.devisId);
+          if (parsedForm.lignes && parsedForm.lignes.length > 0) setLignes(parsedForm.lignes);
+          if (parsedForm.conditions) setConditions(parsedForm.conditions);
+          if (parsedForm.notes) setNotes(parsedForm.notes);
+        } catch (err) {
+          console.error('Erreur lors du chargement du formulaire:', err);
+        }
+      }
+      setFormInitialized(true);
+    }
+  }, [formInitialized]);
+
+  // Sauvegarder les données du formulaire dans le localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && formInitialized) {
+      const formData = {
+        clientId,
+        date,
+        echeance,
+        devisId,
+        lignes,
+        conditions,
+        notes
+      };
+      localStorage.setItem('nouvelleFactureForm', JSON.stringify(formData));
+    }
+  }, [clientId, date, echeance, devisId, lignes, conditions, notes, formInitialized]);
 
   // Mise à jour d'une ligne
   const handleLigneChange = (index: number, field: keyof LigneFacture, value: string | number) => {
@@ -248,6 +289,9 @@ export default function NouvelleFacture() {
       const data = await response.json();
       setSuccessMessage('Facture créée avec succès');
       
+      // Effacer les données du localStorage après création réussie
+      localStorage.removeItem('nouvelleFactureForm');
+      
       // Rediriger vers la page de détails de la facture après 2 secondes
       setTimeout(() => {
         router.push(`/factures/${data.id}`);
@@ -361,7 +405,7 @@ export default function NouvelleFacture() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date d'échéance <span className="text-red-500">*</span>
+              Date d&apos;échéance <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
