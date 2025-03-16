@@ -15,12 +15,6 @@ export default function Clients() {
   // Utiliser le hook useClients pour récupérer les clients
   const { clients, loading, error, fetchClients } = useClients();
   
-  // Forcer le rechargement des clients au montage du composant
-  useEffect(() => {
-    console.log("Page clients montée, rechargement des clients");
-    fetchClients();
-  }, [fetchClients]);
-
   // Filtrer les clients en fonction du terme de recherche
   const filteredClients = clients.filter(client => 
     client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
