@@ -34,10 +34,10 @@ export async function POST(request: NextRequest) {
 
     // Générer un nom de fichier unique
     const fileName = `logo-${uuidv4()}.${file.name.split('.').pop()}`;
-    const path = join(process.cwd(), 'public', 'uploads', fileName);
+    const filePath = join(process.cwd(), 'public', 'uploads', fileName);
 
     // Écrire le fichier sur le disque
-    await writeFile(path, buffer);
+    await writeFile(filePath, buffer);
 
     // Mettre à jour les paramètres avec le nouveau logo
     const parametres = await prisma.parametres.findFirst();

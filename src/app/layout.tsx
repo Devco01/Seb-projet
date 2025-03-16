@@ -1,25 +1,49 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import "./globals.css";
+import './globals.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 
-const geist = Geist({
-  subsets: ["latin"],
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
 });
 
 export const metadata: Metadata = {
-  title: "FacturePro - Facturation pour peintres en bâtiment",
-  description: "Application de facturation pour peintres en bâtiment auto-entrepreneurs",
+  title: 'FacturePro - Gestion de facturation',
+  description: 'Application de gestion de facturation pour entreprise de peinture en bâtiment',
+  icons: {
+    icon: { url: '/icon.png', type: 'image/png' },
+    shortcut: { url: '/icon.png', type: 'image/png' },
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="fr">
-      <body className={`${geist.className} antialiased`}>
-        {children}
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>" />
+      </head>
+      <body className={inter.className}>
+        <header>
+          <div className="container">
+            <h1>FacturePro</h1>
+            <p>Peinture en bâtiment</p>
+          </div>
+        </header>
+        <main>
+          {children}
+        </main>
+        <footer>
+          <div className="container">
+            <p>© 2025 FacturePro - Peinture en bâtiment</p>
+          </div>
+        </footer>
       </body>
     </html>
   );

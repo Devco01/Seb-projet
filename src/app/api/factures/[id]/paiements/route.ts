@@ -4,6 +4,13 @@ import { prisma } from '@/lib/prisma';
 // Configuration pour le mode standalone
 export const dynamic = 'force-dynamic';
 
+
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
+
 // GET /api/factures/[id]/paiements - Récupérer les paiements d'une facture
 export async function GET(
   request: NextRequest,

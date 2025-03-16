@@ -17,7 +17,6 @@ export async function GET() {
           adresse: '1 rue de l\'exemple',
           codePostal: '75000',
           ville: 'Paris',
-          pays: 'France',
           email: 'contact@monentreprise.fr',
           siret: '00000000000000',
           conditionsPaiement: 'Paiement à 30 jours',
@@ -41,10 +40,10 @@ export async function PUT(request: NextRequest) {
     const data = await request.json();
 
     // Validation des données
-    const { nomEntreprise, adresse, codePostal, ville, pays, email, siret } = data;
-    if (!nomEntreprise || !adresse || !codePostal || !ville || !pays || !email || !siret) {
+    const { nomEntreprise, adresse, codePostal, ville, email } = data;
+    if (!nomEntreprise || !adresse || !codePostal || !ville || !email) {
       return NextResponse.json(
-        { message: 'Données invalides. Nom de l\'entreprise, adresse, code postal, ville, pays, email et SIRET sont requis' },
+        { message: 'Données invalides. Nom de l\'entreprise, adresse, code postal, ville et email sont requis' },
         { status: 400 }
       );
     }
@@ -60,19 +59,24 @@ export async function PUT(request: NextRequest) {
           adresse,
           codePostal,
           ville,
-          pays,
           telephone: data.telephone,
           email,
-          siteWeb: data.siteWeb,
-          siret,
-          tvaIntracommunautaire: data.tvaIntracommunautaire,
-          rcs: data.rcs,
-          capital: data.capital,
-          logo: data.logo,
+          siret: data.siret,
+          tva: data.tva,
+          prefixeDevis: data.prefixeDevis || 'D-',
+          prefixeFacture: data.prefixeFacture || 'F-',
           conditionsPaiement: data.conditionsPaiement || 'Paiement à 30 jours',
-          piedPage: data.piedPage,
-          couleurPrincipale: data.couleurPrincipale || '#3B82F6',
-          couleurSecondaire: data.couleurSecondaire || '#1E40AF',
+          mentionsTVA: data.mentionsTVA,
+          textePiedPage: data.textePiedPage,
+          emailExpediteur: data.emailExpediteur,
+          objetDevis: data.objetDevis,
+          objetFacture: data.objetFacture,
+          messageDevis: data.messageDevis,
+          messageFacture: data.messageFacture,
+          iban: data.iban,
+          bic: data.bic,
+          nomBanque: data.nomBanque,
+          titulaire: data.titulaire,
         },
       });
     } else {
@@ -84,19 +88,24 @@ export async function PUT(request: NextRequest) {
           adresse,
           codePostal,
           ville,
-          pays,
           telephone: data.telephone,
           email,
-          siteWeb: data.siteWeb,
-          siret,
-          tvaIntracommunautaire: data.tvaIntracommunautaire,
-          rcs: data.rcs,
-          capital: data.capital,
-          logo: data.logo,
+          siret: data.siret,
+          tva: data.tva,
+          prefixeDevis: data.prefixeDevis,
+          prefixeFacture: data.prefixeFacture,
           conditionsPaiement: data.conditionsPaiement,
-          piedPage: data.piedPage,
-          couleurPrincipale: data.couleurPrincipale,
-          couleurSecondaire: data.couleurSecondaire,
+          mentionsTVA: data.mentionsTVA,
+          textePiedPage: data.textePiedPage,
+          emailExpediteur: data.emailExpediteur,
+          objetDevis: data.objetDevis,
+          objetFacture: data.objetFacture,
+          messageDevis: data.messageDevis,
+          messageFacture: data.messageFacture,
+          iban: data.iban,
+          bic: data.bic,
+          nomBanque: data.nomBanque,
+          titulaire: data.titulaire,
         },
       });
     }
