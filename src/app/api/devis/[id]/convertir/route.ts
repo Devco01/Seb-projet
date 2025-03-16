@@ -91,12 +91,10 @@ export async function POST(
         date: new Date().toISOString().split('T')[0],
         echeance: dateEcheance.toISOString().split('T')[0],
         statut: 'En attente',
-        lignes: devis.lignes,
+        lignes: JSON.stringify(devis.lignes),
         totalHT: devis.totalHT,
         totalTVA: devis.totalTVA,
         totalTTC: devis.totalTTC,
-        totalPaye: 0,
-        resteAPayer: devis.totalTTC,
         conditions: devis.conditions,
         notes: devis.notes,
         devisId: devis.id,
@@ -107,7 +105,9 @@ export async function POST(
     await prisma.devis.update({
       where: { id },
       data: {
-        factureId: nouvelleFacture.id,
+        factures: {
+          connect: { id: nouvelleFacture.id }
+        }
       },
     });
     

@@ -9,20 +9,8 @@ export async function GET() {
   try {
     const paiements = await prisma.paiement.findMany({
       include: {
-        client: {
-          select: {
-            id: true,
-            nom: true,
-            email: true,
-          },
-        },
-        facture: {
-          select: {
-            id: true,
-            numero: true,
-            totalTTC: true,
-          },
-        },
+        Client: true,
+        facture: true,
       },
       orderBy: {
         date: 'desc',

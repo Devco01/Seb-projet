@@ -53,8 +53,6 @@ export async function PUT(
       where: { id },
       data: {
         statut,
-        totalPaye,
-        resteAPayer,
       },
     });
 

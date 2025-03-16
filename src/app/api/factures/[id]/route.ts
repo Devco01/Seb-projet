@@ -122,7 +122,6 @@ export async function PUT(
     });
 
     const totalTTC = totalHT + totalTVA;
-    const resteAPayer = totalTTC - facture.totalPaye;
 
     // Mettre à jour la facture
     const factureModifiee = await prisma.facture.update({
@@ -132,11 +131,10 @@ export async function PUT(
         date,
         echeance,
         statut: data.statut || facture.statut,
-        lignes,
+        lignes: JSON.stringify(lignes),
         totalHT,
         totalTVA,
         totalTTC,
-        resteAPayer,
         conditions: data.conditions,
         notes: data.notes,
       },

@@ -35,7 +35,7 @@ export async function GET(
     const paiements = await prisma.paiement.findMany({
       where: { factureId },
       include: {
-        client: {
+        Client: {
           select: {
             id: true,
             nom: true,
