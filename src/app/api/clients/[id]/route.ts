@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
+
 // GET /api/clients/[id] - Récupérer un client spécifique
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const id = parseInt(params.id);
@@ -68,7 +74,7 @@ export async function GET(
 // PUT /api/clients/[id] - Mettre à jour un client
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const id = parseInt(params.id);
@@ -133,7 +139,7 @@ export async function PUT(
 // DELETE /api/clients/[id] - Supprimer un client
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const id = parseInt(params.id);
