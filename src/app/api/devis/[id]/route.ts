@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
+
 // GET /api/devis/[id] - Récupérer un devis spécifique
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const id = parseInt(params.id);
@@ -52,7 +58,7 @@ export async function GET(
 // PUT /api/devis/[id] - Mettre à jour un devis
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const id = parseInt(params.id);
@@ -141,7 +147,7 @@ export async function PUT(
 // DELETE /api/devis/[id] - Supprimer un devis
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const id = parseInt(params.id);
