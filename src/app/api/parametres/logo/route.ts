@@ -4,6 +4,9 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+// Configuration pour le mode standalone
+export const dynamic = 'force-dynamic';
+
 // POST /api/parametres/logo - Télécharger un logo
 export async function POST(request: NextRequest) {
   try {

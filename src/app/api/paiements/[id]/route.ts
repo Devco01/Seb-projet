@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+// Configuration pour le mode standalone
+export const dynamic = 'force-dynamic';
+
 // GET /api/paiements/[id] - Récupérer un paiement par son ID
 export async function GET(
   request: NextRequest,
