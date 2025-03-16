@@ -26,4 +26,16 @@
       ]
     }
   ]
+=======
+  "buildCommand": "prisma generate && next build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next",
+  "regions": ["cdg1"],
+  "env": {
+    "DATABASE_URL": "postgres://neondb_owner:npg_dsOHK6wNV4qM@ep-wispy-dew-abre87k7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require",
+    "JWT_SECRET": "SebProjetAdmin1427",
+    "NODE_ENV": "production",
+    "NEXT_TELEMETRY_DISABLED": "1"
+  }
 } 
