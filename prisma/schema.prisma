@@ -15,110 +15,96 @@ datasource db {
 
 // Modèle pour les clients
 model Client {
-  id         Int       @id @default(autoincrement())
-  nom        String
-  contact    String?
-  email      String
-  telephone  String?
-  adresse    String
-  codePostal String
-  ville      String
-  pays       String    @default("France")
-  siret      String?
-  tva        String?
-  notes      String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  devis      Devis[]
-  factures   Facture[]
-  paiements  Paiement[]
+  id          Int       @id @default(autoincrement())
+  nom         String
+  email       String    @unique
+  telephone   String?
+  adresse     String
+  codePostal  String
+  ville       String
+  pays        String    @default("France")
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  devis       Devis[]
+  factures    Facture[]
 }
 
 // Modèle pour les devis
 model Devis {
-  id         Int       @id @default(autoincrement())
-  numero     String    @unique
-  clientId   Int
-  client     Client    @relation(fields: [clientId], references: [id])
-  date       DateTime
-  validite   DateTime
-  statut     String    @default("En attente") // En attente, Accepté, Refusé, Expiré
-  lignes     Json      // Stocké comme un tableau JSON de lignes
-  conditions String?
-  notes      String?
-  totalHT    Float
-  totalTVA   Float
-  totalTTC   Float
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  factures   Facture[]
+  id          Int       @id @default(autoincrement())
+  numero      String    @unique
+  date        DateTime
+  validite    DateTime
+  statut      String    @default("En attente") // En attente, Accepté, Refusé, Expiré
+  clientId    Int
+  client      Client    @relation(fields: [clientId], references: [id])
+  montantHT   Float
+  montantTVA  Float
+  montantTTC  Float
+  conditions  String?
+  notes       String?
+  lines       Json      // Tableau des lignes de devis (produits/services)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  factures    Facture[]
 }
 
 // Modèle pour les factures
 model Facture {
-  id          Int       @id @default(autoincrement())
-  numero      String    @unique
-  clientId    Int
-  client      Client    @relation(fields: [clientId], references: [id])
-  devisId     Int?
-  devis       Devis?    @relation(fields: [devisId], references: [id])
+  id          Int        @id @default(autoincrement())
+  numero      String     @unique
   date        DateTime
   echeance    DateTime
-  statut      String    @default("En attente") // En attente, Payée, Retard, Annulée
-  lignes      Json      // Stocké comme un tableau JSON de lignes
+  statut      String     @default("En attente") // En attente, Payée, Partiellement payée, En retard
+  clientId    Int
+  client      Client     @relation(fields: [clientId], references: [id])
+  devisId     Int?
+  devis       Devis?     @relation(fields: [devisId], references: [id])
+  montantHT   Float
+  montantTVA  Float
+  montantTTC  Float
   conditions  String?
   notes       String?
-  totalHT     Float
-  totalTVA    Float
-  totalTTC    Float
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  lines       Json      // Tableau des lignes de facture (produits/services)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   paiements   Paiement[]
 }
 
 // Modèle pour les paiements
 model Paiement {
-  id                  Int       @id @default(autoincrement())
-  reference           String    @unique
-  factureId           Int
-  facture             Facture   @relation(fields: [factureId], references: [id])
-  clientId            Int
-  client              Client    @relation(fields: [clientId], references: [id])
-  date                DateTime
-  montant             Float
-  methode             String    // Virement, Chèque, Espèces, Carte bancaire, Prélèvement
-  referenceTransaction String?
-  statut              String    @default("En attente") // En attente, Reçu
-  notes               String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id          Int       @id @default(autoincrement())
+  factureId   Int
+  facture     Facture   @relation(fields: [factureId], references: [id])
+  date        DateTime
+  montant     Float
+  methode     String    // Virement, Chèque, Espèces, Carte bancaire
+  reference   String?   // Référence du paiement (numéro de chèque, etc.)
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 // Modèle pour les paramètres de l'entreprise
 model Parametres {
-  id                Int       @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
   nomEntreprise     String
   adresse           String
   codePostal        String
   ville             String
+  pays              String   @default("France")
   telephone         String?
-  email             String
+  email             String?
+  siteWeb           String?
   siret             String?
-  tva               String?
-  prefixeDevis      String    @default("D-")
-  prefixeFacture    String    @default("F-")
+  tvaIntracommunautaire String?
+  logo              String?  // Chemin vers le logo
+  couleurPrincipale String?  // Code couleur principal
+  tauxTVA           Float    @default(20)
+  deviseSymbole     String   @default("€")
   conditionsPaiement String?
-  mentionsTVA       String?
-  textePiedPage     String?
-  emailExpediteur   String?
-  objetDevis        String?
-  objetFacture      String?
-  messageDevis      String?
-  messageFacture    String?
-  iban              String?
-  bic               String?
-  nomBanque         String?
-  titulaire         String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  piedPage          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
