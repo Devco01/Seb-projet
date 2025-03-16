@@ -1,218 +1,205 @@
 "use client";
 
-import Layout from '../components/Layout';
-import Link from 'next/link';
-import { FaPlus, FaSearch, FaUsers, FaEye, FaEdit, FaTrash, FaFileInvoiceDollar, FaFileAlt } from 'react-icons/fa';
 import { useState } from 'react';
+import MainLayout from '../components/MainLayout';
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaInfoCircle, FaFileInvoiceDollar, FaFileContract } from 'react-icons/fa';
+import Link from 'next/link';
+
+// Données fictives pour les clients
+const clientsData = [
+  { 
+    id: 1, 
+    nom: 'Dupont SAS', 
+    contact: 'Jean Dupont', 
+    email: 'contact@dupont-sas.fr', 
+    telephone: '01 23 45 67 89', 
+    adresse: '15 rue des Lilas, 75001 Paris', 
+    dateCreation: '12/01/2023',
+    facturesTotal: 5,
+    montantTotal: '8 500 €'
+  },
+  { 
+    id: 2, 
+    nom: 'Martin Construction', 
+    contact: 'Sophie Martin', 
+    email: 'sophie@martin-construction.fr', 
+    telephone: '01 98 76 54 32', 
+    adresse: '8 avenue Victor Hugo, 69002 Lyon', 
+    dateCreation: '25/02/2023',
+    facturesTotal: 3,
+    montantTotal: '4 200 €'
+  },
+  { 
+    id: 3, 
+    nom: 'Dubois SARL', 
+    contact: 'Pierre Dubois', 
+    email: 'p.dubois@dubois-sarl.com', 
+    telephone: '03 45 67 89 01', 
+    adresse: '22 boulevard Gambetta, 33000 Bordeaux', 
+    dateCreation: '18/03/2023',
+    facturesTotal: 2,
+    montantTotal: '3 150 €'
+  },
+  { 
+    id: 4, 
+    nom: 'Résidences du Parc', 
+    contact: 'Marie Leroy', 
+    email: 'contact@residences-parc.fr', 
+    telephone: '04 56 78 90 12', 
+    adresse: '5 rue du Parc, 44000 Nantes', 
+    dateCreation: '02/04/2023',
+    facturesTotal: 1,
+    montantTotal: '1 850 €'
+  },
+];
 
 export default function Clients() {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Données fictives pour les clients
-  const clients = [
-    { 
-      id: 1, 
-      name: 'Dupont SAS', 
-      contact: 'Jean Dupont', 
-      email: 'contact@dupont-sas.fr', 
-      phone: '01 23 45 67 89', 
-      address: '15 rue des Lilas, 75001 Paris',
-      devisCount: 3,
-      facturesCount: 5,
-      totalAmount: '8 750 €'
-    },
-    { 
-      id: 2, 
-      name: 'Résidences du Parc', 
-      contact: 'Marie Martin', 
-      email: 'contact@residences-parc.fr', 
-      phone: '01 34 56 78 90', 
-      address: '8 avenue du Parc, 69002 Lyon',
-      devisCount: 2,
-      facturesCount: 3,
-      totalAmount: '5 200 €'
-    },
-    { 
-      id: 3, 
-      name: 'Martin Immobilier', 
-      contact: 'Pierre Martin', 
-      email: 'p.martin@martin-immo.fr', 
-      phone: '01 45 67 89 01', 
-      address: '25 boulevard Haussmann, 75008 Paris',
-      devisCount: 4,
-      facturesCount: 2,
-      totalAmount: '4 630 €'
-    },
-    { 
-      id: 4, 
-      name: 'Leroy Construction', 
-      contact: 'Sophie Leroy', 
-      email: 'contact@leroy-construction.fr', 
-      phone: '01 56 78 90 12', 
-      address: '42 rue de la République, 13001 Marseille',
-      devisCount: 1,
-      facturesCount: 4,
-      totalAmount: '12 350 €'
-    },
-    { 
-      id: 5, 
-      name: 'Dubois et Fils', 
-      contact: 'François Dubois', 
-      email: 'f.dubois@dubois-fils.fr', 
-      phone: '01 67 89 01 23', 
-      address: '3 place Bellecour, 69002 Lyon',
-      devisCount: 2,
-      facturesCount: 3,
-      totalAmount: '6 800 €'
-    },
-  ];
+  const [clients, setClients] = useState(clientsData);
+  const [showGuide, setShowGuide] = useState(true);
 
   // Filtrer les clients en fonction du terme de recherche
-  const filteredClients = clients.filter(
-    (client) =>
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.address.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredClients = clients.filter(client => 
+    client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Fonction pour supprimer un client
+  const handleDeleteClient = (id: number) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
+      setClients(clients.filter(client => client.id !== id));
+    }
+  };
+
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">Gestion des clients</h1>
-          <Link
-            href="/clients/nouveau"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700"
-          >
-            <FaPlus className="mr-2" /> Nouveau client
-          </Link>
+    <MainLayout>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Clients</h1>
+          <p className="text-gray-600">Gérez vos clients et leurs informations</p>
         </div>
+        <Link 
+          href="/clients/nouveau" 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+        >
+          <FaPlus className="mr-2" /> Nouveau client
+        </Link>
+      </div>
 
-        {/* Filtres et recherche */}
-        <div className="bg-white shadow rounded-lg p-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0 md:space-x-4">
-            <div className="w-full md:w-1/2">
-              <label htmlFor="search" className="sr-only">
-                Rechercher
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaSearch className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  name="search"
-                  id="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                  placeholder="Rechercher un client par nom, contact, email ou adresse..."
-                />
-              </div>
-            </div>
-            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
-              <select
-                id="sort"
-                name="sort"
-                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+      {showGuide && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-md">
+          <div className="flex items-start">
+            <FaInfoCircle className="text-blue-500 mt-1 mr-3" />
+            <div>
+              <h3 className="font-bold text-blue-800">Actions disponibles pour les clients</h3>
+              <ul className="mt-2 text-sm text-blue-800 space-y-1">
+                <li className="flex items-center"><FaPlus className="mr-2" /> Ajouter un nouveau client avec ses coordonnées complètes</li>
+                <li className="flex items-center"><FaEye className="mr-2" /> Consulter la fiche détaillée d'un client</li>
+                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier les informations d'un client</li>
+                <li className="flex items-center"><FaFileContract className="mr-2" /> Créer un devis pour ce client (depuis la fiche client)</li>
+                <li className="flex items-center"><FaFileInvoiceDollar className="mr-2" /> Créer une facture pour ce client (depuis la fiche client)</li>
+                <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer un client (après confirmation)</li>
+              </ul>
+              <p className="mt-2 text-sm text-blue-800">
+                La fiche client vous permet également de consulter l'historique des devis et factures du client.
+              </p>
+              <button 
+                onClick={() => setShowGuide(false)} 
+                className="mt-2 text-sm text-blue-600 hover:underline"
               >
-                <option value="name">Trier par nom</option>
-                <option value="amount-desc">Trier par montant total (élevé d'abord)</option>
-                <option value="amount-asc">Trier par montant total (faible d'abord)</option>
-                <option value="factures-desc">Trier par nombre de factures</option>
-              </select>
+                Masquer ce guide
+              </button>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Liste des clients */}
-        <div className="bg-white shadow overflow-hidden rounded-lg">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Adresse
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Devis
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Factures
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-purple-600">
-                        <Link href={`/clients/${client.id}`} className="hover:underline">
-                          {client.name}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{client.contact}</div>
-                      <div className="text-sm text-gray-500">{client.email}</div>
-                      <div className="text-sm text-gray-500">{client.phone}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {client.address}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {client.devisCount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {client.facturesCount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {client.totalAmount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
-                        <Link href={`/clients/${client.id}`} className="text-blue-600 hover:text-blue-900" title="Voir">
-                          <FaEye />
-                        </Link>
-                        <Link href={`/clients/${client.id}/modifier`} className="text-indigo-600 hover:text-indigo-900" title="Modifier">
-                          <FaEdit />
-                        </Link>
-                        <Link href={`/devis/nouveau?client=${client.id}`} className="text-blue-600 hover:text-blue-900" title="Créer un devis">
-                          <FaFileAlt />
-                        </Link>
-                        <Link href={`/factures/nouveau?client=${client.id}`} className="text-green-600 hover:text-green-900" title="Créer une facture">
-                          <FaFileInvoiceDollar />
-                        </Link>
-                        <button className="text-red-600 hover:text-red-900" title="Supprimer">
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FaSearch className="text-gray-400" />
           </div>
-          {filteredClients.length === 0 && (
-            <div className="px-6 py-4 text-center text-gray-500">
-              Aucun client trouvé.
-            </div>
-          )}
+          <input
+            type="text"
+            placeholder="Rechercher un client..."
+            className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
       </div>
-    </Layout>
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Client
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Contact
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Téléphone
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Factures
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Montant total
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredClients.map((client) => (
+              <tr key={client.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="font-medium text-gray-900">{client.nom}</div>
+                  <div className="text-sm text-gray-500">Depuis {client.dateCreation}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {client.contact}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {client.email}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {client.telephone}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {client.facturesTotal}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {client.montantTotal}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex justify-end space-x-2">
+                    <Link href={`/clients/${client.id}`} className="text-blue-600 hover:text-blue-900">
+                      <FaEye />
+                    </Link>
+                    <Link href={`/clients/${client.id}/modifier`} className="text-green-600 hover:text-green-900">
+                      <FaEdit />
+                    </Link>
+                    <button 
+                      onClick={() => handleDeleteClient(client.id)} 
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </MainLayout>
   );
 } 

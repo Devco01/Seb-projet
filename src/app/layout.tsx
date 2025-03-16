@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const geist = Geist({
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "FacturePro - Application de facturation pour peintres en bâtiment",
-  description: "Application de facturation pour peintres en bâtiment auto-entrepreneurs, inspirée de Tiime AE",
+  title: "FacturePro - Facturation pour peintres en bâtiment",
+  description: "Application de facturation pour peintres en bâtiment auto-entrepreneurs",
 };
 
 export default function RootLayout({
@@ -24,9 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geist.className} antialiased`}>
         {children}
       </body>
     </html>
