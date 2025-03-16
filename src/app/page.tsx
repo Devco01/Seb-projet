@@ -2,93 +2,142 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">FacturePro - Peinture en bâtiment</h1>
+    <div style={{ 
+      maxWidth: '1200px', 
+      margin: '0 auto', 
+      padding: '20px',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <h1 style={{ 
+        fontSize: '24px', 
+        fontWeight: 'bold', 
+        marginBottom: '24px',
+        color: '#333'
+      }}>FacturePro - Peinture en bâtiment</h1>
       
-      <div className="mb-8">
-        <p className="text-lg mb-4">
+      <div style={{ marginBottom: '32px' }}>
+        <p style={{ 
+          fontSize: '18px', 
+          marginBottom: '16px',
+          color: '#555'
+        }}>
           Bienvenue sur votre espace de gestion. Cette page est une version statique sans connexion à la base de données.
         </p>
         
-        <div className="flex flex-wrap gap-4 mb-6">
-          <Link href="/dashboard" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: '16px', 
+          marginBottom: '24px'
+        }}>
+          <a href="/dashboard" style={{
+            padding: '8px 16px',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            borderRadius: '4px',
+            textDecoration: 'none'
+          }}>
             Tableau de bord
-          </Link>
-          <Link href="/clients" className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+          </a>
+          <a href="/clients" style={{
+            padding: '8px 16px',
+            backgroundColor: '#22c55e',
+            color: 'white',
+            borderRadius: '4px',
+            textDecoration: 'none'
+          }}>
             Clients
-          </Link>
-          <Link href="/devis" className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+          </a>
+          <a href="/devis" style={{
+            padding: '8px 16px',
+            backgroundColor: '#eab308',
+            color: 'white',
+            borderRadius: '4px',
+            textDecoration: 'none'
+          }}>
             Devis
-          </Link>
-          <Link href="/factures" className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+          </a>
+          <a href="/factures" style={{
+            padding: '8px 16px',
+            backgroundColor: '#ef4444',
+            color: 'white',
+            borderRadius: '4px',
+            textDecoration: 'none'
+          }}>
             Factures
-          </Link>
+          </a>
+          <a href="/paiements" style={{
+            padding: '8px 16px',
+            backgroundColor: '#8b5cf6',
+            color: 'white',
+            borderRadius: '4px',
+            textDecoration: 'none'
+          }}>
+            Paiements
+          </a>
+          <a href="/parametres" style={{
+            padding: '8px 16px',
+            backgroundColor: '#64748b',
+            color: 'white',
+            borderRadius: '4px',
+            textDecoration: 'none'
+          }}>
+            Paramètres
+          </a>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-bold text-lg mb-2">Devis en cours</h2>
-          <p className="text-3xl font-bold text-blue-600">--</p>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+        gap: '16px',
+        marginBottom: '32px'
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '16px',
+          borderRadius: '4px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Devis en cours</h2>
+          <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>--</p>
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-bold text-lg mb-2">Factures impayées</h2>
-          <p className="text-3xl font-bold text-red-600">--</p>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '16px',
+          borderRadius: '4px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Factures impayées</h2>
+          <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ef4444' }}>--</p>
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-bold text-lg mb-2">Clients actifs</h2>
-          <p className="text-3xl font-bold text-green-600">--</p>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '16px',
+          borderRadius: '4px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Clients actifs</h2>
+          <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#22c55e' }}>--</p>
         </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-bold text-lg mb-2">Chiffre d'affaires</h2>
-          <p className="text-3xl font-bold text-purple-600">--</p>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-bold mb-4">Liens rapides</h2>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/clients" className="text-blue-500 hover:underline">
-                Gestion des clients
-              </Link>
-            </li>
-            <li>
-              <Link href="/devis" className="text-blue-500 hover:underline">
-                Gestion des devis
-              </Link>
-            </li>
-            <li>
-              <Link href="/factures" className="text-blue-500 hover:underline">
-                Gestion des factures
-              </Link>
-            </li>
-            <li>
-              <Link href="/paiements" className="text-blue-500 hover:underline">
-                Gestion des paiements
-              </Link>
-            </li>
-            <li>
-              <Link href="/parametres" className="text-blue-500 hover:underline">
-                Paramètres
-              </Link>
-            </li>
-          </ul>
-        </div>
-        
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-bold mb-4">Informations</h2>
-          <p className="mb-4">
-            Cette page est une version statique de la page d'accueil, créée pour contourner les problèmes de connexion à la base de données.
-          </p>
-          <p>
-            Utilisez les liens ci-dessus pour accéder aux différentes fonctionnalités de l'application.
-          </p>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '16px',
+          borderRadius: '4px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Chiffre d'affaires</h2>
+          <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#8b5cf6' }}>--</p>
         </div>
       </div>
       
-      <footer className="mt-8 pt-4 border-t text-center text-gray-500">
+      <footer style={{ 
+        marginTop: '32px', 
+        paddingTop: '16px', 
+        borderTop: '1px solid #ddd', 
+        textAlign: 'center',
+        color: '#777'
+      }}>
         <p>© 2025 FacturePro - Peinture en bâtiment</p>
       </footer>
     </div>
