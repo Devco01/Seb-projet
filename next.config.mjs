@@ -9,8 +9,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
-  // Activer la génération statique pour améliorer les performances
-  output: 'export',
+  // Utiliser le mode standalone pour Vercel
+  output: 'standalone',
   
   // Désactiver la compression pour éviter les problèmes de rendu
   compress: false,

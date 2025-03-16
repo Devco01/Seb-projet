@@ -4,6 +4,9 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+// Configuration pour le mode standalone
+export const dynamic = 'force-dynamic';
+
 // POST /api/parametres/logo - Télécharger un logo
 export async function POST(request: NextRequest) {
   try {
@@ -31,10 +34,10 @@ export async function POST(request: NextRequest) {
 
     // Générer un nom de fichier unique
     const fileName = `logo-${uuidv4()}.${file.name.split('.').pop()}`;
-    const path = join(process.cwd(), 'public', 'uploads', fileName);
+    const filePath = join(process.cwd(), 'public', 'uploads', fileName);
 
     // Écrire le fichier sur le disque
-    await writeFile(path, buffer);
+    await writeFile(filePath, buffer);
 
     // Mettre à jour les paramètres avec le nouveau logo
     const parametres = await prisma.parametres.findFirst();
