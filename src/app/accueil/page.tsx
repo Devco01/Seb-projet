@@ -34,7 +34,7 @@ export default function AccueilAlternatif() {
           <p className="text-3xl font-bold text-green-600">--</p>
         </div>
         <div className="bg-white p-4 rounded shadow">
-          <h2 className="font-bold text-lg mb-2">Chiffre d'affaires</h2>
+          <h2 className="font-bold text-lg mb-2">Chiffre d&apos;affaires</h2>
           <p className="text-3xl font-bold text-purple-600">--</p>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function AccueilAlternatif() {
         <div className="bg-white p-4 rounded shadow">
           <h2 className="text-xl font-bold mb-4">Informations</h2>
           <p className="mb-4">
-            Cette page est une version alternative de la page d'accueil, créée pour contourner les problèmes de connexion à la base de données.
+            Cette page est une version alternative de la page d&apos;accueil, créée pour contourner les problèmes de connexion à la base de données.
           </p>
           <p>
             Utilisez les liens de diagnostic pour tester la connexion à la base de données et identifier les problèmes.

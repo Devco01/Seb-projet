@@ -24,7 +24,7 @@ export default function HomePage() {
         <div className="mt-8 animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
         <div className="mt-8">
           <Link href="/dashboard" className="text-blue-600 hover:underline">
-            Cliquez ici si vous n'êtes pas redirigé automatiquement
+            Cliquez ici si vous n&apos;êtes pas redirigé automatiquement
           </Link>
         </div>
       </div>
