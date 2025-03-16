@@ -4,8 +4,12 @@ import { useState } from 'react';
 import MainLayout from '../../components/MainLayout';
 import { FaSave, FaTimes } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function NouveauClient() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     nom: '',
     contact: '',
@@ -30,14 +34,34 @@ export default function NouveauClient() {
   };
 
   // Soumission du formulaire
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
     
-    // Ici, vous enverriez les données à votre API
-    alert('Client ajouté avec succès !');
-    
-    // Redirection vers la liste des clients
-    window.location.href = '/clients';
+    try {
+      // Envoi des données à l'API
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la création du client');
+      }
+      
+      // Redirection vers la liste des clients
+      router.push('/clients');
+    } catch (err) {
+      console.error('Erreur:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -48,22 +72,27 @@ export default function NouveauClient() {
           <p className="text-gray-600">Ajoutez un nouveau client à votre base de données</p>
         </div>
         <div className="flex space-x-2">
-          <Link 
-            href="/clients" 
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center"
-          >
+          <Link href="/clients" className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md flex items-center">
             <FaTimes className="mr-2" /> Annuler
           </Link>
           <button 
-            onClick={handleSubmit}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+            type="submit" 
+            form="clientForm" 
+            className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center"
+            disabled={isLoading}
           >
-            <FaSave className="mr-2" /> Enregistrer
+            <FaSave className="mr-2" /> {isLoading ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
+      <form id="clientForm" onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <h2 className="text-lg font-medium mb-4">Informations générales</h2>
