@@ -8,6 +8,10 @@ const nextConfig = {
     // Désactiver les vérifications TypeScript pendant la construction
     ignoreBuildErrors: true,
   },
+  compress: false,
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
 };
 
 export default nextConfig;
