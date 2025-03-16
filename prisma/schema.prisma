@@ -9,9 +9,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL") // Utiliser la même URL pour la connexion directe
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  // Paramètres SSL explicites
+  extensions = [pgcrypto]
 }
 
 // Modèle pour les clients
