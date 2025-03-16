@@ -1,93 +1,98 @@
-# Application de Facturation
+# FacturePro - Application de facturation pour entreprise de peinture
 
-Une application web complète pour gérer vos devis, factures, clients et paiements.
+Cette application permet de gérer les clients, devis, factures et paiements pour une entreprise de peinture en bâtiment.
 
 ## Fonctionnalités
 
 - Gestion des clients
 - Création et suivi des devis
-- Conversion des devis en factures
-- Gestion des factures
+- Génération de factures
 - Suivi des paiements
-- Paramètres de l'entreprise personnalisables
+- Tableau de bord avec statistiques
 
 ## Technologies utilisées
 
 - Next.js 14 (App Router)
 - TypeScript
-- Prisma ORM
-- PostgreSQL
 - Tailwind CSS
+- Prisma ORM
+- PostgreSQL (Neon)
+- Vercel (déploiement)
+
+## Installation locale
+
+1. Cloner le dépôt
+   ```bash
+   git clone https://github.com/votre-utilisateur/seb-projet.git
+   cd seb-projet
+   ```
+
+2. Installer les dépendances
+   ```bash
+   npm install
+   ```
+
+3. Configurer les variables d'environnement
+   ```bash
+   cp .env.example .env
+   # Modifier les valeurs dans le fichier .env
+   ```
+
+4. Générer le client Prisma
+   ```bash
+   npx prisma generate
+   ```
+
+5. Lancer le serveur de développement
+   ```bash
+   npm run dev
+   ```
 
 ## Déploiement sur Vercel
 
 ### Prérequis
 
-- Un compte [Vercel](https://vercel.com)
-- Un compte [GitHub](https://github.com)
-- Une base de données PostgreSQL (vous pouvez utiliser [Vercel Postgres](https://vercel.com/docs/storage/vercel-postgres))
+- Un compte Vercel
+- Un compte Neon pour la base de données PostgreSQL
 
 ### Étapes de déploiement
 
-1. **Créer un dépôt GitHub**
+1. Créer une base de données PostgreSQL sur Neon
+   - Notez l'URL de connexion fournie
 
-   Poussez votre code sur un dépôt GitHub.
+2. Importer le projet sur Vercel
+   - Connectez votre dépôt GitHub
+   - Configurez les variables d'environnement :
+     - `DATABASE_URL` : URL de connexion à votre base de données Neon
+     - `JWT_SECRET` : Une chaîne aléatoire pour sécuriser les JWT
 
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/votre-nom/facturation.git
-   git push -u origin main
-   ```
+3. Déployer l'application
+   - Vercel déploiera automatiquement l'application
 
-2. **Connecter le projet à Vercel**
+### Résolution des problèmes courants
 
-   - Connectez-vous à votre compte Vercel
-   - Cliquez sur "Add New" > "Project"
-   - Importez votre dépôt GitHub
-   - Configurez le projet :
-     - Framework Preset: Next.js
-     - Root Directory: ./
-     - Build Command: prisma generate && next build
+#### Erreur SSL (PR_END_OF_FILE_ERROR)
 
-3. **Configurer la base de données PostgreSQL**
+Si vous rencontrez cette erreur :
 
-   - Dans le tableau de bord Vercel, allez dans "Storage" > "Create" > "Postgres"
-   - Suivez les instructions pour créer une nouvelle base de données
-   - Une fois créée, connectez-la à votre projet
+1. Vérifiez que l'URL de la base de données est correcte et inclut `?sslmode=require`
+2. Essayez d'accéder directement à `/accueil` ou `/diagnostic` pour contourner la page d'accueil
+3. Vérifiez les logs Vercel pour identifier les erreurs spécifiques
 
-4. **Configurer les variables d'environnement**
+## Maintenance
 
-   Dans les paramètres du projet Vercel, ajoutez les variables d'environnement suivantes :
-   
-   - `JWT_SECRET` : Une chaîne aléatoire longue et complexe pour sécuriser les JWT
-   - Les variables de connexion à la base de données seront automatiquement ajoutées si vous utilisez Vercel Postgres
+### Mise à jour des dépendances
 
-5. **Déployer**
+```bash
+npm update
+```
 
-   - Cliquez sur "Deploy"
-   - Vercel va construire et déployer votre application
+### Migration de la base de données
 
-6. **Exécuter les migrations Prisma**
-
-   Après le déploiement, vous devez exécuter les migrations Prisma pour créer les tables dans votre base de données :
-
-   ```bash
-   npx prisma migrate deploy
-   ```
-
-   Vous pouvez le faire via l'interface de ligne de commande Vercel ou configurer un script de déploiement.
-
-## Développement local
-
-1. Clonez le dépôt
-2. Installez les dépendances : `npm install`
-3. Copiez `.env.example` vers `.env` et configurez vos variables d'environnement
-4. Exécutez les migrations Prisma : `npx prisma migrate dev`
-5. Lancez le serveur de développement : `npm run dev`
+```bash
+npx prisma migrate dev --name nom-de-la-migration
+```
 
 ## Licence
 
-MIT
+Ce projet est sous licence privée. Tous droits réservés.

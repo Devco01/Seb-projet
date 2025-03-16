@@ -5,7 +5,7 @@ import MainLayout from '../components/MainLayout';
 import { FaPlus, FaSearch, FaEye, FaEdit, FaTrash, FaInfoCircle, FaFileInvoiceDollar, FaCheck } from 'react-icons/fa';
 import Link from 'next/link';
 
-// Données fictives pour les paiements
+// Donnees fictives pour les paiements
 const paiementsData = [
   { 
     id: 1, 
@@ -14,17 +14,17 @@ const paiementsData = [
     date: '20/06/2023', 
     montant: '2 500 €',
     methode: 'Virement bancaire',
-    statut: 'Reçu',
+    statut: 'Recu',
     statutColor: 'bg-green-100 text-green-800'
   },
   { 
     id: 2, 
     facture: 'F-2023-039', 
-    client: 'Résidences du Parc', 
+    client: 'Residences du Parc', 
     date: '15/06/2023', 
     montant: '1 950 €',
-    methode: 'Chèque',
-    statut: 'Reçu',
+    methode: 'Cheque',
+    statut: 'Recu',
     statutColor: 'bg-green-100 text-green-800'
   },
   { 
@@ -43,7 +43,7 @@ const paiementsData = [
     client: 'Dubois SARL', 
     date: '05/06/2023', 
     montant: '3 200 €',
-    methode: 'Espèces',
+    methode: 'Especes',
     statut: 'En attente',
     statutColor: 'bg-yellow-100 text-yellow-800'
   },
@@ -64,17 +64,17 @@ export default function Paiements() {
 
   // Fonction pour supprimer un paiement
   const handleDeletePaiement = (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
+    if (window.confirm('Etes-vous sur de vouloir supprimer ce paiement ?')) {
       setPaiements(paiements.filter(paiement => paiement.id !== id));
     }
   };
 
-  // Fonction pour marquer un paiement comme reçu
-  // Cette fonction sera implémentée ultérieurement
+  // Fonction pour marquer un paiement comme recu
+  // Cette fonction sera implementee ulterieurement
   const _handleMarkAsReceived = (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir marquer ce paiement comme reçu ?')) {
+    if (window.confirm('Etes-vous sur de vouloir marquer ce paiement comme recu ?')) {
       setPaiements(paiements.map(paiement => 
-        paiement.id === id ? { ...paiement, statut: 'Reçu' } : paiement
+        paiement.id === id ? { ...paiement, statut: 'Recu' } : paiement
       ));
     }
   };
@@ -84,7 +84,7 @@ export default function Paiements() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Paiements</h1>
-          <p className="text-gray-600">Suivez les paiements reçus et en attente</p>
+          <p className="text-gray-600">Suivez les paiements recus et en attente</p>
         </div>
         <Link 
           href="/paiements/nouveau" 
@@ -102,14 +102,14 @@ export default function Paiements() {
               <h3 className="font-bold text-blue-800">Actions disponibles pour les paiements</h3>
               <ul className="mt-2 text-sm text-blue-800 space-y-1">
                 <li className="flex items-center"><FaPlus className="mr-2" /> Enregistrer un nouveau paiement pour une facture existante</li>
-                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les détails d'un paiement</li>
-                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier les informations d'un paiement (date, méthode, montant)</li>
-                <li className="flex items-center"><FaFileInvoiceDollar className="mr-2" /> Accéder à la facture associée au paiement</li>
-                <li className="flex items-center"><FaCheck className="mr-2" /> Marquer un paiement en attente comme reçu</li>
-                <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer un paiement (après confirmation)</li>
+                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les details d'un paiement</li>
+                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier les informations d'un paiement (date, methode, montant)</li>
+                <li className="flex items-center"><FaFileInvoiceDollar className="mr-2" /> Acceder a la facture associee au paiement</li>
+                <li className="flex items-center"><FaCheck className="mr-2" /> Marquer un paiement en attente comme recu</li>
+                <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer un paiement (apres confirmation)</li>
               </ul>
               <p className="mt-2 text-sm text-blue-800">
-                Le tableau de bord des paiements vous permet de suivre les montants reçus et en attente, ainsi que les méthodes de paiement utilisées.
+                Le tableau de bord des paiements vous permet de suivre les montants recus et en attente, ainsi que les methodes de paiement utilisees.
               </p>
               <button 
                 onClick={() => setShowGuide(false)} 
@@ -143,7 +143,7 @@ export default function Paiements() {
               className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="Tous">Tous les paiements</option>
-              <option value="Reçu">Reçus</option>
+              <option value="Recu">Recus</option>
               <option value="En attente">En attente</option>
             </select>
           </div>
@@ -167,7 +167,7 @@ export default function Paiements() {
                 Montant
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Méthode
+                Methode
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Statut
@@ -222,17 +222,17 @@ export default function Paiements() {
         </table>
         {filteredPaiements.length === 0 && (
           <div className="p-6 text-center text-gray-500">
-            Aucun paiement trouvé.
+            Aucun paiement trouve.
           </div>
         )}
       </div>
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold mb-4">Résumé des paiements</h2>
+          <h2 className="text-xl font-bold mb-4">Resume des paiements</h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-gray-600">Total des paiements reçus</span>
+              <span className="text-gray-600">Total des paiements recus</span>
               <span className="font-medium">4 450 €</span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b">
@@ -247,18 +247,18 @@ export default function Paiements() {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold mb-4">Méthodes de paiement</h2>
+          <h2 className="text-xl font-bold mb-4">Methodes de paiement</h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center pb-2 border-b">
               <span className="text-gray-600">Virement bancaire</span>
               <span className="font-medium">4 300 €</span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-gray-600">Chèque</span>
+              <span className="text-gray-600">Cheque</span>
               <span className="font-medium">1 950 €</span>
             </div>
             <div className="flex justify-between items-center pb-2 border-b">
-              <span className="text-gray-600">Espèces</span>
+              <span className="text-gray-600">Especes</span>
               <span className="font-medium">3 200 €</span>
             </div>
           </div>

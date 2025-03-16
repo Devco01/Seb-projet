@@ -45,9 +45,13 @@ export function useFactures() {
   const [factures, setFactures] = useState<Facture[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Récupérer toutes les factures
   const fetchFactures = useCallback(async () => {
+    // Éviter les appels multiples si déjà en cours de chargement
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
     
@@ -58,6 +62,7 @@ export function useFactures() {
         setError(response.error);
       } else if (Array.isArray(response.data)) {
         setFactures(response.data);
+        setIsInitialized(true);
       }
     } catch (err) {
       setError('Erreur lors de la récupération des factures');
@@ -65,7 +70,7 @@ export function useFactures() {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, loading]);
 
   // Récupérer une facture par son ID
   const fetchFactureById = async (id: number) => {
@@ -212,10 +217,12 @@ export function useFactures() {
     return { totalHT, totalTVA, totalTTC };
   };
 
-  // Charger les factures au montage du composant
+  // Charger les factures au montage du composant, une seule fois
   useEffect(() => {
-    fetchFactures();
-  }, [fetchFactures]);
+    if (!isInitialized) {
+      fetchFactures();
+    }
+  }, [fetchFactures, isInitialized]);
 
   return {
     factures,
