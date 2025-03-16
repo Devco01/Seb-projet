@@ -1,82 +1,269 @@
-export default function PaiementsPage() {
-  // Donnees statiques pour la demonstration
-  const paiements = [
-    { id: 1, facture: 'FAC-2025-001', client: 'Dupont SAS', date: '25/01/2025', montant: 2450.50, mode: 'Virement' },
-    { id: 2, facture: 'FAC-2025-004', client: 'Petit Immobilier', date: '28/02/2025', montant: 5620.30, mode: 'Cheque' },
-    { id: 3, facture: 'FAC-2024-098', client: 'Dubois SARL', date: '15/12/2024', montant: 1850.75, mode: 'Carte' },
-    { id: 4, facture: 'FAC-2024-095', client: 'Martin Construction', date: '05/12/2024', montant: 3200.00, mode: 'Virement' },
-    { id: 5, facture: 'FAC-2024-092', client: 'Leroy Batiment', date: '28/11/2024', montant: 4750.25, mode: 'Especes' },
-  ];
+"use client";
 
-  // Fonction pour obtenir la couleur du mode de paiement
-  const getModeColor = (mode: string): string => {
-    switch (mode) {
-      case 'Virement': return '#3b82f6';
-      case 'Cheque': return '#8b5cf6';
-      case 'Carte': return '#10b981';
-      case 'Especes': return '#f59e0b';
-      default: return '#6b7280';
+import { useState } from 'react';
+import MainLayout from '../components/MainLayout';
+import { FaPlus, FaSearch, FaEye, FaEdit, FaTrash, FaInfoCircle, FaFileInvoiceDollar, FaCheck } from 'react-icons/fa';
+import Link from 'next/link';
+
+// Donnees fictives pour les paiements
+const paiementsData = [
+  { 
+    id: 1, 
+    facture: 'F-2023-042', 
+    client: 'Dupont SAS', 
+    date: '20/06/2023', 
+    montant: '2 500 €',
+    methode: 'Virement bancaire',
+    statut: 'Recu',
+    statutColor: 'bg-green-100 text-green-800'
+  },
+  { 
+    id: 2, 
+    facture: 'F-2023-039', 
+    client: 'Residences du Parc', 
+    date: '15/06/2023', 
+    montant: '1 950 €',
+    methode: 'Cheque',
+    statut: 'Recu',
+    statutColor: 'bg-green-100 text-green-800'
+  },
+  { 
+    id: 3, 
+    facture: 'F-2023-041', 
+    client: 'Martin Construction', 
+    date: '10/06/2023', 
+    montant: '1 800 €',
+    methode: 'Virement bancaire',
+    statut: 'En attente',
+    statutColor: 'bg-yellow-100 text-yellow-800'
+  },
+  { 
+    id: 4, 
+    facture: 'F-2023-040', 
+    client: 'Dubois SARL', 
+    date: '05/06/2023', 
+    montant: '3 200 €',
+    methode: 'Especes',
+    statut: 'En attente',
+    statutColor: 'bg-yellow-100 text-yellow-800'
+  },
+];
+
+export default function Paiements() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Tous');
+  const [paiements, setPaiements] = useState(paiementsData);
+  const [showGuide, setShowGuide] = useState(true);
+
+  // Filtrer les paiements en fonction du terme de recherche et du statut
+  const filteredPaiements = paiements.filter(paiement => 
+    (paiement.facture.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    paiement.client.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (statusFilter === 'Tous' || paiement.statut === statusFilter)
+  );
+
+  // Fonction pour supprimer un paiement
+  const handleDeletePaiement = (id: number) => {
+    if (window.confirm('Etes-vous sur de vouloir supprimer ce paiement ?')) {
+      setPaiements(paiements.filter(paiement => paiement.id !== id));
+    }
+  };
+
+  // Fonction pour marquer un paiement comme recu
+  // Cette fonction sera implementee ulterieurement
+  const _handleMarkAsReceived = (id: number) => {
+    if (window.confirm('Etes-vous sur de vouloir marquer ce paiement comme recu ?')) {
+      setPaiements(paiements.map(paiement => 
+        paiement.id === id ? { ...paiement, statut: 'Recu' } : paiement
+      ));
     }
   };
 
   return (
-    <div style={{maxWidth: '1200px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif'}}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px'}}>
-        <h1 style={{fontSize: '24px', fontWeight: 'bold', color: '#333'}}>Gestion des paiements</h1>
-        <a href="/paiements/nouveau" style={{padding: '8px 16px', backgroundColor: '#22c55e', color: 'white', borderRadius: '4px', textDecoration: 'none'}}>
-          Nouveau paiement
-        </a>
+    <MainLayout>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Paiements</h1>
+          <p className="text-gray-600">Suivez les paiements recus et en attente</p>
+        </div>
+        <Link 
+          href="/paiements/nouveau" 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+        >
+          <FaPlus className="mr-2" /> Nouveau paiement
+        </Link>
       </div>
-      
-      <div style={{backgroundColor: 'white', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden'}}>
-        <table style={{width: '100%', borderCollapse: 'collapse'}}>
-          <thead>
-            <tr style={{backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb'}}>
-              <th style={{padding: '12px 16px', textAlign: 'left'}}>Facture</th>
-              <th style={{padding: '12px 16px', textAlign: 'left'}}>Client</th>
-              <th style={{padding: '12px 16px', textAlign: 'left'}}>Date</th>
-              <th style={{padding: '12px 16px', textAlign: 'right'}}>Montant</th>
-              <th style={{padding: '12px 16px', textAlign: 'center'}}>Mode</th>
-              <th style={{padding: '12px 16px', textAlign: 'right'}}>Actions</th>
+
+      {showGuide && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-md">
+          <div className="flex items-start">
+            <FaInfoCircle className="text-blue-500 mt-1 mr-3" />
+            <div>
+              <h3 className="font-bold text-blue-800">Actions disponibles pour les paiements</h3>
+              <ul className="mt-2 text-sm text-blue-800 space-y-1">
+                <li className="flex items-center"><FaPlus className="mr-2" /> Enregistrer un nouveau paiement pour une facture existante</li>
+                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les details d'un paiement</li>
+                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier les informations d'un paiement (date, methode, montant)</li>
+                <li className="flex items-center"><FaFileInvoiceDollar className="mr-2" /> Acceder a la facture associee au paiement</li>
+                <li className="flex items-center"><FaCheck className="mr-2" /> Marquer un paiement en attente comme recu</li>
+                <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer un paiement (apres confirmation)</li>
+              </ul>
+              <p className="mt-2 text-sm text-blue-800">
+                Le tableau de bord des paiements vous permet de suivre les montants recus et en attente, ainsi que les methodes de paiement utilisees.
+              </p>
+              <button 
+                onClick={() => setShowGuide(false)} 
+                className="mt-2 text-sm text-blue-600 hover:underline"
+              >
+                Masquer ce guide
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Rechercher un paiement..."
+              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex-shrink-0">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Tous">Tous les paiements</option>
+              <option value="Recu">Recus</option>
+              <option value="En attente">En attente</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Facture
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Client
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Montant
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Methode
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Statut
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody>
-            {paiements.map((paiement) => (
-              <tr key={paiement.id} style={{borderBottom: '1px solid #e5e7eb'}}>
-                <td style={{padding: '12px 16px'}}>{paiement.facture}</td>
-                <td style={{padding: '12px 16px'}}>{paiement.client}</td>
-                <td style={{padding: '12px 16px'}}>{paiement.date}</td>
-                <td style={{padding: '12px 16px', textAlign: 'right'}}>{paiement.montant.toLocaleString('fr-FR', {style: 'currency', currency: 'EUR'})}</td>
-                <td style={{padding: '12px 16px', textAlign: 'center'}}>
-                  <span style={{display: 'inline-block', padding: '4px 8px', backgroundColor: getModeColor(paiement.mode), color: 'white', borderRadius: '4px', fontSize: '12px'}}>
-                    {paiement.mode}
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredPaiements.map((paiement) => (
+              <tr key={paiement.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                  {paiement.facture}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {paiement.client}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {paiement.date}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {paiement.montant}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {paiement.methode}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${paiement.statutColor}`}>
+                    {paiement.statut}
                   </span>
                 </td>
-                <td style={{padding: '12px 16px', textAlign: 'right'}}>
-                  <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px'}}>
-                    <a href={`/paiements/${paiement.id}`} style={{padding: '4px 8px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '4px', textDecoration: 'none', fontSize: '14px'}}>
-                      Voir
-                    </a>
-                    <a href={`/paiements/${paiement.id}/modifier`} style={{padding: '4px 8px', backgroundColor: '#eab308', color: 'white', borderRadius: '4px', textDecoration: 'none', fontSize: '14px'}}>
-                      Modifier
-                    </a>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex justify-end space-x-2">
+                    <Link href={`/paiements/${paiement.id}`} className="text-blue-600 hover:text-blue-900">
+                      <FaEye />
+                    </Link>
+                    <Link href={`/paiements/${paiement.id}/modifier`} className="text-green-600 hover:text-green-900">
+                      <FaEdit />
+                    </Link>
+                    <button 
+                      onClick={() => handleDeletePaiement(paiement.id)} 
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <FaTrash />
+                    </button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {filteredPaiements.length === 0 && (
+          <div className="p-6 text-center text-gray-500">
+            Aucun paiement trouve.
+          </div>
+        )}
       </div>
-      
-      <div style={{marginTop: '24px', textAlign: 'center'}}>
-        <a href="/" style={{padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', borderRadius: '4px', textDecoration: 'none'}}>
-          Retour a l'accueil
-        </a>
+
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold mb-4">Resume des paiements</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Total des paiements recus</span>
+              <span className="font-medium">4 450 €</span>
+            </div>
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Total des paiements en attente</span>
+              <span className="font-medium">5 000 €</span>
+            </div>
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Paiements du mois en cours</span>
+              <span className="font-medium">9 450 €</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold mb-4">Methodes de paiement</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Virement bancaire</span>
+              <span className="font-medium">4 300 €</span>
+            </div>
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Cheque</span>
+              <span className="font-medium">1 950 €</span>
+            </div>
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Especes</span>
+              <span className="font-medium">3 200 €</span>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <footer style={{marginTop: '32px', paddingTop: '16px', borderTop: '1px solid #ddd', textAlign: 'center', color: '#777'}}>
-        <p>© 2025 FacturePro - Peinture en batiment</p>
-      </footer>
-    </div>
+    </MainLayout>
   );
-}
+} 
