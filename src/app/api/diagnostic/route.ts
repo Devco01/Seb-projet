@@ -1,5 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+
+// Configuration pour le mode standalone
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

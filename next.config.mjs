@@ -8,21 +8,24 @@ const nextConfig = {
     // Désactiver les vérifications TypeScript pendant la construction
     ignoreBuildErrors: true,
   },
-  // Configuration minimale pour Vercel
+  
+  // Utiliser le mode standalone pour Vercel
   output: 'standalone',
   
   // Désactiver la compression pour éviter les problèmes de rendu
   compress: false,
   
-  // Augmenter le délai d'expiration pour les requêtes
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
-  },
-  
   // Configurer les packages externes pour les composants serveur
   serverExternalPackages: ['@prisma/client'],
+  
+  // Désactiver les images optimisées pour le déploiement statique
+  images: {
+    unoptimized: true,
+  },
+  
+  // Désactiver le middleware pour le déploiement statique
+  skipMiddlewareUrlNormalize: true,
+  skipTrailingSlashRedirect: true,
   
   // Configurer les en-têtes pour améliorer le chargement des ressources
   async headers() {
@@ -32,7 +35,16 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=3600, must-revalidate',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
