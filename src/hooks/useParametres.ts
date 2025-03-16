@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApi } from './useApi';
 
 export interface Parametres {
@@ -45,13 +45,13 @@ export interface ParametresFormData {
 }
 
 export function useParametres() {
-  const api = useApi<any>();
+  const api = useApi<Parametres>();
   const [parametres, setParametres] = useState<Parametres | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Récupérer les paramètres
-  const fetchParametres = async () => {
+  const fetchParametres = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -61,7 +61,7 @@ export function useParametres() {
       if (response.error) {
         setError(response.error);
       } else {
-        setParametres(response.data);
+        setParametres(response.data as Parametres);
       }
     } catch (err) {
       setError('Erreur lors de la récupération des paramètres');
@@ -69,7 +69,7 @@ export function useParametres() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
   // Mettre à jour les paramètres
   const updateParametres = async (parametresData: ParametresFormData) => {
@@ -132,7 +132,7 @@ export function useParametres() {
   // Charger les paramètres au montage du composant
   useEffect(() => {
     fetchParametres();
-  }, []);
+  }, [fetchParametres]);
 
   return {
     parametres,

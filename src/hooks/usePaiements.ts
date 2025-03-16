@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApi } from './useApi';
 import { Client } from './useClients';
 import { Facture } from './useFactures';
@@ -29,13 +29,13 @@ export interface PaiementFormData {
 }
 
 export function usePaiements() {
-  const api = useApi<any>();
+  const api = useApi<Paiement[] | Paiement>();
   const [paiements, setPaiements] = useState<Paiement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Récupérer tous les paiements
-  const fetchPaiements = async () => {
+  const fetchPaiements = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -44,7 +44,7 @@ export function usePaiements() {
       
       if (response.error) {
         setError(response.error);
-      } else {
+      } else if (Array.isArray(response.data)) {
         setPaiements(response.data);
       }
     } catch (err) {
@@ -53,7 +53,7 @@ export function usePaiements() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
   // Récupérer un paiement par son ID
   const fetchPaiementById = async (id: number) => {
@@ -182,7 +182,7 @@ export function usePaiements() {
   // Charger les paiements au montage du composant
   useEffect(() => {
     fetchPaiements();
-  }, []);
+  }, [fetchPaiements]);
 
   return {
     paiements,

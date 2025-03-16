@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApi } from './useApi';
 
 export interface Client {
@@ -33,13 +33,13 @@ export interface ClientFormData {
 }
 
 export function useClients() {
-  const api = useApi<any>();
+  const api = useApi<Client[] | Client>();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Récupérer tous les clients
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -48,7 +48,7 @@ export function useClients() {
       
       if (response.error) {
         setError(response.error);
-      } else {
+      } else if (Array.isArray(response.data)) {
         setClients(response.data);
       }
     } catch (err) {
@@ -57,7 +57,7 @@ export function useClients() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
   // Récupérer un client par son ID
   const fetchClientById = async (id: number) => {
@@ -163,7 +163,7 @@ export function useClients() {
   // Charger les clients au montage du composant
   useEffect(() => {
     fetchClients();
-  }, []);
+  }, [fetchClients]);
 
   return {
     clients,

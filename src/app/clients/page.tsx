@@ -92,14 +92,14 @@ export default function Clients() {
               <h3 className="font-bold text-blue-800">Actions disponibles pour les clients</h3>
               <ul className="mt-2 text-sm text-blue-800 space-y-1">
                 <li className="flex items-center"><FaPlus className="mr-2" /> Ajouter un nouveau client avec ses coordonnées complètes</li>
-                <li className="flex items-center"><FaEye className="mr-2" /> Consulter la fiche détaillée d'un client</li>
-                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier les informations d'un client</li>
+                <li className="flex items-center"><FaEye className="mr-2" /> Consulter la fiche détaillée d&apos;un client</li>
+                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier les informations d&apos;un client</li>
                 <li className="flex items-center"><FaFileContract className="mr-2" /> Créer un devis pour ce client (depuis la fiche client)</li>
                 <li className="flex items-center"><FaFileInvoiceDollar className="mr-2" /> Créer une facture pour ce client (depuis la fiche client)</li>
                 <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer un client (après confirmation)</li>
               </ul>
               <p className="mt-2 text-sm text-blue-800">
-                La fiche client vous permet également de consulter l'historique des devis et factures du client.
+                La fiche client vous permet également de consulter l&apos;historique des devis et factures du client.
               </p>
               <button 
                 onClick={() => setShowGuide(false)} 

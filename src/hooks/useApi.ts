@@ -14,7 +14,8 @@ interface ApiMethods<T> {
 }
 
 export function useApi<T>(): ApiMethods<T> {
-  const [loading, setLoading] = useState(false);
+  // État de chargement local pour les requêtes
+  const [__, setLoading] = useState(false);
 
   // Fonction générique pour les requêtes API
   const fetchApi = async <D>(
