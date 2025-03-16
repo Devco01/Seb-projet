@@ -1,81 +1,132 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from '../components/MainLayout';
 import { FaPlus, FaSearch, FaEye, FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaExchangeAlt, FaInfoCircle } from 'react-icons/fa';
 import Link from 'next/link';
 
-// Données fictives pour les devis
-const devisData = [
-  { 
-    id: 1, 
-    numero: 'D-2023-056', 
-    client: 'Dupont SAS', 
-    date: '20/06/2023', 
-    validite: '20/07/2023',
-    montant: '3 200 €',
-    statut: 'En attente',
-    statutColor: 'bg-yellow-100 text-yellow-800'
-  },
-  { 
-    id: 2, 
-    numero: 'D-2023-055', 
-    client: 'Martin Construction', 
-    date: '15/06/2023', 
-    validite: '15/07/2023',
-    montant: '2 450 €',
-    statut: 'Accepté',
-    statutColor: 'bg-green-100 text-green-800'
-  },
-  { 
-    id: 3, 
-    numero: 'D-2023-054', 
-    client: 'Dubois SARL', 
-    date: '10/06/2023', 
-    validite: '10/07/2023',
-    montant: '1 800 €',
-    statut: 'Refusé',
-    statutColor: 'bg-red-100 text-red-800'
-  },
-  { 
-    id: 4, 
-    numero: 'D-2023-053', 
-    client: 'Résidences du Parc', 
-    date: '05/06/2023', 
-    validite: '05/07/2023',
-    montant: '4 100 €',
-    statut: 'Converti en facture',
-    statutColor: 'bg-blue-100 text-blue-800'
-  },
-];
+// Type pour les devis
+type Devis = {
+  id: number;
+  numero: string;
+  date: string;
+  validite: string;
+  statut: string;
+  clientId: number;
+  client: {
+    id: number;
+    nom: string;
+    email: string;
+  };
+  totalHT: number;
+  totalTVA: number;
+  totalTTC: number;
+  conditions?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export default function Devis() {
+  const [devis, setDevis] = useState<Devis[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Tous');
-  const [devis, setDevis] = useState(devisData);
-  const [showGuide, setShowGuide] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [devisToDelete, setDevisToDelete] = useState<number | null>(null);
 
-  // Filtrer les devis en fonction du terme de recherche et du statut
-  const filteredDevis = devis.filter(devis => 
-    (devis.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    devis.client.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (statusFilter === 'Tous' || devis.statut === statusFilter)
-  );
-
-  // Fonction pour supprimer un devis
-  const handleDeleteDevis = (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
-      setDevis(devis.filter(d => d.id !== id));
+  // Fonction pour récupérer les devis
+  const fetchDevis = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      console.log('Tentative de récupération des devis...');
+      const response = await fetch('/api/devis');
+      
+      if (!response.ok) {
+        console.error('Réponse non OK:', response.status, response.statusText);
+        throw new Error('Erreur lors de la récupération des devis');
+      }
+      
+      const data = await response.json();
+      console.log('Données reçues:', data);
+      setDevis(data);
+    } catch (err) {
+      console.error('Erreur complète:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Fonction pour convertir un devis en facture
-  const handleConvertToInvoice = (id: number) => {
-    setDevis(devis.map(d => 
-      d.id === id 
-        ? { ...d, statut: 'Converti en facture', statutColor: 'bg-blue-100 text-blue-800' } 
-        : d
-    ));
+  // Récupérer les devis depuis l'API au chargement
+  useEffect(() => {
+    fetchDevis();
+  }, []);
+
+  // Filtrer les devis en fonction du terme de recherche
+  const filteredDevis = devis.filter(d => 
+    d.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.statut.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Gérer la suppression d'un devis
+  const handleDeleteDevis = async (id: number) => {
+    try {
+      const response = await fetch(`/api/devis/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors de la suppression du devis');
+      }
+      
+      // Mettre à jour la liste des devis
+      setDevis(devis.filter(d => d.id !== id));
+      setShowDeleteModal(false);
+      setDevisToDelete(null);
+    } catch (err) {
+      console.error('Erreur:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  // Ouvrir la modal de confirmation de suppression
+  const openDeleteModal = (id: number) => {
+    setDevisToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  // Formater un montant en euros
+  const formatMontant = (montant: number) => {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant);
+  };
+
+  // Formater une date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR');
+  };
+
+  // Obtenir la couleur pour le statut
+  const getStatusColor = (statut: string) => {
+    switch (statut.toLowerCase()) {
+      case 'brouillon':
+        return 'bg-gray-100 text-gray-800';
+      case 'envoyé':
+        return 'bg-blue-100 text-blue-800';
+      case 'accepté':
+        return 'bg-green-100 text-green-800';
+      case 'refusé':
+        return 'bg-red-100 text-red-800';
+      case 'expiré':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'facturé':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -83,162 +134,152 @@ export default function Devis() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Devis</h1>
-          <p className="text-gray-600">Gérez vos devis et suivez leur statut</p>
+          <p className="text-gray-600">Gérez vos devis et propositions commerciales</p>
         </div>
-        <Link 
-          href="/devis/nouveau" 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
-        >
-          <FaPlus className="mr-2" /> Nouveau devis
-        </Link>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => fetchDevis()}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center mr-2"
+          >
+            <FaSearch className="mr-2" /> Rafraîchir
+          </button>
+          <Link 
+            href="/devis/nouveau" 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+          >
+            <FaPlus className="mr-2" /> Nouveau devis
+          </Link>
+        </div>
       </div>
 
-      {showGuide && (
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-md">
-          <div className="flex items-start">
-            <FaInfoCircle className="text-blue-500 mt-1 mr-3" />
-            <div>
-              <h3 className="font-bold text-blue-800">Actions disponibles pour les devis</h3>
-              <ul className="mt-2 text-sm text-blue-800 space-y-1">
-                <li className="flex items-center"><FaPlus className="mr-2" /> Créer un nouveau devis avec détails client, prestations et conditions</li>
-                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les détails d&apos;un devis existant</li>
-                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier un devis (tant qu&apos;il n&apos;est pas converti en facture)</li>
-                <li className="flex items-center"><FaFileDownload className="mr-2" /> Télécharger le devis au format PDF</li>
-                <li className="flex items-center"><FaEnvelope className="mr-2" /> Envoyer le devis par email au client</li>
-                <li className="flex items-center"><FaExchangeAlt className="mr-2" /> Convertir un devis accepté en facture</li>
-                <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer un devis (après confirmation)</li>
-              </ul>
-              <button 
-                onClick={() => setShowGuide(false)} 
-                className="mt-2 text-sm text-blue-600 hover:underline"
-              >
-                Masquer ce guide
-              </button>
-            </div>
-          </div>
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="relative flex-1">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="p-4 border-b">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FaSearch className="text-gray-400" />
             </div>
             <input
               type="text"
               placeholder="Rechercher un devis..."
-              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex-shrink-0">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Tous">Tous les devis</option>
-              <option value="En attente">En attente</option>
-              <option value="Accepté">Acceptés</option>
-              <option value="Refusé">Refusés</option>
-              <option value="Converti en facture">Convertis en facture</option>
-            </select>
-          </div>
         </div>
-      </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Numéro
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Validité
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Montant
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Statut
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredDevis.map((devis) => (
-              <tr key={devis.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                  {devis.numero}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {devis.client}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {devis.date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {devis.validite}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {devis.montant}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${devis.statutColor}`}>
-                    {devis.statut}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex justify-end space-x-2">
-                    <Link href={`/devis/${devis.id}`} className="text-blue-600 hover:text-blue-900">
-                      <FaEye />
-                    </Link>
-                    <Link href={`/devis/${devis.id}/modifier`} className="text-green-600 hover:text-green-900">
-                      <FaEdit />
-                    </Link>
-                    <button className="text-purple-600 hover:text-purple-900">
-                      <FaFileDownload />
-                    </button>
-                    <button className="text-blue-600 hover:text-blue-900">
-                      <FaEnvelope />
-                    </button>
-                    {devis.statut === 'Accepté' && (
-                      <button 
-                        onClick={() => handleConvertToInvoice(devis.id)} 
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        <FaExchangeAlt />
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => handleDeleteDevis(devis.id)} 
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filteredDevis.length === 0 && (
-          <div className="p-6 text-center text-gray-500">
-            Aucun devis trouvé.
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Chargement des devis...</p>
+          </div>
+        ) : filteredDevis.length === 0 ? (
+          <div className="p-8 text-center">
+            <FaInfoCircle className="text-gray-400 text-4xl mx-auto mb-4" />
+            <p className="text-gray-600">Aucun devis trouvé</p>
+            {searchTerm ? (
+              <p className="text-gray-500 mt-2">Essayez de modifier votre recherche</p>
+            ) : (
+              <p className="text-gray-500 mt-2">Commencez par créer un nouveau devis</p>
+            )}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numéro</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredDevis.map((devis) => (
+                  <tr key={devis.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900 font-medium">{devis.numero}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900">{formatDate(devis.date)}</div>
+                      <div className="text-gray-500 text-sm">Validité: {formatDate(devis.validite)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900">{devis.client.nom}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-gray-900 font-medium">{formatMontant(devis.totalTTC)}</div>
+                      <div className="text-gray-500 text-sm">HT: {formatMontant(devis.totalHT)}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(devis.statut)}`}>
+                        {devis.statut}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end space-x-2">
+                        <Link href={`/devis/${devis.id}`} className="text-blue-600 hover:text-blue-900">
+                          <FaEye className="text-lg" title="Voir" />
+                        </Link>
+                        <Link href={`/devis/${devis.id}/edit`} className="text-green-600 hover:text-green-900">
+                          <FaEdit className="text-lg" title="Modifier" />
+                        </Link>
+                        <button 
+                          onClick={() => openDeleteModal(devis.id)} 
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <FaTrash className="text-lg" title="Supprimer" />
+                        </button>
+                        <Link href={`/devis/${devis.id}/pdf`} className="text-orange-600 hover:text-orange-900">
+                          <FaFileDownload className="text-lg" title="Télécharger PDF" />
+                        </Link>
+                        <Link href={`/devis/${devis.id}/email`} className="text-indigo-600 hover:text-indigo-900">
+                          <FaEnvelope className="text-lg" title="Envoyer par email" />
+                        </Link>
+                        <Link href={`/devis/${devis.id}/facture`} className="text-purple-600 hover:text-purple-900">
+                          <FaExchangeAlt className="text-lg" title="Convertir en facture" />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
+
+      {/* Modal de confirmation de suppression */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl border border-gray-200">
+            <h3 className="text-xl font-bold mb-4">Confirmer la suppression</h3>
+            <p className="mb-6 text-gray-600">Êtes-vous sûr de vouloir supprimer ce devis ? Cette action est irréversible.</p>
+            <div className="flex justify-end space-x-3">
+              <button 
+                onClick={() => setShowDeleteModal(false)} 
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={() => devisToDelete && handleDeleteDevis(devisToDelete)} 
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 } 
