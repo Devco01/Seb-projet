@@ -8,7 +8,18 @@ const nextConfig = {
     // Désactiver les vérifications TypeScript pendant la construction
     ignoreBuildErrors: true,
   },
-  compress: false,
+  // Activer la compression pour améliorer les performances
+  compress: true,
+  // Configuration pour les assets statiques
+  assetPrefix: process.env.NODE_ENV === 'production' ? undefined : undefined,
+  // Désactiver le minifieur pour faciliter le débogage
+  swcMinify: false,
+  // Configuration pour les images
+  images: {
+    domains: [],
+    unoptimized: true,
+  },
+  // Configuration pour le serveur
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
     serverActions: {
@@ -19,8 +30,8 @@ const nextConfig = {
   serverRuntimeConfig: {
     maxDuration: 60, // 60 secondes
   },
-  // Désactiver le minifieur pour faciliter le débogage
-  swcMinify: false,
+  // Configuration pour l'output
+  output: 'standalone',
 };
 
 export default nextConfig;
