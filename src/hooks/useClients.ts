@@ -41,11 +41,7 @@ export function useClients() {
 
   // Récupérer tous les clients
   const fetchClients = useCallback(async () => {
-    fix-infinite-loop
-    // Éviter les appels multiples si déjà en cours de chargement
-    
     // Éviter de charger les données si elles sont déjà en cours de chargement
-    main
     if (loading) return;
     
     setLoading(true);
@@ -175,23 +171,13 @@ export function useClients() {
     }
   };
 
- fix-infinite-loop
-  // Charger les clients au montage du composant, une seule fois
-  useEffect(() => {
-    if (!isInitialized) {
-      console.log("useEffect dans useClients déclenché - chargement initial");
-      fetchClients();
-    }
-  }, [fetchClients, isInitialized]);
-=======
   // Charger les clients au montage du composant, mais une seule fois
   useEffect(() => {
     if (!isInitialized && !loading) {
-      console.log("useEffect dans useClients déclenché - Premier chargement");
+      console.log("useEffect dans useClients déclenché - chargement initial");
       fetchClients();
     }
   }, [fetchClients, isInitialized, loading]);
- main
 
   return {
     clients,

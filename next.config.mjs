@@ -14,16 +14,15 @@ const nextConfig = {
   // Désactiver la compression pour éviter les problèmes de rendu
   compress: false,
   
-  // Optimiser le chargement des styles
-  optimizeFonts: true,
-  
   // Augmenter le délai d'expiration pour les requêtes
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
     serverActions: {
       bodySizeLimit: '2mb',
     },
   },
+  
+  // Configurer les packages externes pour les composants serveur
+  serverExternalPackages: ['@prisma/client'],
   
   // Configurer les en-têtes pour améliorer le chargement des ressources
   async headers() {
