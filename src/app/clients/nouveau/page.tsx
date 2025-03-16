@@ -4,8 +4,12 @@ import { useState } from 'react';
 import MainLayout from '../../components/MainLayout';
 import { FaSave, FaTimes } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useClients } from '@/hooks/useClients';
 
 export default function NouveauClient() {
+  const router = useRouter();
+  const { createClient, loading } = useClients();
   const [clientData, setClientData] = useState({
     nom: '',
     contact: '',
@@ -30,28 +34,24 @@ export default function NouveauClient() {
   };
 
   // Soumission du formulaire
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Formulaire soumis", clientData);
     
-    // Ici, vous enverriez les données à votre API
-    fetch('/api/clients', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(clientData),
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log("Réponse API:", data);
-      alert('Client ajouté avec succès !');
-      window.location.href = '/clients';
-    })
-    .catch(error => {
-      console.error("Erreur:", error);
+    try {
+      const result = await createClient(clientData);
+      if (result) {
+        console.log("Client créé avec succès:", result);
+        alert('Client ajouté avec succès !');
+        
+        // Utiliser le router Next.js pour la navigation
+        router.refresh(); // Force un rechargement des données
+        router.push('/clients');
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création du client:", error);
       alert('Erreur lors de l\'ajout du client');
-    });
+    }
   };
 
   return (
@@ -244,8 +244,9 @@ export default function NouveauClient() {
           <button 
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+            disabled={loading}
           >
-            <FaSave className="mr-2" /> Enregistrer
+            <FaSave className="mr-2" /> {loading ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>
       </form>

@@ -1,87 +1,81 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from '../components/MainLayout';
-import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaInfoCircle, FaFileInvoiceDollar, FaFileContract } from 'react-icons/fa';
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaInfoCircle, FaFileInvoiceDollar, FaFileContract, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
-
-// Données fictives pour les clients
-const clientsData = [
-  { 
-    id: 1, 
-    nom: 'Dupont SAS', 
-    contact: 'Jean Dupont', 
-    email: 'contact@dupont-sas.fr', 
-    telephone: '01 23 45 67 89', 
-    adresse: '15 rue des Lilas, 75001 Paris', 
-    dateCreation: '12/01/2023',
-    facturesTotal: 5,
-    montantTotal: '8 500 €'
-  },
-  { 
-    id: 2, 
-    nom: 'Martin Construction', 
-    contact: 'Sophie Martin', 
-    email: 'sophie@martin-construction.fr', 
-    telephone: '01 98 76 54 32', 
-    adresse: '8 avenue Victor Hugo, 69002 Lyon', 
-    dateCreation: '25/02/2023',
-    facturesTotal: 3,
-    montantTotal: '4 200 €'
-  },
-  { 
-    id: 3, 
-    nom: 'Dubois SARL', 
-    contact: 'Pierre Dubois', 
-    email: 'p.dubois@dubois-sarl.com', 
-    telephone: '03 45 67 89 01', 
-    adresse: '22 boulevard Gambetta, 33000 Bordeaux', 
-    dateCreation: '18/03/2023',
-    facturesTotal: 2,
-    montantTotal: '3 150 €'
-  },
-  { 
-    id: 4, 
-    nom: 'Résidences du Parc', 
-    contact: 'Marie Leroy', 
-    email: 'contact@residences-parc.fr', 
-    telephone: '04 56 78 90 12', 
-    adresse: '5 rue du Parc, 44000 Nantes', 
-    dateCreation: '02/04/2023',
-    facturesTotal: 1,
-    montantTotal: '1 850 €'
-  },
-];
+import { useClients } from '@/hooks/useClients';
+import { useRouter } from 'next/navigation';
 
 export default function Clients() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [clients, setClients] = useState(clientsData);
   const [showGuide, setShowGuide] = useState(true);
+  const router = useRouter();
+  
+  // Utiliser le hook useClients pour récupérer les clients
+  const { clients, loading, error, fetchClients } = useClients();
+  
+  // Forcer le rechargement des clients au montage du composant
+  useEffect(() => {
+    console.log("Page clients montée, rechargement des clients");
+    fetchClients();
+  }, [fetchClients]);
 
   // Filtrer les clients en fonction du terme de recherche
   const filteredClients = clients.filter(client => 
     client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.contact && client.contact.toLowerCase().includes(searchTerm.toLowerCase())) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Fonction pour supprimer un client
-  const handleDeleteClient = (id: number) => {
+  const handleDeleteClient = async (id: number) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
-      setClients(clients.filter(client => client.id !== id));
+      try {
+        const response = await fetch(`/api/clients/${id}`, {
+          method: 'DELETE',
+        });
+        
+        if (response.ok) {
+          // Recharger la liste des clients
+          fetchClients();
+          alert('Client supprimé avec succès');
+        } else {
+          const data = await response.json();
+          alert(`Erreur: ${data.error || 'Impossible de supprimer ce client'}`);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        alert('Une erreur est survenue lors de la suppression');
+      }
     }
+  };
+
+  // Fonction pour rafraîchir la page
+  const handleRefresh = () => {
+    console.log("Rafraîchissement manuel des clients");
+    fetchClients();
   };
 
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Clients</h2>
-        <Link
-          href="/clients/nouveau"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-        >
-          <FaPlus className="mr-2" /> Nouveau client
-        </Link>
+        <div className="flex space-x-2">
+          <button
+            onClick={handleRefresh}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md flex items-center"
+            disabled={loading}
+          >
+            {loading ? <FaSpinner className="animate-spin mr-2" /> : "Rafraîchir"}
+          </button>
+          <Link
+            href="/clients/nouveau"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+          >
+            <FaPlus className="mr-2" /> Nouveau client
+          </Link>
+        </div>
       </div>
 
       {showGuide && (
@@ -112,6 +106,12 @@ export default function Clients() {
         </div>
       )}
 
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md">
+          <p className="text-red-700">Erreur: {error}</p>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-4 border-b">
           <div className="flex items-center">
@@ -128,7 +128,12 @@ export default function Clients() {
           </div>
         </div>
 
-        {filteredClients.length > 0 ? (
+        {loading ? (
+          <div className="p-6 text-center">
+            <FaSpinner className="animate-spin inline-block mr-2" />
+            Chargement des clients...
+          </div>
+        ) : filteredClients.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -160,16 +165,16 @@ export default function Clients() {
                       <div className="font-medium text-gray-900">{client.nom}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{client.contact}</div>
+                      <div className="text-sm text-gray-900">{client.contact || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{client.email}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{client.telephone}</div>
+                      <div className="text-sm text-gray-900">{client.telephone || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{client.adresse.split(', ')[1]}</div>
+                      <div className="text-sm text-gray-900">{client.ville}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">

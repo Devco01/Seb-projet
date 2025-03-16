@@ -42,18 +42,24 @@ export function useClients() {
   const fetchClients = useCallback(async () => {
     setLoading(true);
     setError(null);
+    console.log("Récupération des clients en cours...");
     
     try {
       const response = await api.get('/api/clients');
       
       if (response.error) {
         setError(response.error);
+        console.error("Erreur lors de la récupération des clients:", response.error);
       } else if (Array.isArray(response.data)) {
+        console.log("Clients récupérés avec succès:", response.data);
         setClients(response.data);
+      } else {
+        console.error("Format de données inattendu:", response.data);
+        setError("Format de données inattendu");
       }
     } catch (err) {
       setError('Erreur lors de la récupération des clients');
-      console.error(err);
+      console.error("Exception lors de la récupération des clients:", err);
     } finally {
       setLoading(false);
     }
@@ -162,6 +168,7 @@ export function useClients() {
 
   // Charger les clients au montage du composant
   useEffect(() => {
+    console.log("useEffect dans useClients déclenché");
     fetchClients();
   }, [fetchClients]);
 
