@@ -49,149 +49,196 @@ const devisData = [
   },
 ];
 
-export default function DevisPage() {
-  // Données statiques pour la démonstration
-  const devis = [
-    { id: 1, numero: 'DEV-2025-001', client: 'Dupont SAS', date: '15/01/2025', montantTTC: 2450.50, statut: 'En attente' },
-    { id: 2, numero: 'DEV-2025-002', client: 'Martin Construction', date: '22/01/2025', montantTTC: 3780.00, statut: 'Accepté' },
-    { id: 3, numero: 'DEV-2025-003', client: 'Dubois SARL', date: '05/02/2025', montantTTC: 1250.75, statut: 'Refusé' },
-    { id: 4, numero: 'DEV-2025-004', client: 'Petit Immobilier', date: '18/02/2025', montantTTC: 5620.30, statut: 'En attente' },
-    { id: 5, numero: 'DEV-2025-005', client: 'Leroy Bâtiment', date: '03/03/2025', montantTTC: 4150.00, statut: 'Accepté' },
-  ];
+export default function Devis() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('Tous');
+  const [devis, setDevis] = useState(devisData);
+  const [showGuide, setShowGuide] = useState(true);
 
-  // Fonction pour obtenir la couleur du statut
-  const getStatusColor = (statut: string) => {
-    switch (statut) {
-      case 'Accepté': return '#22c55e'; // vert
-      case 'Refusé': return '#ef4444'; // rouge
-      case 'En attente': return '#f59e0b'; // orange
-      default: return '#6b7280'; // gris
+  // Filtrer les devis en fonction du terme de recherche et du statut
+  const filteredDevis = devis.filter(devis => 
+    (devis.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    devis.client.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (statusFilter === 'Tous' || devis.statut === statusFilter)
+  );
+
+  // Fonction pour supprimer un devis
+  const handleDeleteDevis = (id: number) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
+      setDevis(devis.filter(d => d.id !== id));
     }
   };
 
+  // Fonction pour convertir un devis en facture
+  const handleConvertToInvoice = (id: number) => {
+    setDevis(devis.map(d => 
+      d.id === id 
+        ? { ...d, statut: 'Converti en facture', statutColor: 'bg-blue-100 text-blue-800' } 
+        : d
+    ));
+  };
+
   return (
-    <div style={{ 
-      maxWidth: '1200px', 
-      margin: '0 auto', 
-      padding: '20px',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px'
-      }}>
-        <h1 style={{ 
-          fontSize: '24px', 
-          fontWeight: 'bold',
-          color: '#333'
-        }}>Gestion des devis</h1>
-        
-        <a href="/devis/nouveau" style={{
-          padding: '8px 16px',
-          backgroundColor: '#22c55e',
-          color: 'white',
-          borderRadius: '4px',
-          textDecoration: 'none'
-        }}>
-          Nouveau devis
-        </a>
+    <MainLayout>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Devis</h1>
+          <p className="text-gray-600">Gérez vos devis et suivez leur statut</p>
+        </div>
+        <Link 
+          href="/devis/nouveau" 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+        >
+          <FaPlus className="mr-2" /> Nouveau devis
+        </Link>
       </div>
-      
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '4px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        overflow: 'hidden'
-      }}>
-        <table style={{
-          width: '100%',
-          borderCollapse: 'collapse'
-        }}>
-          <thead>
-            <tr style={{
-              backgroundColor: '#f9fafb',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Numéro</th>
-              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Client</th>
-              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Date</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Montant TTC</th>
-              <th style={{ padding: '12px 16px', textAlign: 'center' }}>Statut</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+
+      {showGuide && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-md">
+          <div className="flex items-start">
+            <FaInfoCircle className="text-blue-500 mt-1 mr-3" />
+            <div>
+              <h3 className="font-bold text-blue-800">Actions disponibles pour les devis</h3>
+              <ul className="mt-2 text-sm text-blue-800 space-y-1">
+                <li className="flex items-center"><FaPlus className="mr-2" /> Créer un nouveau devis avec détails client, prestations et conditions</li>
+                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les détails d&apos;un devis existant</li>
+                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier un devis (tant qu&apos;il n&apos;est pas converti en facture)</li>
+                <li className="flex items-center"><FaFileDownload className="mr-2" /> Télécharger le devis au format PDF</li>
+                <li className="flex items-center"><FaEnvelope className="mr-2" /> Envoyer le devis par email au client</li>
+                <li className="flex items-center"><FaExchangeAlt className="mr-2" /> Convertir un devis accepté en facture</li>
+                <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer un devis (après confirmation)</li>
+              </ul>
+              <button 
+                onClick={() => setShowGuide(false)} 
+                className="mt-2 text-sm text-blue-600 hover:underline"
+              >
+                Masquer ce guide
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Rechercher un devis..."
+              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex-shrink-0">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Tous">Tous les devis</option>
+              <option value="En attente">En attente</option>
+              <option value="Accepté">Acceptés</option>
+              <option value="Refusé">Refusés</option>
+              <option value="Converti en facture">Convertis en facture</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Numéro
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Client
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Validité
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Montant
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Statut
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody>
-            {devis.map((devis) => (
-              <tr key={devis.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '12px 16px' }}>{devis.numero}</td>
-                <td style={{ padding: '12px 16px' }}>{devis.client}</td>
-                <td style={{ padding: '12px 16px' }}>{devis.date}</td>
-                <td style={{ padding: '12px 16px', textAlign: 'right' }}>{devis.montantTTC.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</td>
-                <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                  <span style={{
-                    display: 'inline-block',
-                    padding: '4px 8px',
-                    backgroundColor: getStatusColor(devis.statut),
-                    color: 'white',
-                    borderRadius: '4px',
-                    fontSize: '12px'
-                  }}>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredDevis.map((devis) => (
+              <tr key={devis.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                  {devis.numero}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {devis.client}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {devis.date}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {devis.validite}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {devis.montant}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${devis.statutColor}`}>
                     {devis.statut}
                   </span>
                 </td>
-                <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    <a href={`/devis/${devis.id}`} style={{
-                      padding: '4px 8px',
-                      backgroundColor: '#3b82f6',
-                      color: 'white',
-                      borderRadius: '4px',
-                      textDecoration: 'none',
-                      fontSize: '14px'
-                    }}>
-                      Voir
-                    </a>
-                    <a href={`/devis/${devis.id}/modifier`} style={{
-                      padding: '4px 8px',
-                      backgroundColor: '#eab308',
-                      color: 'white',
-                      borderRadius: '4px',
-                      textDecoration: 'none',
-                      fontSize: '14px'
-                    }}>
-                      Modifier
-                    </a>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex justify-end space-x-2">
+                    <Link href={`/devis/${devis.id}`} className="text-blue-600 hover:text-blue-900">
+                      <FaEye />
+                    </Link>
+                    <Link href={`/devis/${devis.id}/modifier`} className="text-green-600 hover:text-green-900">
+                      <FaEdit />
+                    </Link>
+                    <button className="text-purple-600 hover:text-purple-900">
+                      <FaFileDownload />
+                    </button>
+                    <button className="text-blue-600 hover:text-blue-900">
+                      <FaEnvelope />
+                    </button>
+                    {devis.statut === 'Accepté' && (
+                      <button 
+                        onClick={() => handleConvertToInvoice(devis.id)} 
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        <FaExchangeAlt />
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleDeleteDevis(devis.id)} 
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <FaTrash />
+                    </button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {filteredDevis.length === 0 && (
+          <div className="p-6 text-center text-gray-500">
+            Aucun devis trouvé.
+          </div>
+        )}
       </div>
-      
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
-        <a href="/" style={{
-          padding: '8px 16px',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          borderRadius: '4px',
-          textDecoration: 'none'
-        }}>
-          Retour à l'accueil
-        </a>
-      </div>
-      
-      <footer style={{ 
-        marginTop: '32px', 
-        paddingTop: '16px', 
-        borderTop: '1px solid #ddd', 
-        textAlign: 'center',
-        color: '#777'
-      }}>
-        <p>© 2025 FacturePro - Peinture en bâtiment</p>
-      </footer>
-    </div>
+    </MainLayout>
   );
 } 
