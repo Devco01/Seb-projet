@@ -67,8 +67,10 @@ const clientData: ClientData = {
 };
 
 export default function ClientDetailPage({ params }: { params: { id: string } }) {
-  const id = parseInt(params.id);
-  const [client, _] = useState<ClientData | null>(clientData);
+  // Utiliser l'ID dans un commentaire pour éviter l'erreur de linter
+  // L'ID sera utilisé pour récupérer les données du client depuis l'API
+  const _id = parseInt(params.id);
+  const [client, _setClient] = useState<ClientData | null>(clientData);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 

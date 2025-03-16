@@ -101,8 +101,8 @@ export default function Devis() {
               <h3 className="font-bold text-blue-800">Actions disponibles pour les devis</h3>
               <ul className="mt-2 text-sm text-blue-800 space-y-1">
                 <li className="flex items-center"><FaPlus className="mr-2" /> Créer un nouveau devis avec détails client, prestations et conditions</li>
-                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les détails d'un devis existant</li>
-                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier un devis (tant qu'il n'est pas converti en facture)</li>
+                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les détails d&apos;un devis existant</li>
+                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier un devis (tant qu&apos;il n&apos;est pas converti en facture)</li>
                 <li className="flex items-center"><FaFileDownload className="mr-2" /> Télécharger le devis au format PDF</li>
                 <li className="flex items-center"><FaEnvelope className="mr-2" /> Envoyer le devis par email au client</li>
                 <li className="flex items-center"><FaExchangeAlt className="mr-2" /> Convertir un devis accepté en facture</li>

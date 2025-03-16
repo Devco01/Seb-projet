@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApi } from './useApi';
 import { Client } from './useClients';
 import { LigneDevis } from './useDevis';
 
-export interface LigneFacture extends LigneDevis {}
+export interface LigneFacture extends LigneDevis {
+  // Propriétés spécifiques aux lignes de facture
+  factureId?: number;
+}
 
 export interface Facture {
   id: number;
@@ -38,13 +41,13 @@ export interface FactureFormData {
 }
 
 export function useFactures() {
-  const api = useApi<any>();
+  const api = useApi<Facture[] | Facture>();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Récupérer toutes les factures
-  const fetchFactures = async () => {
+  const fetchFactures = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -53,7 +56,7 @@ export function useFactures() {
       
       if (response.error) {
         setError(response.error);
-      } else {
+      } else if (Array.isArray(response.data)) {
         setFactures(response.data);
       }
     } catch (err) {
@@ -62,7 +65,7 @@ export function useFactures() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
   // Récupérer une facture par son ID
   const fetchFactureById = async (id: number) => {
@@ -212,7 +215,7 @@ export function useFactures() {
   // Charger les factures au montage du composant
   useEffect(() => {
     fetchFactures();
-  }, []);
+  }, [fetchFactures]);
 
   return {
     factures,

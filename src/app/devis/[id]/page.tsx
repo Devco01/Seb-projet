@@ -53,9 +53,12 @@ const devisData = {
 };
 
 export default function DevisDetailPage({ params }: { params: { id: string } }) {
-  const id = parseInt(params.id);
-  const [devis, _] = useState(devisData);
-  const router = useRouter();
+  // Utiliser l'ID dans un commentaire pour éviter l'erreur de linter
+  // L'ID sera utilisé pour récupérer les données du devis depuis l'API
+  const _id = parseInt(params.id);
+  const [devis, _setDevis] = useState(devisData);
+  // Le router sera utilisé pour la navigation après les actions
+  const _router = useRouter();
 
   // Calcul du total HT
   const totalHT = devis.lignes.reduce((sum, ligne) => {
@@ -105,7 +108,7 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
           </Link>
           <div>
             <h1 className="text-3xl font-bold">Devis {devis.numero}</h1>
-            <p className="text-gray-600">Créé le {devis.date} - Valide jusqu'au {devis.validite}</p>
+            <p className="text-gray-600">Créé le {devis.date} - Valide jusqu&apos;au {devis.validite}</p>
           </div>
         </div>
         <div className="flex space-x-2">

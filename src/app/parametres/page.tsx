@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import MainLayout from '../components/MainLayout';
-import { FaSave, FaUser, FaBuilding, FaFileInvoice, FaEnvelope, FaCreditCard } from 'react-icons/fa';
+import { FaBuilding, FaEnvelope, FaPhone, FaFileInvoiceDollar, FaSave, FaCreditCard } from 'react-icons/fa';
 
 export default function Parametres() {
   // Données fictives pour les paramètres
@@ -194,7 +194,7 @@ export default function Parametres() {
           {/* Paramètres de facturation */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center mb-4">
-              <FaFileInvoice className="text-green-600 mr-2" />
+              <FaFileInvoiceDollar className="text-green-600 mr-2" />
               <h2 className="text-xl font-bold">Paramètres de facturation</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -357,7 +357,7 @@ export default function Parametres() {
           {/* Informations bancaires */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center mb-4">
-              <FaCreditCard className="text-red-600 mr-2" />
+              <FaPhone className="text-red-600 mr-2" />
               <h2 className="text-xl font-bold">Informations bancaires</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

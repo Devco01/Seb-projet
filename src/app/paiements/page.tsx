@@ -70,12 +70,13 @@ export default function Paiements() {
   };
 
   // Fonction pour marquer un paiement comme reçu
-  const handleMarkAsReceived = (id: number) => {
-    setPaiements(paiements.map(paiement => 
-      paiement.id === id 
-        ? { ...paiement, statut: 'Reçu', statutColor: 'bg-green-100 text-green-800' } 
-        : paiement
-    ));
+  // Cette fonction sera implémentée ultérieurement
+  const _handleMarkAsReceived = (id: number) => {
+    if (window.confirm('Êtes-vous sûr de vouloir marquer ce paiement comme reçu ?')) {
+      setPaiements(paiements.map(paiement => 
+        paiement.id === id ? { ...paiement, statut: 'Reçu' } : paiement
+      ));
+    }
   };
 
   return (

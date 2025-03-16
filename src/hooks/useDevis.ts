@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApi } from './useApi';
 import { Client } from './useClients';
 
@@ -41,13 +41,13 @@ export interface DevisFormData {
 }
 
 export function useDevis() {
-  const api = useApi<any>();
+  const api = useApi<Devis[] | Devis>();
   const [devis, setDevis] = useState<Devis[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Récupérer tous les devis
-  const fetchDevis = async () => {
+  const fetchDevis = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -56,7 +56,7 @@ export function useDevis() {
       
       if (response.error) {
         setError(response.error);
-      } else {
+      } else if (Array.isArray(response.data)) {
         setDevis(response.data);
       }
     } catch (err) {
@@ -65,7 +65,7 @@ export function useDevis() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
   // Récupérer un devis par son ID
   const fetchDevisById = async (id: number) => {
@@ -215,7 +215,7 @@ export function useDevis() {
   // Charger les devis au montage du composant
   useEffect(() => {
     fetchDevis();
-  }, []);
+  }, [fetchDevis]);
 
   return {
     devis,
