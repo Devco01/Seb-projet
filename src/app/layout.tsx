@@ -30,20 +30,7 @@ export default function RootLayout({
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>" />
       </head>
       <body className={inter.className}>
-        <header>
-          <div className="container">
-            <h1>FacturePro</h1>
-            <p>Peinture en bâtiment</p>
-          </div>
-        </header>
-        <main>
-          {children}
-        </main>
-        <footer>
-          <div className="container">
-            <p>© 2025 FacturePro - Peinture en bâtiment</p>
-          </div>
-        </footer>
+        {children}
       </body>
     </html>
   );
