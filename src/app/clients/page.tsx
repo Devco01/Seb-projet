@@ -30,24 +30,32 @@ export default function Clients() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<number | null>(null);
 
-  // Récupérer les clients depuis l'API
-  useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const response = await fetch('/api/clients');
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des clients');
-        }
-        const data = await response.json();
-        setClients(data);
-      } catch (err) {
-        console.error('Erreur:', err);
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-      } finally {
-        setIsLoading(false);
+  // Fonction pour récupérer les clients
+  const fetchClients = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      console.log('Tentative de récupération des clients depuis le frontend...');
+      const response = await fetch('/api/clients');
+      
+      if (!response.ok) {
+        console.error('Réponse non OK:', response.status, response.statusText);
+        throw new Error('Erreur lors de la récupération des clients');
       }
-    };
+      
+      const data = await response.json();
+      console.log('Données reçues:', data);
+      setClients(data);
+    } catch (err) {
+      console.error('Erreur complète:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Récupérer les clients depuis l'API au chargement
+  useEffect(() => {
     fetchClients();
   }, []);
 
@@ -92,12 +100,20 @@ export default function Clients() {
           <h1 className="text-3xl font-bold">Clients</h1>
           <p className="text-gray-600">Gérez vos clients et leurs informations</p>
         </div>
-        <Link 
-          href="/clients/nouveau" 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
-        >
-          <FaPlus className="mr-2" /> Nouveau client
-        </Link>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => fetchClients()}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center mr-2"
+          >
+            <FaSearch className="mr-2" /> Rafraîchir
+          </button>
+          <Link 
+            href="/clients/nouveau" 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+          >
+            <FaPlus className="mr-2" /> Nouveau client
+          </Link>
+        </div>
       </div>
 
       {error && (
