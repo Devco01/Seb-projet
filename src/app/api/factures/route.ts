@@ -80,7 +80,13 @@ export async function POST(request: NextRequest) {
     let totalHT = 0;
     let totalTVA = 0;
 
-    lignes.forEach((ligne: any) => {
+    interface LigneFacture {
+      quantite: number;
+      prixUnitaire: number;
+      tva: number;
+    }
+
+    lignes.forEach((ligne: LigneFacture) => {
       const ligneHT = ligne.quantite * ligne.prixUnitaire;
       const ligneTVA = ligneHT * (ligne.tva / 100);
       

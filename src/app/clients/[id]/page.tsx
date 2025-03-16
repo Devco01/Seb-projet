@@ -1,173 +1,236 @@
 'use client';
 
 import { useState } from 'react';
-import MainLayout from '../../components/MainLayout';
+import MainLayout from '@/app/components/MainLayout';
 import { FaEdit, FaTrash, FaFileInvoiceDollar, FaFileContract, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+interface Devis {
+  id: number;
+  numero: string;
+  date: string;
+  montant: number;
+  statut: string;
+}
+
+interface Facture {
+  id: number;
+  numero: string;
+  date: string;
+  montant: number;
+  statut: string;
+}
+
+interface ClientData {
+  id: number;
+  nom: string;
+  contact: string;
+  email: string;
+  telephone: string;
+  adresse: string;
+  codePostal: string;
+  ville: string;
+  pays: string;
+  siret: string;
+  tva: string;
+  dateCreation: string;
+  notes: string;
+  devis: Devis[];
+  factures: Facture[];
+}
 
 // Données fictives pour un client
-const clientData = {
+const clientData: ClientData = {
   id: 1,
-  nom: 'Dupont SAS',
-  contact: 'Jean Dupont',
-  email: 'contact@dupont-sas.fr',
-  telephone: '01 23 45 67 89',
-  adresse: '15 rue des Lilas',
-  codePostal: '75001',
-  ville: 'Paris',
-  pays: 'France',
-  siret: '12345678901234',
-  tva: 'FR12345678901',
-  dateCreation: '12/01/2023',
-  notes: 'Client régulier, préfère être contacté par email.',
+  nom: "Entreprise ABC",
+  contact: "Jean Dupont",
+  email: "contact@entrepriseabc.fr",
+  telephone: "01 23 45 67 89",
+  adresse: "123 rue de la Paix",
+  codePostal: "75000",
+  ville: "Paris",
+  pays: "France",
+  siret: "12345678901234",
+  tva: "FR12345678901",
+  dateCreation: "2023-01-15",
+  notes: "Client fidèle depuis 2023. Préfère être contacté par email.",
   devis: [
-    { id: 1, numero: 'D-2023-056', date: '20/06/2023', montant: '3 200 €', statut: 'En attente' },
-    { id: 2, numero: 'D-2023-048', date: '05/06/2023', montant: '1 800 €', statut: 'Accepté' },
-    { id: 3, numero: 'D-2023-032', date: '15/05/2023', montant: '2 400 €', statut: 'Refusé' }
+    { id: 101, numero: "DEV-2023-0001", date: "2023-05-10", montant: 1200, statut: "Accepté" },
+    { id: 102, numero: "DEV-2023-0008", date: "2023-07-22", montant: 850, statut: "En attente" },
+    { id: 103, numero: "DEV-2023-0012", date: "2023-09-05", montant: 2300, statut: "Refusé" }
   ],
   factures: [
-    { id: 1, numero: 'F-2023-042', date: '15/06/2023', montant: '2 500 €', statut: 'Payée' },
-    { id: 2, numero: 'F-2023-035', date: '01/06/2023', montant: '1 800 €', statut: 'En attente' },
-    { id: 3, numero: 'F-2023-028', date: '15/05/2023', montant: '3 200 €', statut: 'Impayée' }
+    { id: 201, numero: "FACT-2023-0001", date: "2023-05-15", montant: 1200, statut: "Payée" },
+    { id: 202, numero: "FACT-2023-0010", date: "2023-08-01", montant: 1500, statut: "En attente" }
   ]
 };
 
-export default function DetailClient({ params }: { params: { id: string } }) {
-  const [client, setClient] = useState(clientData);
+export default function ClientDetailPage({ params }: { params: { id: string } }) {
+  const id = parseInt(params.id);
+  const [client, _] = useState<ClientData | null>(clientData);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   // Fonction pour supprimer le client
   const handleDelete = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
-      alert('Client supprimé avec succès !');
-      window.location.href = '/clients';
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce client ?")) {
+      setLoading(true);
+      // Simulation d'une suppression
+      setTimeout(() => {
+        setLoading(false);
+        alert("Client supprimé avec succès");
+        router.push("/clients");
+      }, 1000);
     }
   };
 
-  // Fonction pour créer un nouveau devis pour ce client
+  // Fonction pour créer un nouveau devis
   const handleCreateDevis = () => {
-    window.location.href = `/devis/nouveau?client=${client.id}`;
+    router.push(`/devis/nouveau?clientId=${client?.id}`);
   };
 
-  // Fonction pour créer une nouvelle facture pour ce client
+  // Fonction pour créer une nouvelle facture
   const handleCreateFacture = () => {
-    window.location.href = `/factures/nouveau?client=${client.id}`;
+    router.push(`/factures/nouveau?clientId=${client?.id}`);
   };
+
+  if (!client) {
+    return (
+      <MainLayout>
+        <div className="p-6">
+          <div className="flex items-center mb-6">
+            <Link href="/clients" className="flex items-center text-blue-600 hover:text-blue-800">
+              <FaArrowLeft className="mr-2" /> Retour à la liste des clients
+            </Link>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <p>Client non trouvé.</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
-      <div className="mb-6 flex justify-between items-center">
-        <div className="flex items-center">
-          <Link href="/clients" className="mr-4 text-blue-600 hover:text-blue-800">
-            <FaArrowLeft />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">{client.nom}</h1>
-            <p className="text-gray-600">Client depuis {client.dateCreation}</p>
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <Link href="/clients" className="flex items-center text-blue-600 hover:text-blue-800 mr-4">
+              <FaArrowLeft className="mr-2" /> Retour à la liste
+            </Link>
+            <h1 className="text-2xl font-bold">{client.nom}</h1>
+            <span className="ml-4 text-gray-500">Client depuis le {new Date(client.dateCreation).toLocaleDateString()}</span>
           </div>
-        </div>
-        <div className="flex space-x-2">
-          <button 
-            onClick={handleCreateDevis}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
-          >
-            <FaFileContract className="mr-2" /> Nouveau devis
-          </button>
-          <button 
-            onClick={handleCreateFacture}
-            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center"
-          >
-            <FaFileInvoiceDollar className="mr-2" /> Nouvelle facture
-          </button>
-          <Link 
-            href={`/clients/${params.id}/modifier`}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg flex items-center"
-          >
-            <FaEdit className="mr-2" /> Modifier
-          </Link>
-          <button 
-            onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg flex items-center"
-          >
-            <FaTrash className="mr-2" /> Supprimer
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-bold mb-4">Informations générales</h2>
-          <div className="space-y-2">
-            <p><span className="font-medium">Contact:</span> {client.contact}</p>
-            <p><span className="font-medium">Email:</span> {client.email}</p>
-            <p><span className="font-medium">Téléphone:</span> {client.telephone}</p>
+          <div className="flex space-x-2">
+            <button
+              onClick={handleCreateDevis}
+              className="bg-green-600 text-white px-4 py-2 rounded-md flex items-center hover:bg-green-700"
+            >
+              <FaFileContract className="mr-2" /> Nouveau devis
+            </button>
+            <button
+              onClick={handleCreateFacture}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md flex items-center hover:bg-blue-700"
+            >
+              <FaFileInvoiceDollar className="mr-2" /> Nouvelle facture
+            </button>
+            <Link
+              href={`/clients/${client.id}/modifier`}
+              className="bg-yellow-600 text-white px-4 py-2 rounded-md flex items-center hover:bg-yellow-700"
+            >
+              <FaEdit className="mr-2" /> Modifier
+            </Link>
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              className="bg-red-600 text-white px-4 py-2 rounded-md flex items-center hover:bg-red-700 disabled:bg-red-400"
+            >
+              <FaTrash className="mr-2" /> Supprimer
+            </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-bold mb-4">Adresse</h2>
-          <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Informations générales</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-600">Contact</p>
+                <p className="font-medium">{client.contact}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Email</p>
+                <p className="font-medium">{client.email}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Téléphone</p>
+                <p className="font-medium">{client.telephone}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Adresse</h2>
             <p>{client.adresse}</p>
             <p>{client.codePostal} {client.ville}</p>
             <p>{client.pays}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-bold mb-4">Informations fiscales</h2>
-          <div className="space-y-2">
-            <p><span className="font-medium">SIRET:</span> {client.siret}</p>
-            <p><span className="font-medium">N° TVA:</span> {client.tva}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Informations fiscales</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-600">SIRET</p>
+                <p className="font-medium">{client.siret}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">N° TVA</p>
+                <p className="font-medium">{client.tva}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Notes</h2>
+            <p>{client.notes}</p>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-lg font-bold mb-4">Notes</h2>
-        <p className="text-gray-700">{client.notes}</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-bold mb-4">Devis récents</h2>
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h2 className="text-xl font-semibold mb-4">Devis récents</h2>
           {client.devis.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Numéro
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Montant
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+              <table className="min-w-full bg-white">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="py-2 px-4 text-left">Numéro</th>
+                    <th className="py-2 px-4 text-left">Date</th>
+                    <th className="py-2 px-4 text-left">Montant</th>
+                    <th className="py-2 px-4 text-left">Statut</th>
+                    <th className="py-2 px-4 text-left">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {client.devis.map((devis) => (
-                    <tr key={devis.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap font-medium">
-                        {devis.numero}
+                <tbody>
+                  {client.devis.map((devis: Devis) => (
+                    <tr key={devis.id} className="border-t hover:bg-gray-50">
+                      <td className="py-2 px-4">{devis.numero}</td>
+                      <td className="py-2 px-4">{new Date(devis.date).toLocaleDateString()}</td>
+                      <td className="py-2 px-4">{devis.montant.toLocaleString()} €</td>
+                      <td className="py-2 px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          devis.statut === 'Accepté' ? 'bg-green-100 text-green-800' :
+                          devis.statut === 'Refusé' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {devis.statut}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {devis.date}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
-                        {devis.montant}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {devis.statut}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
-                        <Link href={`/devis/${devis.id}`} className="text-blue-600 hover:text-blue-900">
+                      <td className="py-2 px-4">
+                        <Link href={`/devis/${devis.id}`} className="text-blue-600 hover:text-blue-800">
                           Voir
                         </Link>
                       </td>
@@ -179,54 +242,39 @@ export default function DetailClient({ params }: { params: { id: string } }) {
           ) : (
             <p className="text-gray-500">Aucun devis pour ce client.</p>
           )}
-          <div className="mt-4 text-right">
-            <Link href={`/devis?client=${client.id}`} className="text-blue-600 hover:text-blue-900 text-sm">
-              Voir tous les devis
-            </Link>
-          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-bold mb-4">Factures récentes</h2>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Factures récentes</h2>
           {client.factures.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Numéro
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Montant
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+              <table className="min-w-full bg-white">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="py-2 px-4 text-left">Numéro</th>
+                    <th className="py-2 px-4 text-left">Date</th>
+                    <th className="py-2 px-4 text-left">Montant</th>
+                    <th className="py-2 px-4 text-left">Statut</th>
+                    <th className="py-2 px-4 text-left">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {client.factures.map((facture) => (
-                    <tr key={facture.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap font-medium">
-                        {facture.numero}
+                <tbody>
+                  {client.factures.map((facture: Facture) => (
+                    <tr key={facture.id} className="border-t hover:bg-gray-50">
+                      <td className="py-2 px-4">{facture.numero}</td>
+                      <td className="py-2 px-4">{new Date(facture.date).toLocaleDateString()}</td>
+                      <td className="py-2 px-4">{facture.montant.toLocaleString()} €</td>
+                      <td className="py-2 px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          facture.statut === 'Payée' ? 'bg-green-100 text-green-800' :
+                          facture.statut === 'En retard' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {facture.statut}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {facture.date}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
-                        {facture.montant}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {facture.statut}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
-                        <Link href={`/factures/${facture.id}`} className="text-blue-600 hover:text-blue-900">
+                      <td className="py-2 px-4">
+                        <Link href={`/factures/${facture.id}`} className="text-blue-600 hover:text-blue-800">
                           Voir
                         </Link>
                       </td>
@@ -238,11 +286,6 @@ export default function DetailClient({ params }: { params: { id: string } }) {
           ) : (
             <p className="text-gray-500">Aucune facture pour ce client.</p>
           )}
-          <div className="mt-4 text-right">
-            <Link href={`/factures?client=${client.id}`} className="text-blue-600 hover:text-blue-900 text-sm">
-              Voir toutes les factures
-            </Link>
-          </div>
         </div>
       </div>
     </MainLayout>

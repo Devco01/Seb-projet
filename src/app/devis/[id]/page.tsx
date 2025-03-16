@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import MainLayout from '../../components/MainLayout';
-import { FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaExchangeAlt, FaArrowLeft } from 'react-icons/fa';
+import { useState } from 'react';
+import MainLayout from '@/app/components/MainLayout';
+import { FaDownload, FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Données fictives pour un devis
 const devisData = {
@@ -51,8 +52,10 @@ const devisData = {
   notes: 'Devis valable pour une durée de 30 jours. Les travaux pourront commencer 2 semaines après acceptation du devis.'
 };
 
-export default function DetailDevis({ params }: { params: { id: string } }) {
-  const [devis, setDevis] = useState(devisData);
+export default function DevisDetailPage({ params }: { params: { id: string } }) {
+  const id = parseInt(params.id);
+  const [devis, _] = useState(devisData);
+  const router = useRouter();
 
   // Calcul du total HT
   const totalHT = devis.lignes.reduce((sum, ligne) => {
@@ -110,7 +113,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
             onClick={handleDownload}
             className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
-            <FaFileDownload className="mr-2" /> PDF
+            <FaDownload className="mr-2" /> PDF
           </button>
           <button 
             onClick={handleSendEmail}

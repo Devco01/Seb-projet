@@ -23,7 +23,7 @@ export async function GET() {
   } catch (error) {
     console.error('Erreur lors de la récupération des devis:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la récupération des devis' },
+      { message: 'Erreur lors de la récupération des devis' },
       { status: 500 }
     );
   }
@@ -35,35 +35,32 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     
     // Validation des données
-    if (!data.clientId || !data.date || !data.validite || !data.lignes || data.lignes.length === 0) {
+    const { clientId, date, validite, lignes } = data;
+    if (!clientId || !date || !validite || !lignes || !Array.isArray(lignes) || lignes.length === 0) {
       return NextResponse.json(
-        { error: 'Les champs clientId, date, validite et lignes sont obligatoires' },
+        { message: 'Données invalides. ClientId, date, validité et lignes sont requis' },
         { status: 400 }
       );
     }
     
     // Vérifier si le client existe
     const client = await prisma.client.findUnique({
-      where: { id: data.clientId },
+      where: { id: clientId },
     });
     
     if (!client) {
       return NextResponse.json(
-        { error: 'Client non trouvé' },
+        { message: 'Client non trouvé' },
         { status: 404 }
       );
     }
     
     // Générer un numéro de devis unique
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    
-    // Récupérer le dernier numéro de devis pour générer le suivant
+    const currentYear = new Date().getFullYear();
     const lastDevis = await prisma.devis.findFirst({
       where: {
         numero: {
-          startsWith: `D-${year}-`,
+          startsWith: `DEV-${currentYear}-`,
         },
       },
       orderBy: {
@@ -73,48 +70,48 @@ export async function POST(request: NextRequest) {
     
     let nextNumber = 1;
     if (lastDevis) {
-      const lastNumber = parseInt(lastDevis.numero.split('-')[2]);
+      const lastNumber = parseInt(lastDevis.numero.split('-').pop() || '0');
       nextNumber = lastNumber + 1;
     }
     
-    const numero = `D-${year}-${String(nextNumber).padStart(3, '0')}`;
+    const numeroDevis = `DEV-${currentYear}-${nextNumber.toString().padStart(4, '0')}`;
     
     // Calculer les totaux
     let totalHT = 0;
     let totalTVA = 0;
     
-    for (const ligne of data.lignes) {
+    lignes.forEach((ligne: any) => {
       const ligneHT = ligne.quantite * ligne.prixUnitaire;
       const ligneTVA = ligneHT * (ligne.tva / 100);
       
       totalHT += ligneHT;
       totalTVA += ligneTVA;
-    }
+    });
     
     const totalTTC = totalHT + totalTVA;
     
     // Créer le devis
-    const devis = await prisma.devis.create({
+    const nouveauDevis = await prisma.devis.create({
       data: {
-        numero,
-        clientId: data.clientId,
-        date: new Date(data.date),
-        validite: new Date(data.validite),
-        statut: 'En attente',
-        lignes: data.lignes,
-        conditions: data.conditions,
-        notes: data.notes,
+        numero: numeroDevis,
+        clientId,
+        date,
+        validite,
+        statut: data.statut || 'Brouillon',
+        lignes,
         totalHT,
         totalTVA,
         totalTTC,
+        conditions: data.conditions,
+        notes: data.notes,
       },
     });
     
-    return NextResponse.json(devis, { status: 201 });
+    return NextResponse.json(nouveauDevis);
   } catch (error) {
     console.error('Erreur lors de la création du devis:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la création du devis' },
+      { message: 'Erreur lors de la création du devis' },
       { status: 500 }
     );
   }
