@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING") // Utilisé par Vercel Postgres
+}
+
+// Modèle pour les clients
+model Client {
+  id         Int       @id @default(autoincrement())
+  nom        String
+  contact    String?
+  email      String
+  telephone  String?
+  adresse    String
+  codePostal String
+  ville      String
+  pays       String    @default("France")
+  siret      String?
+  tva        String?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  devis      Devis[]
+  factures   Facture[]
+  paiements  Paiement[]
+}
+
+// Modèle pour les devis
+model Devis {
+  id         Int       @id @default(autoincrement())
+  numero     String    @unique
+  clientId   Int
+  client     Client    @relation(fields: [clientId], references: [id])
+  date       DateTime
+  validite   DateTime
+  statut     String    @default("En attente") // En attente, Accepté, Refusé, Expiré
+  lignes     Json      // Stocké comme un tableau JSON de lignes
+  conditions String?
+  notes      String?
+  totalHT    Float
+  totalTVA   Float
+  totalTTC   Float
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  factures   Facture[]
+}
+
+// Modèle pour les factures
+model Facture {
+  id          Int       @id @default(autoincrement())
+  numero      String    @unique
+  clientId    Int
+  client      Client    @relation(fields: [clientId], references: [id])
+  devisId     Int?
+  devis       Devis?    @relation(fields: [devisId], references: [id])
+  date        DateTime
+  echeance    DateTime
+  statut      String    @default("En attente") // En attente, Payée, Retard, Annulée
+  lignes      Json      // Stocké comme un tableau JSON de lignes
+  conditions  String?
+  notes       String?
+  totalHT     Float
+  totalTVA    Float
+  totalTTC    Float
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  paiements   Paiement[]
+}
+
+// Modèle pour les paiements
+model Paiement {
+  id                  Int       @id @default(autoincrement())
+  reference           String    @unique
+  factureId           Int
+  facture             Facture   @relation(fields: [factureId], references: [id])
+  clientId            Int
+  client              Client    @relation(fields: [clientId], references: [id])
+  date                DateTime
+  montant             Float
+  methode             String    // Virement, Chèque, Espèces, Carte bancaire, Prélèvement
+  referenceTransaction String?
+  statut              String    @default("En attente") // En attente, Reçu
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+// Modèle pour les paramètres de l'entreprise
+model Parametres {
+  id                Int       @id @default(autoincrement())
+  nomEntreprise     String
+  adresse           String
+  codePostal        String
+  ville             String
+  telephone         String?
+  email             String
+  siret             String?
+  tva               String?
+  prefixeDevis      String    @default("D-")
+  prefixeFacture    String    @default("F-")
+  conditionsPaiement String?
+  mentionsTVA       String?
+  textePiedPage     String?
+  emailExpediteur   String?
+  objetDevis        String?
+  objetFacture      String?
+  messageDevis      String?
+  messageFacture    String?
+  iban              String?
+  bic               String?
+  nomBanque         String?
+  titulaire         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
