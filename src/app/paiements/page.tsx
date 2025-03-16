@@ -1,256 +1,268 @@
 "use client";
 
-import Layout from '../components/Layout';
-import Link from 'next/link';
-import { FaPlus, FaSearch, FaMoneyBillWave, FaEye, FaEdit, FaTrash, FaFileInvoiceDollar } from 'react-icons/fa';
 import { useState } from 'react';
+import MainLayout from '../components/MainLayout';
+import { FaPlus, FaSearch, FaEye, FaEdit, FaTrash, FaInfoCircle, FaFileInvoiceDollar, FaCheck } from 'react-icons/fa';
+import Link from 'next/link';
+
+// Données fictives pour les paiements
+const paiementsData = [
+  { 
+    id: 1, 
+    facture: 'F-2023-042', 
+    client: 'Dupont SAS', 
+    date: '20/06/2023', 
+    montant: '2 500 €',
+    methode: 'Virement bancaire',
+    statut: 'Reçu',
+    statutColor: 'bg-green-100 text-green-800'
+  },
+  { 
+    id: 2, 
+    facture: 'F-2023-039', 
+    client: 'Résidences du Parc', 
+    date: '15/06/2023', 
+    montant: '1 950 €',
+    methode: 'Chèque',
+    statut: 'Reçu',
+    statutColor: 'bg-green-100 text-green-800'
+  },
+  { 
+    id: 3, 
+    facture: 'F-2023-041', 
+    client: 'Martin Construction', 
+    date: '10/06/2023', 
+    montant: '1 800 €',
+    methode: 'Virement bancaire',
+    statut: 'En attente',
+    statutColor: 'bg-yellow-100 text-yellow-800'
+  },
+  { 
+    id: 4, 
+    facture: 'F-2023-040', 
+    client: 'Dubois SARL', 
+    date: '05/06/2023', 
+    montant: '3 200 €',
+    methode: 'Espèces',
+    statut: 'En attente',
+    statutColor: 'bg-yellow-100 text-yellow-800'
+  },
+];
 
 export default function Paiements() {
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Données fictives pour les paiements
-  const paiements = [
-    { 
-      id: 1, 
-      date: '15/03/2023', 
-      facture: 'F-2023-042', 
-      client: 'Dupont SAS', 
-      amount: '1 250 €', 
-      method: 'Virement bancaire',
-      reference: 'VIR-2023-0315-DUP'
-    },
-    { 
-      id: 2, 
-      date: '01/03/2023', 
-      facture: 'F-2023-040', 
-      client: 'Martin Immobilier', 
-      amount: '2 780 €', 
-      method: 'Chèque',
-      reference: 'CHQ-2023-0301-MAR'
-    },
-    { 
-      id: 3, 
-      date: '18/02/2023', 
-      facture: 'F-2023-038', 
-      client: 'Dubois et Fils', 
-      amount: '1 850 €', 
-      method: 'Virement bancaire',
-      reference: 'VIR-2023-0218-DUB'
-    },
-    { 
-      id: 4, 
-      date: '05/02/2023', 
-      facture: 'F-2023-037', 
-      client: 'Résidences du Parc', 
-      amount: '3 450 €', 
-      method: 'Virement bancaire',
-      reference: 'VIR-2023-0205-RES'
-    },
-    { 
-      id: 5, 
-      date: '28/01/2023', 
-      facture: 'F-2023-035', 
-      client: 'Leroy Construction', 
-      amount: '4 200 €', 
-      method: 'Chèque',
-      reference: 'CHQ-2023-0128-LER'
-    },
-  ];
+  const [statusFilter, setStatusFilter] = useState('Tous');
+  const [paiements, setPaiements] = useState(paiementsData);
+  const [showGuide, setShowGuide] = useState(true);
 
-  // Filtrer les paiements en fonction du terme de recherche
-  const filteredPaiements = paiements.filter(
-    (paiement) =>
-      paiement.facture.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      paiement.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      paiement.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      paiement.method.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filtrer les paiements en fonction du terme de recherche et du statut
+  const filteredPaiements = paiements.filter(paiement => 
+    (paiement.facture.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    paiement.client.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (statusFilter === 'Tous' || paiement.statut === statusFilter)
   );
 
+  // Fonction pour supprimer un paiement
+  const handleDeletePaiement = (id: number) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
+      setPaiements(paiements.filter(paiement => paiement.id !== id));
+    }
+  };
+
+  // Fonction pour marquer un paiement comme reçu
+  const handleMarkAsReceived = (id: number) => {
+    setPaiements(paiements.map(paiement => 
+      paiement.id === id 
+        ? { ...paiement, statut: 'Reçu', statutColor: 'bg-green-100 text-green-800' } 
+        : paiement
+    ));
+  };
+
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">Suivi des paiements</h1>
-          <Link
-            href="/paiements/nouveau"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700"
-          >
-            <FaPlus className="mr-2" /> Nouveau paiement
-          </Link>
+    <MainLayout>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Paiements</h1>
+          <p className="text-gray-600">Suivez les paiements reçus et en attente</p>
         </div>
+        <Link 
+          href="/paiements/nouveau" 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+        >
+          <FaPlus className="mr-2" /> Nouveau paiement
+        </Link>
+      </div>
 
-        {/* Filtres et recherche */}
-        <div className="bg-white shadow rounded-lg p-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0 md:space-x-4">
-            <div className="w-full md:w-1/3">
-              <label htmlFor="search" className="sr-only">
-                Rechercher
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaSearch className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  name="search"
-                  id="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
-                  placeholder="Rechercher un paiement..."
-                />
-              </div>
-            </div>
-            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
-              <select
-                id="method"
-                name="method"
-                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
+      {showGuide && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-md">
+          <div className="flex items-start">
+            <FaInfoCircle className="text-blue-500 mt-1 mr-3" />
+            <div>
+              <h3 className="font-bold text-blue-800">Actions disponibles pour les paiements</h3>
+              <ul className="mt-2 text-sm text-blue-800 space-y-1">
+                <li className="flex items-center"><FaPlus className="mr-2" /> Enregistrer un nouveau paiement pour une facture existante</li>
+                <li className="flex items-center"><FaEye className="mr-2" /> Consulter les détails d'un paiement</li>
+                <li className="flex items-center"><FaEdit className="mr-2" /> Modifier les informations d'un paiement (date, méthode, montant)</li>
+                <li className="flex items-center"><FaFileInvoiceDollar className="mr-2" /> Accéder à la facture associée au paiement</li>
+                <li className="flex items-center"><FaCheck className="mr-2" /> Marquer un paiement en attente comme reçu</li>
+                <li className="flex items-center"><FaTrash className="mr-2" /> Supprimer un paiement (après confirmation)</li>
+              </ul>
+              <p className="mt-2 text-sm text-blue-800">
+                Le tableau de bord des paiements vous permet de suivre les montants reçus et en attente, ainsi que les méthodes de paiement utilisées.
+              </p>
+              <button 
+                onClick={() => setShowGuide(false)} 
+                className="mt-2 text-sm text-blue-600 hover:underline"
               >
-                <option value="">Tous les modes de paiement</option>
-                <option value="virement">Virement bancaire</option>
-                <option value="cheque">Chèque</option>
-                <option value="especes">Espèces</option>
-                <option value="carte">Carte bancaire</option>
-              </select>
-              <select
-                id="sort"
-                name="sort"
-                className="block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm"
-              >
-                <option value="date-desc">Date (récent d'abord)</option>
-                <option value="date-asc">Date (ancien d'abord)</option>
-                <option value="amount-desc">Montant (élevé d'abord)</option>
-                <option value="amount-asc">Montant (faible d'abord)</option>
-              </select>
+                Masquer ce guide
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Rechercher un paiement..."
+              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex-shrink-0">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Tous">Tous les paiements</option>
+              <option value="Reçu">Reçus</option>
+              <option value="En attente">En attente</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Facture
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Client
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Montant
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Méthode
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Statut
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredPaiements.map((paiement) => (
+              <tr key={paiement.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                  {paiement.facture}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {paiement.client}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {paiement.date}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  {paiement.montant}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {paiement.methode}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${paiement.statutColor}`}>
+                    {paiement.statut}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex justify-end space-x-2">
+                    <Link href={`/paiements/${paiement.id}`} className="text-blue-600 hover:text-blue-900">
+                      <FaEye />
+                    </Link>
+                    <Link href={`/paiements/${paiement.id}/modifier`} className="text-green-600 hover:text-green-900">
+                      <FaEdit />
+                    </Link>
+                    <button 
+                      onClick={() => handleDeletePaiement(paiement.id)} 
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {filteredPaiements.length === 0 && (
+          <div className="p-6 text-center text-gray-500">
+            Aucun paiement trouvé.
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold mb-4">Résumé des paiements</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Total des paiements reçus</span>
+              <span className="font-medium">4 450 €</span>
+            </div>
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Total des paiements en attente</span>
+              <span className="font-medium">5 000 €</span>
+            </div>
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Paiements du mois en cours</span>
+              <span className="font-medium">9 450 €</span>
             </div>
           </div>
         </div>
 
-        {/* Liste des paiements */}
-        <div className="bg-white shadow overflow-hidden rounded-lg">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Facture
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Montant
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Mode de paiement
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Référence
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPaiements.map((paiement) => (
-                  <tr key={paiement.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {paiement.date}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
-                      <Link href={`/factures/${paiement.facture}`} className="hover:underline">
-                        {paiement.facture}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {paiement.client}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {paiement.amount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {paiement.method}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {paiement.reference}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
-                        <Link href={`/paiements/${paiement.id}`} className="text-blue-600 hover:text-blue-900" title="Voir">
-                          <FaEye />
-                        </Link>
-                        <Link href={`/paiements/${paiement.id}/modifier`} className="text-indigo-600 hover:text-indigo-900" title="Modifier">
-                          <FaEdit />
-                        </Link>
-                        <Link href={`/factures/${paiement.facture}`} className="text-green-600 hover:text-green-900" title="Voir la facture">
-                          <FaFileInvoiceDollar />
-                        </Link>
-                        <button className="text-red-600 hover:text-red-900" title="Supprimer">
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {filteredPaiements.length === 0 && (
-            <div className="px-6 py-4 text-center text-gray-500">
-              Aucun paiement trouvé.
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold mb-4">Méthodes de paiement</h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Virement bancaire</span>
+              <span className="font-medium">4 300 €</span>
             </div>
-          )}
-        </div>
-
-        {/* Rappels de paiement */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-            <h2 className="text-lg leading-6 font-medium text-gray-900">Rappels de paiement</h2>
-            <Link href="/parametres/rappels" className="text-sm text-yellow-600 hover:text-yellow-800">
-              Configurer les rappels
-            </Link>
-          </div>
-          <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-            <p className="text-sm text-gray-500 mb-4">
-              Configurez des rappels automatiques pour les factures impayées. Les rappels seront envoyés par email aux clients selon le calendrier que vous définissez.
-            </p>
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="border border-gray-200 rounded-md p-4 bg-gray-50">
-                <h3 className="text-sm font-medium text-gray-900">Premier rappel</h3>
-                <p className="mt-1 text-sm text-gray-500">3 jours après la date d'échéance</p>
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    Actif
-                  </span>
-                </div>
-              </div>
-              <div className="border border-gray-200 rounded-md p-4 bg-gray-50">
-                <h3 className="text-sm font-medium text-gray-900">Deuxième rappel</h3>
-                <p className="mt-1 text-sm text-gray-500">10 jours après la date d'échéance</p>
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    Actif
-                  </span>
-                </div>
-              </div>
-              <div className="border border-gray-200 rounded-md p-4 bg-gray-50">
-                <h3 className="text-sm font-medium text-gray-900">Rappel final</h3>
-                <p className="mt-1 text-sm text-gray-500">30 jours après la date d'échéance</p>
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    Inactif
-                  </span>
-                </div>
-              </div>
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Chèque</span>
+              <span className="font-medium">1 950 €</span>
+            </div>
+            <div className="flex justify-between items-center pb-2 border-b">
+              <span className="text-gray-600">Espèces</span>
+              <span className="font-medium">3 200 €</span>
             </div>
           </div>
         </div>
       </div>
-    </Layout>
+    </MainLayout>
   );
 } 
