@@ -49,9 +49,13 @@ export function useParametres() {
   const [parametres, setParametres] = useState<Parametres | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Récupérer les paramètres
   const fetchParametres = useCallback(async () => {
+    // Éviter les appels multiples si déjà en cours de chargement
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
     
@@ -62,6 +66,7 @@ export function useParametres() {
         setError(response.error);
       } else {
         setParametres(response.data as Parametres);
+        setIsInitialized(true);
       }
     } catch (err) {
       setError('Erreur lors de la récupération des paramètres');
@@ -69,7 +74,7 @@ export function useParametres() {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, loading]);
 
   // Mettre à jour les paramètres
   const updateParametres = async (parametresData: ParametresFormData) => {
@@ -129,10 +134,12 @@ export function useParametres() {
     }
   };
 
-  // Charger les paramètres au montage du composant
+  // Charger les paramètres au montage du composant, une seule fois
   useEffect(() => {
-    fetchParametres();
-  }, [fetchParametres]);
+    if (!isInitialized) {
+      fetchParametres();
+    }
+  }, [fetchParametres, isInitialized]);
 
   return {
     parametres,

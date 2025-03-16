@@ -33,9 +33,13 @@ export function usePaiements() {
   const [paiements, setPaiements] = useState<Paiement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Récupérer tous les paiements
   const fetchPaiements = useCallback(async () => {
+    // Éviter les appels multiples si déjà en cours de chargement
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
     
@@ -46,6 +50,7 @@ export function usePaiements() {
         setError(response.error);
       } else if (Array.isArray(response.data)) {
         setPaiements(response.data);
+        setIsInitialized(true);
       }
     } catch (err) {
       setError('Erreur lors de la récupération des paiements');
@@ -53,7 +58,7 @@ export function usePaiements() {
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, loading]);
 
   // Récupérer un paiement par son ID
   const fetchPaiementById = async (id: number) => {
@@ -179,10 +184,12 @@ export function usePaiements() {
     }
   };
 
-  // Charger les paiements au montage du composant
+  // Charger les paiements au montage du composant, une seule fois
   useEffect(() => {
-    fetchPaiements();
-  }, [fetchPaiements]);
+    if (!isInitialized) {
+      fetchPaiements();
+    }
+  }, [fetchPaiements, isInitialized]);
 
   return {
     paiements,
