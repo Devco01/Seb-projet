@@ -163,8 +163,31 @@ export default function NouveauDevis() {
         throw new Error('Veuillez sélectionner un client');
       }
       
-      if (lignes.some(ligne => !ligne.description || ligne.quantite <= 0)) {
-        throw new Error('Veuillez remplir correctement toutes les lignes du devis');
+      // Vérification détaillée des lignes avec logs pour déboguer
+      console.log("Lignes à valider:", JSON.stringify(lignes));
+      
+      const lignesInvalides = lignes.filter(ligne => 
+        !ligne.description.trim() || 
+        ligne.quantite <= 0 || 
+        ligne.prixUnitaire < 0 || 
+        isNaN(ligne.quantite) || 
+        isNaN(ligne.prixUnitaire) || 
+        isNaN(ligne.tva)
+      );
+      
+      if (lignesInvalides.length > 0) {
+        console.error("Lignes invalides détectées:", JSON.stringify(lignesInvalides));
+        
+        // Message d'erreur plus détaillé
+        const messages: string[] = [];
+        lignesInvalides.forEach((ligne, index) => {
+          if (!ligne.description.trim()) messages.push(`La description de la ligne ${index + 1} est vide`);
+          if (ligne.quantite <= 0 || isNaN(ligne.quantite)) messages.push(`La quantité de la ligne ${index + 1} est invalide`);
+          if (ligne.prixUnitaire < 0 || isNaN(ligne.prixUnitaire)) messages.push(`Le prix unitaire de la ligne ${index + 1} est invalide`);
+          if (isNaN(ligne.tva)) messages.push(`La TVA de la ligne ${index + 1} est invalide`);
+        });
+        
+        throw new Error(`Veuillez remplir correctement toutes les lignes du devis: ${messages.join(', ')}`);
       }
       
       // Préparer les données
@@ -185,6 +208,8 @@ export default function NouveauDevis() {
         totalTTC
       };
       
+      console.log("Données du devis à envoyer:", JSON.stringify(devisData));
+      
       // Envoi des données à l'API
       const response = await fetch('/api/devis', {
         method: 'POST',
@@ -196,6 +221,7 @@ export default function NouveauDevis() {
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Erreur API:", errorData);
         throw new Error(errorData.message || 'Erreur lors de la création du devis');
       }
       
