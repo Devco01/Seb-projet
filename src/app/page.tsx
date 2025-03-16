@@ -11,14 +11,17 @@ export default function Home() {
         </p>
         
         <div className="flex flex-wrap gap-4 mb-6">
-          <Link href="/accueil" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-            Aller à l'accueil complet
+          <Link href="/dashboard" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            Tableau de bord
           </Link>
-          <Link href="/test-home" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-            Tester la connexion
+          <Link href="/clients" className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+            Clients
           </Link>
-          <Link href="/diagnostic" className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-            Diagnostic
+          <Link href="/devis" className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+            Devis
+          </Link>
+          <Link href="/factures" className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+            Factures
           </Link>
         </div>
       </div>
@@ -80,7 +83,7 @@ export default function Home() {
             Cette page est une version statique de la page d'accueil, créée pour contourner les problèmes de connexion à la base de données.
           </p>
           <p>
-            Utilisez les liens de diagnostic pour tester la connexion à la base de données et identifier les problèmes.
+            Utilisez les liens ci-dessus pour accéder aux différentes fonctionnalités de l'application.
           </p>
         </div>
       </div>
