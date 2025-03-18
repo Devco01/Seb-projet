@@ -1,4 +1,3 @@
-@import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -52,17 +51,27 @@ main {
   }
 }
 
-/* Assurer le contraste et la lisibilité */
-.text-xs {
-  @apply leading-relaxed;
-}
+/* Classes utilitaires */
+@layer utilities {
+  /* Assurer le contraste et la lisibilité */
+  .text-xs {
+    line-height: 1.5;
+  }
 
-/* Affichage responsive des tableaux */
-.table-responsive {
-  @apply overflow-x-auto w-full;
-}
+  /* Affichage responsive des tableaux */
+  .table-responsive {
+    overflow-x: auto;
+    width: 100%;
+  }
 
-/* Classes d'adaptation mobile */
-.mobile-full-width {
-  @apply md:w-auto w-full;
+  /* Classes d'adaptation mobile */
+  .mobile-full-width {
+    width: 100%;
+  }
+
+  @screen md {
+    .mobile-full-width {
+      width: auto;
+    }
+  }
 }
