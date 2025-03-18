@@ -280,8 +280,8 @@ export default function NouveauDevis() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-4 md:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Client <span className="text-red-500">*</span>
@@ -336,68 +336,68 @@ export default function NouveauDevis() {
         <div className="mb-6">
           <h2 className="text-lg font-medium mb-4">Lignes du devis</h2>
           
-          <div className="overflow-x-auto">
+          <div className="table-responsive">
             <table className="w-full mb-4">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-2 text-left">Description</th>
-                  <th className="px-4 py-2 text-right">Quantité</th>
-                  <th className="px-4 py-2 text-right">Prix unitaire (€)</th>
-                  <th className="px-4 py-2 text-right">TVA (%)</th>
-                  <th className="px-4 py-2 text-right">Total (€)</th>
-                  <th className="px-4 py-2 text-center">Actions</th>
+                  <th className="px-2 md:px-4 py-2 text-left">Description</th>
+                  <th className="px-2 md:px-4 py-2 text-right">Qté</th>
+                  <th className="px-2 md:px-4 py-2 text-right">Prix €</th>
+                  <th className="px-2 md:px-4 py-2 text-right">TVA %</th>
+                  <th className="px-2 md:px-4 py-2 text-right">Total €</th>
+                  <th className="px-2 md:px-4 py-2 text-center w-10">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {lignes.map((ligne, index) => (
                   <tr key={index} className="border-b">
-                    <td className="px-4 py-2">
+                    <td className="px-2 md:px-4 py-2">
                       <input
                         type="text"
                         value={ligne.description}
                         onChange={(e) => handleLigneChange(index, 'description', e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Description du produit ou service"
+                        className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="Description"
                         required
                       />
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-2 md:px-4 py-2">
                       <input
                         type="number"
                         min="1"
                         step="1"
                         value={ligne.quantite}
                         onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                        className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-sm"
                         required
                       />
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-2 md:px-4 py-2">
                       <input
                         type="number"
                         min="0"
                         step="0.01"
                         value={ligne.prixUnitaire}
                         onChange={(e) => handleLigneChange(index, 'prixUnitaire', e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                        className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-sm"
                         required
                       />
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-2 md:px-4 py-2">
                       <input
                         type="number"
                         min="0"
                         step="0.1"
                         value={ligne.tva}
                         onChange={(e) => handleLigneChange(index, 'tva', e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+                        className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-sm"
                         required
                       />
                     </td>
-                    <td className="px-4 py-2 text-right font-medium">
+                    <td className="px-2 md:px-4 py-2 text-right font-medium text-sm">
                       {ligne.total.toFixed(2)} €
                     </td>
-                    <td className="px-4 py-2 text-center">
+                    <td className="px-2 md:px-4 py-2 text-center">
                       <button
                         type="button"
                         onClick={() => handleSupprimerLigne(index)}
@@ -416,13 +416,13 @@ export default function NouveauDevis() {
           <button
             type="button"
             onClick={handleAjouterLigne}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg flex items-center"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg flex items-center text-sm"
           >
             <FaPlus className="mr-2" /> Ajouter une ligne
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Conditions de paiement
@@ -449,7 +449,7 @@ export default function NouveauDevis() {
         </div>
 
         <div className="flex justify-end">
-          <div className="w-64">
+          <div className="w-full md:w-64">
             <div className="flex justify-between py-2 border-b">
               <span className="font-medium">Total HT:</span>
               <span>{totalHT.toFixed(2)} €</span>
