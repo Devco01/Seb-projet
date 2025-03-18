@@ -108,7 +108,7 @@ export default function Clients() {
         </div>
         <Link 
           href="/clients/nouveau/"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center w-full md:w-auto justify-center"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center w-full md:w-auto justify-center mt-4 md:mt-0"
         >
           <FaUserPlus className="mr-2" />
           Nouveau client
@@ -127,6 +127,49 @@ export default function Clients() {
           value={searchTerm}
           onChange={handleSearch}
         />
+      </div>
+
+      {/* Statistiques des clients */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total clients</p>
+              <p className="text-2xl font-bold text-gray-800">{clientsData.length}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <FaUsers className="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Devis créés</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {clientsData.reduce((sum, client) => sum + client.nbDevis, 0)}
+              </p>
+            </div>
+            <div className="p-3 bg-amber-100 rounded-full">
+              <FaFileAlt className="h-5 w-5 text-amber-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Factures émises</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {clientsData.reduce((sum, client) => sum + client.nbFactures, 0)}
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <FaFileInvoiceDollar className="h-5 w-5 text-green-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Liste des clients */}
