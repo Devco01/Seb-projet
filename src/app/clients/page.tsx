@@ -11,7 +11,9 @@ import {
   FaEnvelope,
   FaPhone,
   FaEye,
-  FaTrashAlt
+  FaTrashAlt,
+  FaMapMarkerAlt,
+  FaCalendarAlt
 } from "react-icons/fa";
 
 export default function Clients() {
@@ -96,19 +98,30 @@ export default function Clients() {
     }
   };
 
+  // Statut du client basé sur le nombre de factures et devis
+  const getClientStatus = (client) => {
+    if (client.nbFactures > 0) {
+      return "text-green-600";
+    } else if (client.nbDevis > 0) {
+      return "text-amber-600";
+    } else {
+      return "text-gray-600";
+    }
+  };
+
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
       {/* En-tête avec titre et actions */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-blue-800">Clients</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-blue-800">Clients</h2>
           <p className="text-gray-500">
             Gérez vos clients et leurs informations
           </p>
         </div>
         <Link 
           href="/clients/nouveau/"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center w-full md:w-auto justify-center mt-4 md:mt-0"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center w-full sm:w-auto justify-center mt-4 sm:mt-0"
         >
           <FaUserPlus className="mr-2" />
           Nouveau client
@@ -130,7 +143,7 @@ export default function Clients() {
       </div>
 
       {/* Statistiques des clients */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -172,8 +185,89 @@ export default function Clients() {
         </div>
       </div>
 
-      {/* Liste des clients */}
-      <div className="bg-white rounded-lg shadow">
+      {/* Liste des clients - Version mobile (cartes) */}
+      <div className="sm:hidden space-y-4">
+        {clients.length > 0 ? (
+          clients.map((client) => (
+            <div key={client.id} className="bg-white rounded-lg shadow p-4">
+              <div className="flex justify-between items-start">
+                <Link href={`/clients/${client.id}`} className="block">
+                  <h3 className={`font-medium text-lg ${getClientStatus(client)}`}>{client.nom}</h3>
+                </Link>
+                <div className="flex space-x-2">
+                  <Link href={`/clients/${client.id}`} className="text-blue-600 p-1">
+                    <FaEye title="Voir le détail" />
+                  </Link>
+                  <button 
+                    className="text-red-600 p-1"
+                    onClick={() => alert(`Supprimer le client ${client.nom}`)}
+                  >
+                    <FaTrashAlt title="Supprimer" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="mt-2">
+                <p className="text-gray-700 font-medium">{client.contact}</p>
+                <div className="mt-1 space-y-1 text-sm">
+                  <div className="flex items-center text-gray-500">
+                    <FaEnvelope className="mr-2 h-3 w-3" />
+                    <a href={`mailto:${client.email}`} className="hover:underline">{client.email}</a>
+                  </div>
+                  <div className="flex items-center text-gray-500">
+                    <FaPhone className="mr-2 h-3 w-3" />
+                    <a href={`tel:${client.telephone}`}>{client.telephone}</a>
+                  </div>
+                  <div className="flex items-center text-gray-500">
+                    <FaMapMarkerAlt className="mr-2 h-3 w-3" />
+                    <span>{client.adresse}</span>
+                  </div>
+                  <div className="flex items-center text-gray-500">
+                    <FaCalendarAlt className="mr-2 h-3 w-3" />
+                    <span>Créé le {client.dateCreation}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
+                <div className="flex space-x-3">
+                  <div className="flex items-center text-amber-600">
+                    <FaFileAlt className="mr-1" />
+                    <span>{client.nbDevis} devis</span>
+                  </div>
+                  <div className="flex items-center text-green-600">
+                    <FaFileInvoiceDollar className="mr-1" />
+                    <span>{client.nbFactures} factures</span>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <Link 
+                    href={`/devis/nouveau?client=${client.id}`} 
+                    className="bg-amber-100 text-amber-600 p-2 rounded-full"
+                  >
+                    <FaFileAlt title="Créer un devis" />
+                  </Link>
+                  <Link 
+                    href={`/factures/nouveau?client=${client.id}`} 
+                    className="bg-green-100 text-green-600 p-2 rounded-full"
+                  >
+                    <FaFileInvoiceDollar title="Créer une facture" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <FaUsers className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+            <p className="text-lg font-medium">Aucun client trouvé</p>
+            <p className="mt-1">Ajoutez un nouveau client ou modifiez votre recherche.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Liste des clients - Version desktop (table) */}
+      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
