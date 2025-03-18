@@ -194,17 +194,6 @@ export default function Clients() {
                 <Link href={`/clients/${client.id}`} className="block">
                   <h3 className={`font-medium text-lg ${getClientStatus(client)}`}>{client.nom}</h3>
                 </Link>
-                <div className="flex space-x-2">
-                  <Link href={`/clients/${client.id}`} className="text-blue-600 p-1">
-                    <FaEye title="Voir le détail" />
-                  </Link>
-                  <button 
-                    className="text-red-600 p-1"
-                    onClick={() => alert(`Supprimer le client ${client.nom}`)}
-                  >
-                    <FaTrashAlt title="Supprimer" />
-                  </button>
-                </div>
               </div>
               
               <div className="mt-2">
@@ -230,17 +219,10 @@ export default function Clients() {
               </div>
               
               <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
-                <div className="flex space-x-3">
-                  <div className="flex items-center text-amber-600">
-                    <FaFileAlt className="mr-1" />
-                    <span>{client.nbDevis} devis</span>
-                  </div>
-                  <div className="flex items-center text-green-600">
-                    <FaFileInvoiceDollar className="mr-1" />
-                    <span>{client.nbFactures} factures</span>
-                  </div>
-                </div>
                 <div className="flex space-x-2">
+                  <Link href={`/clients/${client.id}`} className="bg-blue-100 text-blue-600 p-2 rounded-full">
+                    <FaEye title="Voir le détail" />
+                  </Link>
                   <Link 
                     href={`/devis/nouveau?client=${client.id}`} 
                     className="bg-amber-100 text-amber-600 p-2 rounded-full"
@@ -253,6 +235,12 @@ export default function Clients() {
                   >
                     <FaFileInvoiceDollar title="Créer une facture" />
                   </Link>
+                  <button 
+                    className="bg-red-100 text-red-600 p-2 rounded-full"
+                    onClick={() => alert(`Supprimer le client ${client.nom}`)}
+                  >
+                    <FaTrashAlt title="Supprimer" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -320,11 +308,11 @@ export default function Clients() {
                     <div className="flex space-x-2">
                       <div className="flex items-center text-amber-600">
                         <FaFileAlt className="mr-1" />
-                        <span>{client.nbDevis}</span>
+                        <span>{client.nbDevis} devis</span>
                       </div>
                       <div className="flex items-center text-green-600">
                         <FaFileInvoiceDollar className="mr-1" />
-                        <span>{client.nbFactures}</span>
+                        <span>{client.nbFactures} factures</span>
                       </div>
                     </div>
                   </td>
