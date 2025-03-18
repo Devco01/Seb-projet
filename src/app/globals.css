@@ -1,7 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Base styles */
+/* @tailwind base; */
+/* @tailwind components; */
+/* @tailwind utilities; */
 
+/* Styles de base */
 :root {
   --background: #f5f7fa;
   --foreground: #333333;
@@ -51,27 +53,22 @@ main {
   }
 }
 
-/* Classes utilitaires */
-@layer utilities {
-  /* Assurer le contraste et la lisibilité */
-  .text-xs {
-    line-height: 1.5;
-  }
+/* Classes personnalisées */
+.text-xs {
+  line-height: 1.5;
+}
 
-  /* Affichage responsive des tableaux */
-  .table-responsive {
-    overflow-x: auto;
-    width: 100%;
-  }
+.table-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
 
-  /* Classes d'adaptation mobile */
+.mobile-full-width {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
   .mobile-full-width {
-    width: 100%;
-  }
-
-  @screen md {
-    .mobile-full-width {
-      width: auto;
-    }
+    width: auto;
   }
 }
