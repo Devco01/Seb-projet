@@ -1,9 +1,9 @@
-/* Base styles */
+/* Base styles - NE PAS MODIFIER CES IMPORTATIONS TAILWIND */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Styles de base */
+/* Styles personnalisés en dessous de cette ligne */
 :root {
   --background: #f5f7fa;
   --foreground: #333333;
