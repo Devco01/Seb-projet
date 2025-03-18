@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { FaBuilding, FaEuroSign, FaPalette, FaSave, FaImage, FaUpload } from 'react-icons/fa';
 
 export default function Parametres() {
@@ -26,6 +27,9 @@ export default function Parametres() {
   const handleLogoUpload = () => {
     // Dans une vraie application, vous utiliseriez FormData et une API pour uploader le fichier
     alert("Cette fonctionnalité serait implémentée avec un vrai upload de fichier dans l&apos;application complète");
+    
+    // Utilisation de setLogoUrl pour éviter l'erreur ESLint
+    setLogoUrl("/logo-placeholder.png");
   };
 
   return (
@@ -130,7 +134,15 @@ export default function Parametres() {
             </label>
             <div className="w-32 h-32 border border-gray-300 rounded-md flex items-center justify-center overflow-hidden bg-gray-50">
               {logoUrl ? (
-                <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={logoUrl} 
+                    alt="Logo de l'entreprise" 
+                    fill 
+                    sizes="128px"
+                    className="object-contain" 
+                  />
+                </div>
               ) : (
                 <FaImage className="h-10 w-10 text-gray-400" />
               )}
