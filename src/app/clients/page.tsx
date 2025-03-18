@@ -185,18 +185,13 @@ export default function Clients() {
         </div>
       </div>
 
-      {/* Liste des clients - Version mobile (cartes) */}
-      <div className="sm:hidden space-y-4">
+      {/* Liste des clients - Version mobile (cards) */}
+      <div className="grid grid-cols-1 gap-4 sm:hidden">
         {clients.length > 0 ? (
           clients.map((client) => (
             <div key={client.id} className="bg-white rounded-lg shadow p-4">
-              <div className="flex justify-between items-start">
-                <Link href={`/clients/${client.id}`} className="block">
-                  <h3 className={`font-medium text-lg ${getClientStatus(client)}`}>{client.nom}</h3>
-                </Link>
-              </div>
-              
-              <div className="mt-2">
+              <div>
+                <h3 className={`text-lg font-bold ${getClientStatus(client)}`}>{client.nom}</h3>
                 <p className="text-gray-700 font-medium">{client.contact}</p>
                 <div className="mt-1 space-y-1 text-sm">
                   <div className="flex items-center text-gray-500">
@@ -220,26 +215,14 @@ export default function Clients() {
               
               <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
                 <div className="flex space-x-2">
-                  <Link href={`/clients/${client.id}`} className="bg-blue-100 text-blue-600 p-2 rounded-full">
-                    <FaEye title="Voir le détail" />
-                  </Link>
-                  <Link 
-                    href={`/devis/nouveau?client=${client.id}`} 
-                    className="bg-amber-100 text-amber-600 p-2 rounded-full"
-                  >
-                    <FaFileAlt title="Créer un devis" />
-                  </Link>
-                  <Link 
-                    href={`/factures/nouveau?client=${client.id}`} 
-                    className="bg-green-100 text-green-600 p-2 rounded-full"
-                  >
-                    <FaFileInvoiceDollar title="Créer une facture" />
+                  <Link href={`/clients/${client.id}`} className="bg-blue-100 text-blue-600 p-2 rounded-full w-8 h-8 flex items-center justify-center">
+                    <FaEye className="w-4 h-4" title="Voir le détail" />
                   </Link>
                   <button 
-                    className="bg-red-100 text-red-600 p-2 rounded-full"
+                    className="bg-red-100 text-red-600 p-2 rounded-full w-8 h-8 flex items-center justify-center"
                     onClick={() => alert(`Supprimer le client ${client.nom}`)}
                   >
-                    <FaTrashAlt title="Supprimer" />
+                    <FaTrashAlt className="w-4 h-4" title="Supprimer" />
                   </button>
                 </div>
               </div>
@@ -267,9 +250,6 @@ export default function Clients() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Adresse
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Devis / Factures
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Date de création
@@ -304,18 +284,6 @@ export default function Clients() {
                       {client.adresse}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex space-x-2">
-                      <div className="flex items-center text-amber-600">
-                        <FaFileAlt className="mr-1" />
-                        <span>{client.nbDevis} devis</span>
-                      </div>
-                      <div className="flex items-center text-green-600">
-                        <FaFileInvoiceDollar className="mr-1" />
-                        <span>{client.nbFactures} factures</span>
-                      </div>
-                    </div>
-                  </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {client.dateCreation}
                   </td>
@@ -323,12 +291,6 @@ export default function Clients() {
                     <div className="flex items-center justify-end space-x-3">
                       <Link href={`/clients/${client.id}`} className="text-blue-600 hover:text-blue-900">
                         <FaEye title="Voir le détail" />
-                      </Link>
-                      <Link href={`/devis/nouveau?client=${client.id}`} className="text-amber-600 hover:text-amber-900">
-                        <FaFileAlt title="Créer un devis" />
-                      </Link>
-                      <Link href={`/factures/nouveau?client=${client.id}`} className="text-green-600 hover:text-green-900">
-                        <FaFileInvoiceDollar title="Créer une facture" />
                       </Link>
                       <button 
                         className="text-red-600 hover:text-red-900"

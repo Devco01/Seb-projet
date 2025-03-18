@@ -17,8 +17,6 @@ type Client = {
   codePostal?: string;
   ville?: string;
   pays?: string;
-  siret?: string;
-  tva?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -35,8 +33,6 @@ export default function ModifierClient({ params }: { params: { id: string } }) {
     codePostal: '',
     ville: '',
     pays: '',
-    siret: '',
-    tva: '',
     notes: ''
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -67,8 +63,6 @@ export default function ModifierClient({ params }: { params: { id: string } }) {
           codePostal: client.codePostal || '',
           ville: client.ville || '',
           pays: client.pays || '',
-          siret: client.siret || '',
-          tva: client.tva || '',
           notes: client.notes || ''
         });
       } catch (err) {
@@ -284,34 +278,6 @@ export default function ModifierClient({ params }: { params: { id: string } }) {
                 id="pays"
                 name="pays"
                 value={formData.pays}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-medium mb-2" htmlFor="siret">
-                SIRET
-              </label>
-              <input
-                type="text"
-                id="siret"
-                name="siret"
-                value={formData.siret}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 font-medium mb-2" htmlFor="tva">
-                N° TVA
-              </label>
-              <input
-                type="text"
-                id="tva"
-                name="tva"
-                value={formData.tva}
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

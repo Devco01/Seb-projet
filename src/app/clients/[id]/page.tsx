@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from '@/app/components/MainLayout';
 import { FaEdit, FaTrash, FaFileInvoiceDollar, FaFileContract, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
@@ -32,8 +32,6 @@ interface ClientData {
   codePostal: string;
   ville: string;
   pays: string;
-  siret: string;
-  tva: string;
   dateCreation: string;
   notes: string;
   devis: Devis[];
@@ -51,8 +49,6 @@ const clientData: ClientData = {
   codePostal: "75000",
   ville: "Paris",
   pays: "France",
-  siret: "12345678901234",
-  tva: "FR12345678901",
   dateCreation: "2023-01-15",
   notes: "Client fidèle depuis 2023. Préfère être contacté par email.",
   devis: [
@@ -67,12 +63,37 @@ const clientData: ClientData = {
 };
 
 export default function ClientDetailPage({ params }: { params: { id: string } }) {
-  // Utiliser l'ID dans un commentaire pour éviter l'erreur de linter
-  // L'ID sera utilisé pour récupérer les données du client depuis l'API
-  const _id = parseInt(params.id);
-  const [client, _setClient] = useState<ClientData | null>(clientData);
+  const [client, setClient] = useState<ClientData | null>(clientData);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Effet pour charger les données du client basé sur l'ID
+  useEffect(() => {
+    // Cette fonction sera utilisée pour charger les vraies données depuis l'API
+    // Pour l'instant, nous utilisons des données fictives
+    console.log(`Chargement du client avec ID: ${params.id}`);
+    
+    const fetchClient = async () => {
+      try {
+        setLoading(true);
+        // Simulation d'un appel API
+        // Dans une vraie implémentation, nous ferions un fetch ici
+        setTimeout(() => {
+          // Nous réutilisons les données fictives mais avec l'ID du paramètre
+          setClient({
+            ...clientData,
+            id: parseInt(params.id)
+          });
+          setLoading(false);
+        }, 500);
+      } catch (error) {
+        console.error("Erreur lors du chargement du client:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchClient();
+  }, [params.id]);
 
   // Fonction pour supprimer le client
   const handleDelete = () => {
@@ -183,22 +204,22 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Informations fiscales</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-gray-600">SIRET</p>
-                <p className="font-medium">{client.siret}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">N° TVA</p>
-                <p className="font-medium">{client.tva}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Notes</h2>
             <p>{client.notes}</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Statistiques</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-600">Nombre de devis</p>
+                <p className="font-medium">{client.devis.length}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Nombre de factures</p>
+                <p className="font-medium">{client.factures.length}</p>
+              </div>
+            </div>
           </div>
         </div>
 

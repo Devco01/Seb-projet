@@ -57,10 +57,16 @@ export default function NouvelleFacture() {
           throw new Error('Erreur lors de la récupération des clients');
         }
         const data = await response.json();
-        setClients(data);
+        if (Array.isArray(data)) {
+          setClients(data);
+        } else {
+          console.error('Les données clients reçues ne sont pas un tableau:', data);
+          setClients([]);
+        }
       } catch (err) {
         console.error('Erreur:', err);
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        setClients([]);
       } finally {
         setIsLoadingClients(false);
       }
@@ -78,13 +84,19 @@ export default function NouvelleFacture() {
           throw new Error('Erreur lors de la récupération des devis');
         }
         const data = await response.json();
-        // Filtrer les devis qui peuvent être convertis en factures (statut accepté)
-        const devisConvertibles = data.filter((devis: Devis) => 
-          devis.statut?.toLowerCase() === 'accepté' || devis.statut?.toLowerCase() === 'envoyé'
-        );
-        setDevisList(devisConvertibles);
+        if (Array.isArray(data)) {
+          // Filtrer les devis qui peuvent être convertis en factures (statut accepté)
+          const devisConvertibles = data.filter((devis: Devis) => 
+            devis.statut?.toLowerCase() === 'accepté' || devis.statut?.toLowerCase() === 'envoyé'
+          );
+          setDevisList(devisConvertibles);
+        } else {
+          console.error('Les données devis reçues ne sont pas un tableau:', data);
+          setDevisList([]);
+        }
       } catch (err) {
         console.error('Erreur:', err);
+        setDevisList([]);
       } finally {
         setIsLoadingDevis(false);
       }
@@ -302,20 +314,20 @@ export default function NouvelleFacture() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex justify-between items-center">
+    <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Nouvelle facture</h1>
           <p className="text-gray-600">Créez une nouvelle facture pour un client</p>
         </div>
-        <div className="flex space-x-2">
-          <Link 
-            href="/factures" 
+        <div className="flex space-x-2 mt-4 sm:mt-0">
+          <Link
+            href="/factures"
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center"
           >
             <FaTimes className="mr-2" /> Annuler
           </Link>
-          <button 
+          <button
             onClick={handleSubmit}
             disabled={isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
@@ -355,11 +367,13 @@ export default function NouvelleFacture() {
               {isLoadingClients ? (
                 <option value="" disabled>Chargement des clients...</option>
               ) : (
+                Array.isArray(clients) ? 
                 clients.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.nom}
                   </option>
-                ))
+                )) : 
+                <option value="" disabled>Erreur lors du chargement des clients</option>
               )}
             </select>
           </div>
@@ -403,11 +417,13 @@ export default function NouvelleFacture() {
               {isLoadingDevis ? (
                 <option value="" disabled>Chargement des devis...</option>
               ) : (
+                Array.isArray(devisList) ? 
                 devisList.map((devis) => (
                   <option key={devis.id} value={devis.id}>
                     {devis.numero} - {devis.clientId} - {devis.totalTTC.toFixed(2)} €
                   </option>
-                ))
+                )) :
+                <option value="" disabled>Erreur lors du chargement des devis</option>
               )}
             </select>
           </div>
