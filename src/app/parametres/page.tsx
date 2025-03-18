@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from '../components/MainLayout';
-import { FaBuilding, FaEnvelope, FaPhone, FaFileInvoiceDollar, FaSave, FaCreditCard } from 'react-icons/fa';
+import { FaBuilding, FaEnvelope, FaPhone, FaFileInvoiceDollar, FaSave, FaCreditCard, FaCheck } from 'react-icons/fa';
 
 export default function Parametres() {
-  // Données fictives pour les paramètres
-  const [entrepriseInfo, setEntrepriseInfo] = useState({
+  const [successMessage, setSuccessMessage] = useState('');
+  
+  // Données par défaut pour les paramètres
+  const defaultEntrepriseInfo = {
     nom: 'Martin Peinture',
     adresse: '15 rue des Lilas',
     codePostal: '75001',
@@ -15,31 +17,82 @@ export default function Parametres() {
     email: 'contact@martin-peinture.fr',
     siret: '12345678901234',
     tva: 'FR12345678901',
-  });
+  };
 
-  const [facturationInfo, setFacturationInfo] = useState({
+  const defaultFacturationInfo = {
     prefixeDevis: 'D-',
     prefixeFacture: 'F-',
     delaiPaiement: '30',
     conditionsPaiement: 'Paiement à réception de facture',
     mentionsTva: 'TVA non applicable, art. 293 B du CGI',
     piedPage: 'Merci pour votre confiance',
-  });
+  };
 
-  const [emailInfo, setEmailInfo] = useState({
+  const defaultEmailInfo = {
     expediteur: 'contact@martin-peinture.fr',
     objetDevis: 'Votre devis {numero}',
     objetFacture: 'Votre facture {numero}',
     messageDevis: 'Bonjour,\n\nVeuillez trouver ci-joint votre devis {numero}.\n\nCordialement,\nMartin Peinture',
     messageFacture: 'Bonjour,\n\nVeuillez trouver ci-joint votre facture {numero}.\n\nCordialement,\nMartin Peinture',
-  });
+  };
 
-  const [paiementInfo, setPaiementInfo] = useState({
+  const defaultPaiementInfo = {
     iban: 'FR76 1234 5678 9012 3456 7890 123',
     bic: 'ABCDEFGHIJK',
     banque: 'Banque Exemple',
     titulaire: 'Martin Jean',
-  });
+  };
+
+  // Initialiser les états avec les valeurs par défaut
+  const [entrepriseInfo, setEntrepriseInfo] = useState(defaultEntrepriseInfo);
+  const [facturationInfo, setFacturationInfo] = useState(defaultFacturationInfo);
+  const [emailInfo, setEmailInfo] = useState(defaultEmailInfo);
+  const [paiementInfo, setPaiementInfo] = useState(defaultPaiementInfo);
+
+  // Charger les paramètres depuis le localStorage au chargement de la page
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Charger les informations de l'entreprise
+      const savedEntrepriseInfo = localStorage.getItem('entrepriseInfo');
+      if (savedEntrepriseInfo) {
+        try {
+          setEntrepriseInfo(JSON.parse(savedEntrepriseInfo));
+        } catch (err) {
+          console.error("Erreur lors du chargement des informations de l'entreprise:", err);
+        }
+      }
+
+      // Charger les informations de facturation
+      const savedFacturationInfo = localStorage.getItem('facturationInfo');
+      if (savedFacturationInfo) {
+        try {
+          setFacturationInfo(JSON.parse(savedFacturationInfo));
+        } catch (err) {
+          console.error("Erreur lors du chargement des informations de facturation:", err);
+        }
+      }
+
+      // Charger les informations d'email
+      const savedEmailInfo = localStorage.getItem('emailInfo');
+      if (savedEmailInfo) {
+        try {
+          setEmailInfo(JSON.parse(savedEmailInfo));
+        } catch (err) {
+          console.error("Erreur lors du chargement des informations d'email:", err);
+        }
+      }
+
+      // Charger les informations de paiement
+      const savedPaiementInfo = localStorage.getItem('paiementInfo');
+      if (savedPaiementInfo) {
+        try {
+          setPaiementInfo(JSON.parse(savedPaiementInfo));
+        } catch (err) {
+          console.error("Erreur lors du chargement des informations de paiement:", err);
+        }
+      }
+    }
+  }, []);
 
   // Fonction pour gérer les changements dans les formulaires
   const handleEntrepriseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +118,20 @@ export default function Parametres() {
   // Fonction pour gérer la soumission du formulaire
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Paramètres enregistrés avec succès !');
+    
+    // Sauvegarder les données dans le localStorage
+    localStorage.setItem('entrepriseInfo', JSON.stringify(entrepriseInfo));
+    localStorage.setItem('facturationInfo', JSON.stringify(facturationInfo));
+    localStorage.setItem('emailInfo', JSON.stringify(emailInfo));
+    localStorage.setItem('paiementInfo', JSON.stringify(paiementInfo));
+    
+    // Afficher un message de succès
+    setSuccessMessage('Paramètres enregistrés avec succès !');
+    
+    // Masquer le message après 3 secondes
+    setTimeout(() => {
+      setSuccessMessage('');
+    }, 3000);
   };
 
   return (
@@ -74,6 +140,12 @@ export default function Parametres() {
         <h1 className="text-3xl font-bold">Paramètres</h1>
         <p className="text-gray-600">Configurez les paramètres de votre entreprise</p>
       </div>
+
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded flex items-center">
+          <FaCheck className="mr-2" /> {successMessage}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">

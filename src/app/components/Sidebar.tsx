@@ -25,7 +25,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="w-64 h-screen bg-gray-100 text-gray-700 p-4 fixed left-0 top-0 border-r border-gray-200 shadow-sm">
+    <div className="w-64 h-screen bg-gray-100 text-gray-700 p-4 overflow-y-auto border-r border-gray-200 shadow-sm">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-blue-600">FacturePro</h1>
         <p className="text-sm text-gray-500">Peinture en bâtiment</p>
@@ -39,14 +39,14 @@ export default function Sidebar() {
               <li key={item.href}>
                 <Link 
                   href={item.href}
-                  className={`flex items-center p-2 rounded-lg transition-colors ${
+                  className={`flex items-center p-3 md:p-2 rounded-lg transition-colors ${
                     isActive 
                       ? 'bg-blue-100 text-blue-600 font-medium' 
                       : 'text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <item.icon className={`mr-3 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                  <span>{item.name}</span>
+                  <item.icon className={`mr-3 text-xl md:text-base ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+                  <span className="text-base">{item.name}</span>
                 </Link>
               </li>
             );
