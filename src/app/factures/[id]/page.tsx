@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import MainLayout from '../../components/MainLayout';
 import { FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
 
@@ -99,7 +98,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
   };
 
   return (
-    <MainLayout>
+    <div>
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/factures" className="mr-4 text-blue-600 hover:text-blue-800">
@@ -254,6 +253,6 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 } 

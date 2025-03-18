@@ -1,246 +1,232 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import MainLayout from '../components/MainLayout';
-import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye, FaInfoCircle, FaFileInvoiceDollar, FaFileContract } from 'react-icons/fa';
-import Link from 'next/link';
-
-// Type pour les clients
-type Client = {
-  id: number;
-  nom: string;
-  contact?: string;
-  email: string;
-  telephone?: string;
-  adresse: string;
-  codePostal: string;
-  ville: string;
-  pays: string;
-  siret?: string;
-  tva?: string;
-  notes?: string;
-  createdAt: string;
-};
+import Link from "next/link";
+import { useState } from "react";
+import { 
+  FaUsers, 
+  FaUserPlus, 
+  FaSearch, 
+  FaFileInvoiceDollar,
+  FaFileAlt,
+  FaEnvelope,
+  FaPhone,
+  FaEye,
+  FaTrashAlt
+} from "react-icons/fa";
 
 export default function Clients() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [clientToDelete, setClientToDelete] = useState<number | null>(null);
-
-  // Fonction pour récupérer les clients
-  const fetchClients = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      console.log('Tentative de récupération des clients depuis le frontend...');
-      const response = await fetch('/api/clients');
-      
-      if (!response.ok) {
-        console.error('Réponse non OK:', response.status, response.statusText);
-        throw new Error('Erreur lors de la récupération des clients');
-      }
-      
-      const data = await response.json();
-      console.log('Données reçues:', data);
-      setClients(data);
-    } catch (err) {
-      console.error('Erreur complète:', err);
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-    } finally {
-      setIsLoading(false);
+  // Données clients fictives pour la démo (statiques)
+  const clientsData = [
+    { 
+      id: 1, 
+      nom: "Dupont Immobilier", 
+      contact: "Jean Dupont", 
+      email: "contact@dupontimmo.fr", 
+      telephone: "01 23 45 67 89", 
+      adresse: "12 rue des Lilas, 75001 Paris",
+      nbDevis: 5,
+      nbFactures: 3,
+      dateCreation: "15/01/2024"
+    },
+    { 
+      id: 2, 
+      nom: "Martin Résidences", 
+      contact: "Sophie Martin", 
+      email: "s.martin@residences.fr", 
+      telephone: "06 12 34 56 78", 
+      adresse: "8 avenue Victor Hugo, 69002 Lyon",
+      nbDevis: 2,
+      nbFactures: 2,
+      dateCreation: "03/02/2024"
+    },
+    { 
+      id: 3, 
+      nom: "Dubois & Fils", 
+      contact: "Pierre Dubois", 
+      email: "p.dubois@duboisetfils.fr", 
+      telephone: "04 56 78 90 12", 
+      adresse: "45 rue du Commerce, 33000 Bordeaux",
+      nbDevis: 3,
+      nbFactures: 1,
+      dateCreation: "22/02/2024"
+    },
+    { 
+      id: 4, 
+      nom: "Lepetit SCI", 
+      contact: "Marie Lepetit", 
+      email: "contact@lepetitsci.fr", 
+      telephone: "07 89 01 23 45", 
+      adresse: "5 place de la République, 31000 Toulouse",
+      nbDevis: 1,
+      nbFactures: 0,
+      dateCreation: "10/03/2024"
+    },
+    { 
+      id: 5, 
+      nom: "Moreau Construction", 
+      contact: "Philippe Moreau", 
+      email: "p.moreau@construction.fr", 
+      telephone: "09 87 65 43 21", 
+      adresse: "24 boulevard Haussmann, 75009 Paris",
+      nbDevis: 2,
+      nbFactures: 2,
+      dateCreation: "28/02/2024"
     }
-  };
+  ];
 
-  // Récupérer les clients depuis l'API au chargement
-  useEffect(() => {
-    fetchClients();
-  }, []);
+  // États pour la recherche et le tri
+  const [searchTerm, setSearchTerm] = useState("");
+  const [clients, setClients] = useState(clientsData);
 
-  // Filtrer les clients en fonction du terme de recherche
-  const filteredClients = clients.filter(client => 
-    client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.contact && client.contact.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Gérer la suppression d'un client
-  const handleDeleteClient = async (id: number) => {
-    try {
-      const response = await fetch(`/api/clients/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erreur lors de la suppression du client');
-      }
-      
-      // Mettre à jour la liste des clients
-      setClients(clients.filter(client => client.id !== id));
-      setShowDeleteModal(false);
-      setClientToDelete(null);
-    } catch (err) {
-      console.error('Erreur:', err);
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+  // Fonction de recherche
+  const handleSearch = (event) => {
+    const value = event.target.value.toLowerCase();
+    setSearchTerm(value);
+    
+    if (value === "") {
+      setClients(clientsData);
+    } else {
+      const filteredClients = clientsData.filter(client => 
+        client.nom.toLowerCase().includes(value) || 
+        client.contact.toLowerCase().includes(value) || 
+        client.email.toLowerCase().includes(value) ||
+        client.adresse.toLowerCase().includes(value)
+      );
+      setClients(filteredClients);
     }
-  };
-
-  // Ouvrir la modal de confirmation de suppression
-  const openDeleteModal = (id: number) => {
-    setClientToDelete(id);
-    setShowDeleteModal(true);
   };
 
   return (
-    <MainLayout>
-      <div className="mb-6 flex justify-between items-center">
+    <div className="space-y-6 pb-16">
+      {/* En-tête avec titre et actions */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Clients</h1>
-          <p className="text-gray-600">Gérez vos clients et leurs informations</p>
+          <h2 className="text-3xl font-bold tracking-tight text-blue-800">Clients</h2>
+          <p className="text-gray-500">
+            Gérez vos clients et leurs informations
+          </p>
         </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => fetchClients()}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center mr-2"
-          >
-            <FaSearch className="mr-2" /> Rafraîchir
-          </button>
-          <Link 
-            href="/clients/nouveau" 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
-          >
-            <FaPlus className="mr-2" /> Nouveau client
-          </Link>
-        </div>
+        <Link 
+          href="/clients/nouveau/"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center w-full md:w-auto justify-center"
+        >
+          <FaUserPlus className="mr-2" />
+          Nouveau client
+        </Link>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
+      {/* Barre de recherche */}
+      <div className="relative mb-4">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <FaSearch className="h-5 w-5 text-gray-400" />
         </div>
-      )}
+        <input
+          type="text"
+          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Rechercher un client..."
+          value={searchTerm}
+          onChange={handleSearch}
+        />
+      </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="p-4 border-b">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Rechercher un client..."
-              className="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Chargement des clients...</p>
-          </div>
-        ) : filteredClients.length === 0 ? (
-          <div className="p-8 text-center">
-            <FaInfoCircle className="text-gray-400 text-4xl mx-auto mb-4" />
-            <p className="text-gray-600">Aucun client trouvé</p>
-            {searchTerm ? (
-              <p className="text-gray-500 mt-2">Essayez de modifier votre recherche</p>
-            ) : (
-              <p className="text-gray-500 mt-2">Commencez par ajouter un nouveau client</p>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Adresse</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de création</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+      {/* Liste des clients */}
+      <div className="bg-white rounded-lg shadow">
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Client
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Contact
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Adresse
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Devis / Factures
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date de création
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {clients.length > 0 ? (
+              clients.map((client) => (
+                <tr key={client.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <Link href={`/clients/${client.id}`} className="block">
                       <div className="font-medium text-gray-900">{client.nom}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-500">{client.contact || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-500">{client.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-500">{client.telephone || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-500">{`${client.adresse}, ${client.codePostal} ${client.ville}`}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-500">{new Date(client.createdAt).toLocaleDateString('fr-FR')}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
-                        <Link href={`/clients/${client.id}`} className="text-blue-600 hover:text-blue-900">
-                          <FaEye className="text-lg" title="Voir" />
-                        </Link>
-                        <Link href={`/clients/${client.id}/edit`} className="text-green-600 hover:text-green-900">
-                          <FaEdit className="text-lg" title="Modifier" />
-                        </Link>
-                        <button 
-                          onClick={() => openDeleteModal(client.id)} 
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <FaTrash className="text-lg" title="Supprimer" />
-                        </button>
-                        <Link href={`/devis/nouveau?clientId=${client.id}`} className="text-orange-600 hover:text-orange-900">
-                          <FaFileContract className="text-lg" title="Nouveau devis" />
-                        </Link>
-                        <Link href={`/factures/nouveau?clientId=${client.id}`} className="text-purple-600 hover:text-purple-900">
-                          <FaFileInvoiceDollar className="text-lg" title="Nouvelle facture" />
-                        </Link>
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-gray-900">{client.contact}</div>
+                    <div className="flex items-center text-gray-500 text-sm mt-1">
+                      <FaEnvelope className="mr-1 h-3 w-3" />
+                      <a href={`mailto:${client.email}`} className="hover:underline">{client.email}</a>
+                    </div>
+                    <div className="flex items-center text-gray-500 text-sm mt-1">
+                      <FaPhone className="mr-1 h-3 w-3" />
+                      <a href={`tel:${client.telephone}`}>{client.telephone}</a>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-500">
+                      {client.adresse}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex space-x-2">
+                      <div className="flex items-center text-amber-600">
+                        <FaFileAlt className="mr-1" />
+                        <span>{client.nbDevis}</span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      <div className="flex items-center text-green-600">
+                        <FaFileInvoiceDollar className="mr-1" />
+                        <span>{client.nbFactures}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {client.dateCreation}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end space-x-3">
+                      <Link href={`/clients/${client.id}`} className="text-blue-600 hover:text-blue-900">
+                        <FaEye title="Voir le détail" />
+                      </Link>
+                      <Link href={`/devis/nouveau?client=${client.id}`} className="text-amber-600 hover:text-amber-900">
+                        <FaFileAlt title="Créer un devis" />
+                      </Link>
+                      <Link href={`/factures/nouveau?client=${client.id}`} className="text-green-600 hover:text-green-900">
+                        <FaFileInvoiceDollar title="Créer une facture" />
+                      </Link>
+                      <button 
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => alert(`Supprimer le client ${client.nom}`)}
+                      >
+                        <FaTrashAlt title="Supprimer" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                  <FaUsers className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                  <p className="text-lg font-medium">Aucun client trouvé</p>
+                  <p className="mt-1">Ajoutez un nouveau client ou modifiez votre recherche.</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
-
-      {/* Modal de confirmation de suppression */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Confirmer la suppression</h3>
-            <p className="mb-6">Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.</p>
-            <div className="flex justify-end space-x-3">
-              <button 
-                onClick={() => setShowDeleteModal(false)} 
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
-              >
-                Annuler
-              </button>
-              <button 
-                onClick={() => clientToDelete && handleDeleteClient(clientToDelete)} 
-                className="px-4 py-2 bg-red-600 text-white rounded-md"
-              >
-                Supprimer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </MainLayout>
+    </div>
   );
 } 

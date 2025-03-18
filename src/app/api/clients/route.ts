@@ -5,7 +5,49 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     console.log('Tentative de récupération des clients...');
-    console.log('URL de la base de données:', process.env.DATABASE_URL);
+    
+    // Ajouter quelques clients de test si la base est vide
+    const count = await prisma.client.count();
+    
+    if (count === 0) {
+      console.log('Aucun client trouvé, création de clients de test...');
+      try {
+        await prisma.client.createMany({
+          data: [
+            {
+              nom: 'Dupont Entreprise',
+              email: 'contact@dupont.fr',
+              telephone: '01 23 45 67 89',
+              adresse: '15 rue des Lilas',
+              codePostal: '75001',
+              ville: 'Paris',
+              contact: 'Jean Dupont',
+            },
+            {
+              nom: 'Martin Construction',
+              email: 'info@martin-construction.fr',
+              telephone: '01 98 76 54 32',
+              adresse: '8 avenue des Champs',
+              codePostal: '69000',
+              ville: 'Lyon',
+              contact: 'Marie Martin',
+            },
+            {
+              nom: 'Petit Immobilier',
+              email: 'contact@petit-immo.fr',
+              telephone: '03 45 67 89 10',
+              adresse: '25 rue de la Paix',
+              codePostal: '33000',
+              ville: 'Bordeaux',
+              contact: 'Sophie Petit',
+            },
+          ],
+        });
+        console.log('Clients de test créés avec succès');
+      } catch (error) {
+        console.error('Erreur lors de la création des clients de test:', error);
+      }
+    }
     
     const clients = await prisma.client.findMany({
       orderBy: {

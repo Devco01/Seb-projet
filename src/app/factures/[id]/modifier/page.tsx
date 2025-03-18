@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import MainLayout from '../../../components/MainLayout';
 import { FaPlus, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import Link from 'next/link';
 
@@ -155,19 +154,17 @@ export default function ModifierFacture({ params }: { params: { id: string } }) 
 
   if (isLoading) {
     return (
-      <MainLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Chargement de la facture...</p>
-          </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement de la facture...</p>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
+    <div>
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Modifier la facture {factureExistante.numero}</h1>
@@ -417,6 +414,6 @@ export default function ModifierFacture({ params }: { params: { id: string } }) 
           </div>
         </div>
       </form>
-    </MainLayout>
+    </div>
   );
 } 

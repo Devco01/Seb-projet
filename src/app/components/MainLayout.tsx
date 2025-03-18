@@ -4,62 +4,61 @@ import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { FaBars } from 'react-icons/fa';
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Détection du mode mobile au chargement et redimensionnement
+  const [currentPath, setCurrentPath] = useState('');
+  
+  // Récupérer le chemin actuel pour le debuggage
   useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    // Vérifier au chargement
-    checkIsMobile();
-    
-    // Ajouter un écouteur d'événement pour le redimensionnement
-    window.addEventListener('resize', checkIsMobile);
-    
-    // Nettoyer l'écouteur à la démonter du composant
-    return () => window.removeEventListener('resize', checkIsMobile);
+    setCurrentPath(window.location.pathname);
   }, []);
 
+  console.log("MainLayout rendu, chemin:", currentPath);
+
   return (
-    <div className="flex min-h-screen bg-gray-50 relative">
-      {/* Bouton d'affichage/masquage sur mobile */}
-      <button 
-        className="md:hidden fixed top-4 left-4 z-30 bg-blue-600 text-white p-2 rounded-md shadow-md"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        <FaBars />
-      </button>
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar pour mobile - s'ouvre avec un bouton */}
+      <div 
+        className={`md:hidden fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity duration-300 ${
+          sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
       
-      {/* Sidebar avec état responsive */}
-      <div className={`${isMobile ? 'fixed z-20' : ''} ${isMobile && !sidebarOpen ? '-translate-x-full' : ''} transition-transform duration-300 ease-in-out`}>
-        <Sidebar />
+      {/* Sidebar fixe pour desktop, absolute pour mobile */}
+      <div 
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 md:relative md:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <Sidebar closeSidebar={() => setSidebarOpen(false)} />
       </div>
       
-      {/* Overlay pour fermer le menu sur mobile */}
-      {isMobile && sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-10"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      
-      {/* Contenu principal avec marge adaptative */}
-      <main className={`flex-1 ${!isMobile ? 'ml-64' : 'ml-0'} p-5 bg-gray-50 transition-all duration-300 ease-in-out`}>
-        <div className="max-w-6xl mx-auto">
-          {/* Ajouter de l'espace en haut sur mobile pour le bouton */}
-          {isMobile && <div className="h-12" />}
+      {/* Contenu principal avec flexbox pour permettre au contenu de scroller indépendamment */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header avec bouton pour ouvrir le sidebar sur mobile */}
+        <header className="bg-white shadow-sm h-16 flex items-center px-4 md:px-6 sticky top-0 z-30">
+          <button 
+            className="md:hidden text-gray-600 hover:text-gray-800 mr-4"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <FaBars size={24} />
+          </button>
+          <div className="ml-auto flex space-x-4">
+            {/* Zone pour ajouter des actions de header */}
+          </div>
+        </header>
+        
+        {/* Contenu de la page avec scroll indépendant */}
+        <main className="flex-1 overflow-auto p-4 md:p-6">
           {children}
-        </div>
-        <footer className="mt-10 pt-4 border-t border-gray-200">
-          <p className="text-center text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} FacturePro - Peinture en bâtiment
-          </p>
+        </main>
+        
+        {/* Footer simple */}
+        <footer className="bg-white py-4 px-6 border-t text-center text-gray-500 text-sm">
+          FacturePro © {new Date().getFullYear()}
         </footer>
-      </main>
+      </div>
     </div>
   );
 } 

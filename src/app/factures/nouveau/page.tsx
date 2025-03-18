@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import MainLayout from '../../components/MainLayout';
 import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -47,6 +46,7 @@ export default function NouvelleFacture() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [formInitialized, setFormInitialized] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // Récupérer les clients depuis l'API
   useEffect(() => {
@@ -104,41 +104,29 @@ export default function NouvelleFacture() {
 
   // Charger les données du formulaire depuis le localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined' && !formInitialized) {
-      const savedForm = localStorage.getItem('nouvelleFactureForm');
-      if (savedForm) {
+    // Marquer que nous sommes côté client
+    setIsClient(true);
+    
+    if (!formInitialized) {
+      // Charger les données nécessaires
+      const fetchData = async () => {
         try {
-          const parsedForm = JSON.parse(savedForm);
-          if (parsedForm.clientId) setClientId(parsedForm.clientId);
-          if (parsedForm.date) setDate(parsedForm.date);
-          if (parsedForm.echeance) setEcheance(parsedForm.echeance);
-          if (parsedForm.devisId) setDevisId(parsedForm.devisId);
-          if (parsedForm.lignes && parsedForm.lignes.length > 0) setLignes(parsedForm.lignes);
-          if (parsedForm.conditions) setConditions(parsedForm.conditions);
-          if (parsedForm.notes) setNotes(parsedForm.notes);
-        } catch (err) {
-          console.error('Erreur lors du chargement du formulaire:', err);
+          const clientsResponse = await fetch('/api/clients');
+          const clientsData = await clientsResponse.json();
+          setClients(clientsData);
+      
+          // Générer un numéro de facture
+          // ... code existant ...
+          
+          setFormInitialized(true);
+        } catch (error) {
+          console.error('Erreur lors du chargement des données:', error);
         }
-      }
-      setFormInitialized(true);
+      };
+      
+      fetchData();
     }
   }, [formInitialized]);
-
-  // Sauvegarder les données du formulaire dans le localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined' && formInitialized) {
-      const formData = {
-        clientId,
-        date,
-        echeance,
-        devisId,
-        lignes,
-        conditions,
-        notes
-      };
-      localStorage.setItem('nouvelleFactureForm', JSON.stringify(formData));
-    }
-  }, [clientId, date, echeance, devisId, lignes, conditions, notes, formInitialized]);
 
   // Mise à jour d'une ligne
   const handleLigneChange = (index: number, field: keyof LigneFacture, value: string | number) => {
@@ -304,8 +292,17 @@ export default function NouvelleFacture() {
     }
   };
 
+  // Conditionnellement rendre le contenu uniquement côté client
+  if (!isClient) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
+      </div>
+    );
+  }
+
   return (
-    <MainLayout>
+    <div>
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Nouvelle facture</h1>
@@ -548,6 +545,6 @@ export default function NouvelleFacture() {
           </div>
         </div>
       </form>
-    </MainLayout>
+    </div>
   );
 } 

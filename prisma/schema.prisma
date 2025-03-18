@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -43,7 +43,7 @@ model Devis {
   date       DateTime
   validite   DateTime
   statut     String    @default("En attente") // En attente, Accepté, Refusé, Expiré
-  lignes     Json      // Stocké comme un tableau JSON de lignes
+  lignes     String    // Stocké comme un JSON stringifié pour SQLite
   conditions String?
   notes      String?
   totalHT    Float
@@ -65,7 +65,7 @@ model Facture {
   date        DateTime
   echeance    DateTime
   statut      String    @default("En attente") // En attente, Payée, Retard, Annulée
-  lignes      Json      // Stocké comme un tableau JSON de lignes
+  lignes      String    // Stocké comme un JSON stringifié pour SQLite
   conditions  String?
   notes       String?
   totalHT     Float
