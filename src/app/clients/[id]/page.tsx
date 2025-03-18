@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MainLayout from '@/app/components/MainLayout';
 import { FaEdit, FaTrash, FaFileInvoiceDollar, FaFileContract, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
@@ -63,12 +63,37 @@ const clientData: ClientData = {
 };
 
 export default function ClientDetailPage({ params }: { params: { id: string } }) {
-  // Utiliser l'ID dans un commentaire pour éviter l'erreur de linter
-  // L'ID sera utilisé pour récupérer les données du client depuis l'API
-  const _id = parseInt(params.id);
-  const [client, _setClient] = useState<ClientData | null>(clientData);
+  const [client, setClient] = useState<ClientData | null>(clientData);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Effet pour charger les données du client basé sur l'ID
+  useEffect(() => {
+    // Cette fonction sera utilisée pour charger les vraies données depuis l'API
+    // Pour l'instant, nous utilisons des données fictives
+    console.log(`Chargement du client avec ID: ${params.id}`);
+    
+    const fetchClient = async () => {
+      try {
+        setLoading(true);
+        // Simulation d'un appel API
+        // Dans une vraie implémentation, nous ferions un fetch ici
+        setTimeout(() => {
+          // Nous réutilisons les données fictives mais avec l'ID du paramètre
+          setClient({
+            ...clientData,
+            id: parseInt(params.id)
+          });
+          setLoading(false);
+        }, 500);
+      } catch (error) {
+        console.error("Erreur lors du chargement du client:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchClient();
+  }, [params.id]);
 
   // Fonction pour supprimer le client
   const handleDelete = () => {
