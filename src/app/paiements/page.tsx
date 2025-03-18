@@ -140,18 +140,18 @@ export default function Paiements() {
     }, 0).toFixed(2).replace('.', ',') + " €";
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-6 pb-16 px-4 sm:px-6 max-w-7xl mx-auto">
       {/* En-tête avec titre et actions */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-blue-800">Paiements</h2>
-          <p className="text-gray-500">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-blue-800">Paiements</h2>
+          <p className="text-gray-500 mt-1">
             Suivez les paiements reçus de vos clients
           </p>
         </div>
         <Link 
           href="/paiements/nouveau/"
-          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center w-full md:w-auto justify-center"
+          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-lg flex items-center w-full sm:w-auto justify-center"
         >
           <FaPlus className="mr-2" />
           Enregistrer un paiement
@@ -173,10 +173,10 @@ export default function Paiements() {
       </div>
 
       {/* Filtres par mode de paiement */}
-      <div className="flex space-x-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4">
         <button 
           onClick={() => handleModeFilter("Tous")}
-          className={`px-4 py-2 rounded-md text-sm font-medium ${
+          className={`px-3 py-1.5 rounded-md text-sm font-medium ${
             modeFilter === "Tous" ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
           }`}
         >
@@ -184,7 +184,7 @@ export default function Paiements() {
         </button>
         <button 
           onClick={() => handleModeFilter("Virement bancaire")}
-          className={`px-4 py-2 rounded-md text-sm font-medium ${
+          className={`px-3 py-1.5 rounded-md text-sm font-medium ${
             modeFilter === "Virement bancaire" ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
           }`}
         >
@@ -192,7 +192,7 @@ export default function Paiements() {
         </button>
         <button 
           onClick={() => handleModeFilter("Chèque")}
-          className={`px-4 py-2 rounded-md text-sm font-medium ${
+          className={`px-3 py-1.5 rounded-md text-sm font-medium ${
             modeFilter === "Chèque" ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700'
           }`}
         >
@@ -201,12 +201,12 @@ export default function Paiements() {
       </div>
 
       {/* Statistiques des paiements */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Total encaissé</p>
-              <p className="text-2xl font-bold text-gray-800">{totalMontant}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">{totalMontant}</p>
               <p className="text-xs text-gray-500 mt-1">{paiementsData.length} paiements</p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
@@ -219,7 +219,7 @@ export default function Paiements() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Virements bancaires</p>
-              <p className="text-2xl font-bold text-gray-800">{montantVirements}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">{montantVirements}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {paiementsData.filter(p => p.mode === "Virement bancaire").length} paiements
               </p>
@@ -234,7 +234,7 @@ export default function Paiements() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Chèques</p>
-              <p className="text-2xl font-bold text-gray-800">{montantCheques}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">{montantCheques}</p>
               <p className="text-xs text-gray-500 mt-1">
                 {paiementsData.filter(p => p.mode === "Chèque").length} paiements
               </p>
@@ -246,8 +246,8 @@ export default function Paiements() {
         </div>
       </div>
 
-      {/* Liste des paiements */}
-      <div className="bg-white rounded-lg shadow">
+      {/* Liste des paiements - version desktop */}
+      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
@@ -261,10 +261,10 @@ export default function Paiements() {
                 Client
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Montant
+                Date
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
+                Montant
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Mode
@@ -278,52 +278,46 @@ export default function Paiements() {
             {paiements.length > 0 ? (
               paiements.map((paiement) => (
                 <tr key={paiement.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <Link href={`/paiements/${paiement.id}`} className="text-blue-600 hover:text-blue-800 font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link href={`/paiements/${paiement.id}`} className="font-medium text-blue-600 hover:text-blue-800">
                       {paiement.id}
                     </Link>
                   </td>
-                  <td className="px-6 py-4">
-                    <Link href={`/factures/${paiement.factureId}`} className="flex items-center text-gray-900 hover:text-blue-600">
-                      <FaFileInvoiceDollar className="mr-1 text-gray-400" />
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link href={`/factures/${paiement.factureId}`} className="text-gray-700 hover:text-blue-600">
                       {paiement.facture}
                     </Link>
                   </td>
-                  <td className="px-6 py-4">
-                    <Link href={`/clients/${paiement.clientId}`} className="text-gray-900 hover:text-blue-600">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link href={`/clients/${paiement.clientId}`} className="text-gray-700 hover:text-blue-600">
                       {paiement.client}
                     </Link>
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-900">
-                    {paiement.montant}
-                  </td>
-                  <td className="px-6 py-4 text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     {paiement.date}
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 text-sm rounded-full font-medium ${
-                      paiement.mode === 'Virement bancaire' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : paiement.mode === 'Chèque'
-                          ? 'bg-purple-100 text-purple-800'
-                          : 'bg-green-100 text-green-800'
+                  <td className="px-6 py-4 whitespace-nowrap font-medium">
+                    {paiement.montant}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      paiement.mode === "Virement bancaire" 
+                        ? "bg-blue-100 text-blue-800" 
+                        : "bg-purple-100 text-purple-800"
                     }`}>
                       {paiement.mode}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-3">
-                      <Link href={`/paiements/${paiement.id}`} className="text-blue-600 hover:text-blue-900">
-                        <FaEye title="Voir le détail" />
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex space-x-3 justify-end">
+                      <Link href={`/paiements/${paiement.id}`} className="text-blue-600 hover:text-blue-900" title="Voir">
+                        <FaEye />
                       </Link>
-                      <Link href={`/factures/${paiement.factureId}`} className="text-green-600 hover:text-green-900">
-                        <FaFileInvoiceDollar title="Voir la facture" />
+                      <Link href={`/factures/${paiement.factureId}`} className="text-indigo-600 hover:text-indigo-900" title="Voir la facture">
+                        <FaFileInvoiceDollar />
                       </Link>
-                      <button 
-                        className="text-red-600 hover:text-red-900"
-                        onClick={() => alert(`Supprimer le paiement ${paiement.id}`)}
-                      >
-                        <FaTrashAlt title="Supprimer" />
+                      <button className="text-red-600 hover:text-red-900" title="Supprimer">
+                        <FaTrashAlt />
                       </button>
                     </div>
                   </td>
@@ -332,14 +326,69 @@ export default function Paiements() {
             ) : (
               <tr>
                 <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
-                  <FaMoneyBillWave className="mx-auto h-12 w-12 text-gray-300 mb-3" />
                   <p className="text-lg font-medium">Aucun paiement trouvé</p>
-                  <p className="mt-1">Enregistrez un nouveau paiement ou modifiez vos filtres.</p>
+                  <p className="mt-1">Essayez de modifier vos filtres ou enregistrez un nouveau paiement.</p>
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Cartes des paiements - version mobile */}
+      <div className="sm:hidden space-y-4">
+        {paiements.length > 0 ? (
+          paiements.map((paiement) => (
+            <div key={paiement.id} className="bg-white rounded-lg shadow p-4">
+              <div className="flex justify-between items-start mb-3">
+                <Link href={`/paiements/${paiement.id}`} className="font-medium text-blue-600 text-lg">
+                  {paiement.id}
+                </Link>
+                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                  paiement.mode === "Virement bancaire" 
+                    ? "bg-blue-100 text-blue-800" 
+                    : "bg-purple-100 text-purple-800"
+                }`}>
+                  {paiement.mode}
+                </span>
+              </div>
+              
+              <div className="mb-3">
+                <div className="flex justify-between mb-1">
+                  <p className="text-gray-700 font-semibold">{paiement.client}</p>
+                  <p className="font-bold">{paiement.montant}</p>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500">
+                  <Link href={`/factures/${paiement.factureId}`} className="text-blue-600">
+                    Facture: {paiement.facture}
+                  </Link>
+                  <p>{paiement.date}</p>
+                </div>
+              </div>
+              
+              <div className="text-sm text-gray-600 mb-3 line-clamp-2">
+                {paiement.notes}
+              </div>
+              
+              <div className="flex justify-between border-t pt-3">
+                <Link href={`/paiements/${paiement.id}`} className="text-blue-600 flex items-center text-sm">
+                  <FaEye className="mr-1" /> Détails
+                </Link>
+                <Link href={`/factures/${paiement.factureId}`} className="text-indigo-600 flex items-center text-sm">
+                  <FaFileInvoiceDollar className="mr-1" /> Facture
+                </Link>
+                <button className="text-red-600 flex items-center text-sm">
+                  <FaTrashAlt className="mr-1" /> Supprimer
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+            <p className="text-lg font-medium">Aucun paiement trouvé</p>
+            <p className="mt-1">Essayez de modifier vos filtres ou enregistrez un nouveau paiement.</p>
+          </div>
+        )}
       </div>
     </div>
   );

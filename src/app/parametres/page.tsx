@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { FaBuilding, FaEuroSign, FaPalette, FaSave, FaImage, FaUpload } from 'react-icons/fa';
+import { FaBuilding, FaEuroSign, FaSave, FaImage, FaUpload } from 'react-icons/fa';
 
 export default function Parametres() {
   // États pour les différents paramètres
@@ -15,8 +15,6 @@ export default function Parametres() {
   const [defaultTva, setDefaultTva] = useState("20");
   const [paymentDelay, setPaymentDelay] = useState("30");
   const [logoUrl, setLogoUrl] = useState("/logo-placeholder.png");
-  const [primaryColor, setPrimaryColor] = useState("#2563eb");
-  const [secondaryColor, setSecondaryColor] = useState("#4f46e5");
 
   // Fonction de sauvegarde simulée
   const handleSave = (section) => {
@@ -33,21 +31,21 @@ export default function Parametres() {
   };
 
   return (
-    <div className="space-y-8 pb-16">
+    <div className="space-y-6 pb-16 px-4 sm:px-6 max-w-7xl mx-auto">
       {/* En-tête */}
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-blue-800">Paramètres</h2>
+      <div className="py-4">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-blue-800">Paramètres</h2>
         <p className="text-gray-500 mt-2">Configurez votre application de facturation</p>
       </div>
       
       {/* Section informations de l'entreprise */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex items-center mb-4">
           <FaBuilding className="text-blue-600 mr-2" />
           <h3 className="text-lg font-medium text-gray-900">Informations de l&apos;entreprise</h3>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
               Nom de l&apos;entreprise
@@ -127,8 +125,8 @@ export default function Parametres() {
           </div>
         </div>
         
-        <div className="mt-6 flex items-center">
-          <div className="mr-8">
+        <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center">
+          <div className="mb-4 sm:mb-0 sm:mr-8">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Logo de l&apos;entreprise
             </label>
@@ -149,7 +147,7 @@ export default function Parametres() {
             </div>
           </div>
           
-          <div className="mt-6">
+          <div className="mt-2 sm:mt-6">
             <label htmlFor="logo-upload" className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 inline-flex items-center">
               <FaUpload className="mr-2" />
               Choisir un fichier
@@ -168,7 +166,7 @@ export default function Parametres() {
         <div className="mt-6">
           <button
             onClick={() => handleSave('entreprise')}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <FaSave className="mr-2" />
             Sauvegarder les informations
@@ -177,13 +175,13 @@ export default function Parametres() {
       </div>
       
       {/* Section paramètres de facturation */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex items-center mb-4">
           <FaEuroSign className="text-blue-600 mr-2" />
           <h3 className="text-lg font-medium text-gray-900">Paramètres de facturation</h3>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label htmlFor="defaultTva" className="block text-sm font-medium text-gray-700 mb-1">
               Taux de TVA par défaut (%)
@@ -256,90 +254,10 @@ export default function Parametres() {
         <div className="mt-6">
           <button
             onClick={() => handleSave('facturation')}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <FaSave className="mr-2" />
             Sauvegarder les paramètres
-          </button>
-        </div>
-      </div>
-      
-      {/* Section personnalisation */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center mb-4">
-          <FaPalette className="text-blue-600 mr-2" />
-          <h3 className="text-lg font-medium text-gray-900">Personnalisation</h3>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700 mb-1">
-              Couleur principale
-            </label>
-            <div className="flex items-center">
-              <input
-                type="color"
-                id="primaryColor"
-                className="h-10 w-10 border-0 p-0 rounded"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-              />
-              <input
-                type="text"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="ml-2 border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label htmlFor="secondaryColor" className="block text-sm font-medium text-gray-700 mb-1">
-              Couleur secondaire
-            </label>
-            <div className="flex items-center">
-              <input
-                type="color"
-                id="secondaryColor"
-                className="h-10 w-10 border-0 p-0 rounded"
-                value={secondaryColor}
-                onChange={(e) => setSecondaryColor(e.target.value)}
-              />
-              <input
-                type="text"
-                value={secondaryColor}
-                onChange={(e) => setSecondaryColor(e.target.value)}
-                className="ml-2 border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-6">
-          <p className="text-sm text-gray-500 mb-3">Aperçu des couleurs:</p>
-          <div className="grid grid-cols-2 gap-4">
-            <div 
-              className="h-20 rounded-md flex items-center justify-center text-white font-medium" 
-              style={{ backgroundColor: primaryColor }}
-            >
-              Couleur principale
-            </div>
-            <div 
-              className="h-20 rounded-md flex items-center justify-center text-white font-medium" 
-              style={{ backgroundColor: secondaryColor }}
-            >
-              Couleur secondaire
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-6">
-          <button
-            onClick={() => handleSave('personnalisation')}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <FaSave className="mr-2" />
-            Sauvegarder la personnalisation
           </button>
         </div>
       </div>
