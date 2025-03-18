@@ -32,8 +32,6 @@ interface ClientData {
   codePostal: string;
   ville: string;
   pays: string;
-  siret: string;
-  tva: string;
   dateCreation: string;
   notes: string;
   devis: Devis[];
@@ -51,8 +49,6 @@ const clientData: ClientData = {
   codePostal: "75000",
   ville: "Paris",
   pays: "France",
-  siret: "12345678901234",
-  tva: "FR12345678901",
   dateCreation: "2023-01-15",
   notes: "Client fidèle depuis 2023. Préfère être contacté par email.",
   devis: [
@@ -183,22 +179,22 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
-            <h2 className="text-xl font-semibold mb-4">Informations fiscales</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-gray-600">SIRET</p>
-                <p className="font-medium">{client.siret}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">N° TVA</p>
-                <p className="font-medium">{client.tva}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Notes</h2>
             <p>{client.notes}</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h2 className="text-xl font-semibold mb-4">Statistiques</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-600">Nombre de devis</p>
+                <p className="font-medium">{client.devis.length}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Nombre de factures</p>
+                <p className="font-medium">{client.factures.length}</p>
+              </div>
+            </div>
           </div>
         </div>
 

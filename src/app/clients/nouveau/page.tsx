@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import MainLayout from '../../components/MainLayout';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -20,8 +19,6 @@ export default function NouveauClient() {
     codePostal: '',
     ville: '',
     pays: 'France',
-    siret: '',
-    tva: '',
     notes: ''
   });
 
@@ -77,7 +74,7 @@ export default function NouveauClient() {
   };
 
   return (
-    <MainLayout>
+    <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Nouveau client</h1>
@@ -227,34 +224,6 @@ export default function NouveauClient() {
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
-          <div>
-            <label className="block text-gray-700 font-medium mb-2" htmlFor="siret">
-              SIRET
-            </label>
-            <input
-              type="text"
-              id="siret"
-              name="siret"
-              value={formData.siret}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-medium mb-2" htmlFor="tva">
-              N° TVA
-            </label>
-            <input
-              type="text"
-              id="tva"
-              name="tva"
-              value={formData.tva}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
         </div>
 
         <div className="mt-6">
@@ -282,6 +251,6 @@ export default function NouveauClient() {
           </button>
         </div>
       </form>
-    </MainLayout>
+    </div>
   );
 } 
