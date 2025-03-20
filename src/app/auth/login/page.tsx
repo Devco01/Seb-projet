@@ -48,7 +48,6 @@ function LoginContent() {
         username: email,
         password,
         redirect: false,
-        callbackUrl: callbackUrl
       });
 
       if (result?.error) {
