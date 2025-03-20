@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -19,7 +19,8 @@ type Client = {
   email?: string;
 };
 
-export default function NouveauDevis() {
+// Composant qui utilise useSearchParams
+function DevisFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const devisId = searchParams?.get('id');
@@ -577,5 +578,24 @@ export default function NouveauDevis() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Composant de chargement pour le Suspense
+function DevisLoading() {
+  return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <p className="ml-3 text-gray-600">Chargement du formulaire de devis...</p>
+    </div>
+  );
+}
+
+// Composant principal enveloppé dans Suspense
+export default function NouveauDevis() {
+  return (
+    <Suspense fallback={<DevisLoading />}>
+      <DevisFormContent />
+    </Suspense>
   );
 } 
