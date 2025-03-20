@@ -127,7 +127,7 @@ export async function PUT(
         date: new Date(data.date),
         validite: new Date(data.validite),
         statut: data.statut || existingDevis.statut,
-        lignes: data.lignes,
+        lignes: JSON.stringify(data.lignes),
         conditions: data.conditions,
         notes: data.notes,
         totalHT,
