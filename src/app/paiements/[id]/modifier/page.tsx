@@ -1,50 +1,163 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { FaSave, FaTimes } from 'react-icons/fa';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-
-// Données fictives pour un paiement existant
-const paiementExistant = {
-  id: "p123",
-  factureId: "f789",
-  montant: "500.00",
-  datePaiement: "2023-06-15",
-  modePaiement: "Chèque",
-  reference: "CHQ12345",
-  notes: "Paiement partiel"
-};
 
 export default function ModifierPaiementPage({ params }: { params: { id: string } }) {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement du paiement...</p>
+        </div>
+      </div>
+    }>
+      <ModifierPaiementForm id={params.id} />
+    </Suspense>
+  );
+}
+
+interface Facture {
+  id: number;
+  numero: string;
+  totalTTC: number;
+  resteAPayer?: number;
+  clientId: number;
+}
+
+interface Client {
+  id: number;
+  nom: string;
+  email?: string;
+}
+
+function ModifierPaiementForm({ id }: { id: string }) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [formData, setFormData] = useState(paiementExistant);
+  
+  const [factureId, setFactureId] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [montant, setMontant] = useState('');
+  const [datePaiement, setDatePaiement] = useState('');
+  const [modePaiement, setModePaiement] = useState('');
+  const [reference, setReference] = useState('');
+  const [notes, setNotes] = useState('');
+  
+  const [factures, setFactures] = useState<Facture[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedFacture, setSelectedFacture] = useState<Facture | null>(null);
 
+  // Chargement des données du paiement
   useEffect(() => {
-    // Simuler un chargement de données
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchPaiement = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/paiements/${id}`);
+        
+        if (!response.ok) {
+          throw new Error('Impossible de charger les données du paiement');
+        }
+        
+        const data = await response.json();
+        
+        setFactureId(data.factureId.toString());
+        setClientId(data.clientId.toString());
+        setMontant(data.montant.toString());
+        setDatePaiement(new Date(data.date).toISOString().split('T')[0]);
+        setModePaiement(data.methode);
+        setReference(data.reference || '');
+        setNotes(data.notes || '');
+      } catch (error) {
+        console.error('Erreur lors du chargement du paiement:', error);
+        toast.error('Erreur lors du chargement du paiement');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+    const fetchFactures = async () => {
+      try {
+        const response = await fetch('/api/factures');
+        if (response.ok) {
+          const data = await response.json();
+          setFactures(data);
+        } else {
+          console.error('Erreur lors du chargement des factures');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+      }
+    };
 
-  const handleSubmit = (e: React.FormEvent) => {
+    const fetchClients = async () => {
+      try {
+        const response = await fetch('/api/clients');
+        if (response.ok) {
+          const data = await response.json();
+          setClients(data);
+        } else {
+          console.error('Erreur lors du chargement des clients');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+      }
+    };
+
+    fetchPaiement();
+    fetchFactures();
+    fetchClients();
+  }, [id]);
+
+  // Mise à jour du client sélectionné lorsque la facture change
+  useEffect(() => {
+    if (factureId && factures.length > 0) {
+      const facture = factures.find(f => f.id.toString() === factureId);
+      setSelectedFacture(facture || null);
+      
+      if (facture) {
+        setClientId(facture.clientId.toString());
+      }
+    }
+  }, [factureId, factures]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Paiement modifié avec succès!");
-    // Redirection vers la page de détail du paiement
-    window.location.href = `/paiements/${params.id}`;
-  };
+    
+    try {
+      const paiement = {
+        factureId: parseInt(factureId),
+        clientId: parseInt(clientId),
+        date: datePaiement,
+        montant: parseFloat(montant),
+        methode: modePaiement,
+        reference,
+        notes,
+      };
 
-  const { register } = useForm();
+      const response = await fetch(`/api/paiements/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paiement),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erreur lors de la modification du paiement');
+      }
+
+      toast.success('Paiement modifié avec succès !');
+      router.push(`/paiements/${id}`);
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -58,7 +171,7 @@ export default function ModifierPaiementPage({ params }: { params: { id: string 
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Modifier le paiement</h1>
-        <Link href={`/paiements/${params.id}`} className="text-blue-600 hover:text-blue-800">
+        <Link href={`/paiements/${id}`} className="text-blue-600 hover:text-blue-800">
           <FaTimes className="inline mr-1" />
           Annuler
         </Link>
@@ -69,16 +182,50 @@ export default function ModifierPaiementPage({ params }: { params: { id: string 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-gray-700 font-medium mb-2" htmlFor="factureId">
-                ID de la facture
+                Facture
               </label>
-              <input
-                type="text"
+              <select
+                id="factureId"
                 name="factureId"
-                value={formData.factureId}
-                onChange={handleChange}
+                value={factureId}
+                onChange={(e) => setFactureId(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
-              />
+              >
+                <option value="">Sélectionner une facture</option>
+                {factures.map((facture) => (
+                  <option key={facture.id} value={facture.id.toString()}>
+                    {facture.numero} - {facture.totalTTC.toFixed(2)} €
+                  </option>
+                ))}
+              </select>
+              
+              {selectedFacture && (
+                <div className="mt-2 text-sm text-gray-600">
+                  Reste à payer: {(selectedFacture.resteAPayer || selectedFacture.totalTTC).toFixed(2)} €
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2" htmlFor="clientId">
+                Client
+              </label>
+              <select
+                id="clientId"
+                name="clientId"
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Sélectionner un client</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id.toString()}>
+                    {client.nom}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -86,17 +233,15 @@ export default function ModifierPaiementPage({ params }: { params: { id: string 
                 Montant (€)
               </label>
               <input
-                type="text"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                type="number"
                 id="montant"
-                placeholder="Montant du paiement"
-                {...register("montant", {
-                  required: "Le montant est requis",
-                  pattern: {
-                    value: /^\d+(\.\d{1,2})?$/,
-                    message: "Veuillez entrer un montant valide (ex: 100 ou 100.50)"
-                  },
-                })}
+                name="montant"
+                value={montant}
+                onChange={(e) => setMontant(e.target.value)}
+                step="0.01"
+                min="0"
+                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
 
@@ -106,9 +251,10 @@ export default function ModifierPaiementPage({ params }: { params: { id: string 
               </label>
               <input
                 type="date"
+                id="datePaiement"
                 name="datePaiement"
-                value={formData.datePaiement}
-                onChange={handleChange}
+                value={datePaiement}
+                onChange={(e) => setDatePaiement(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -119,9 +265,10 @@ export default function ModifierPaiementPage({ params }: { params: { id: string 
                 Mode de paiement
               </label>
               <select
+                id="modePaiement"
                 name="modePaiement"
-                value={formData.modePaiement}
-                onChange={handleChange}
+                value={modePaiement}
+                onChange={(e) => setModePaiement(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -139,9 +286,10 @@ export default function ModifierPaiementPage({ params }: { params: { id: string 
               </label>
               <input
                 type="text"
+                id="reference"
                 name="reference"
-                value={formData.reference}
-                onChange={handleChange}
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -151,9 +299,10 @@ export default function ModifierPaiementPage({ params }: { params: { id: string 
                 Notes
               </label>
               <textarea
+                id="notes"
                 name="notes"
-                value={formData.notes}
-                onChange={handleChange}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

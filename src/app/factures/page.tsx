@@ -117,6 +117,32 @@ export default function Factures() {
     }
   };
 
+  // Fonction pour supprimer une facture
+  const handleDeleteFacture = async (id: number, numero: string) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer la facture ${numero} ?`)) {
+      try {
+        const response = await fetch(`/api/factures/${id}`, {
+          method: 'DELETE',
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Erreur lors de la suppression de la facture');
+        }
+        
+        // Mettre à jour la liste des factures
+        setFactures(prevFactures => prevFactures.filter(f => f.id !== id));
+        setFilteredFactures(prevFiltered => prevFiltered.filter(f => f.id !== id));
+        
+        alert('Facture supprimée avec succès !');
+      } catch (err) {
+        console.error('Erreur lors de la suppression:', err);
+        alert(`Erreur lors de la suppression: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6 pb-16 px-4 sm:px-6 max-w-7xl mx-auto">
       {/* En-tête avec titre et action */}
@@ -278,7 +304,7 @@ export default function Factures() {
                       </Link>
                       <button
                         className="text-red-600 hover:text-red-900"
-                        onClick={() => alert(`Supprimer la facture ${facture.numero}?`)}
+                        onClick={() => handleDeleteFacture(facture.id, facture.numero)}
                       >
                         <FaTrashAlt title="Supprimer" />
                       </button>
@@ -332,7 +358,7 @@ export default function Factures() {
                   </Link>
                   <button 
                     className="bg-red-100 text-red-600 p-2 rounded-full w-8 h-8 flex items-center justify-center"
-                    onClick={() => alert(`Supprimer la facture ${facture.numero}?`)}
+                    onClick={() => handleDeleteFacture(facture.id, facture.numero)}
                   >
                     <FaTrashAlt className="w-4 h-4" title="Supprimer" />
                   </button>

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { FaPlus, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface LigneFacture {
   description: string;
@@ -12,80 +14,128 @@ interface LigneFacture {
   unite?: string;
 }
 
-// Données fictives pour une facture existante
-const factureExistante = {
-  id: 1,
-  numero: 'F-2023-042',
-  client: 'Dupont SAS',
-  date: '2023-06-15',
-  echeance: '2023-07-15',
-  statut: 'En attente',
-  devisAssocie: 'D-2023-056',
-  lignes: [
-    {
-      description: 'Peinture murs intérieurs - Salon',
-      quantite: 45,
-      unite: 'm²',
-      prixUnitaire: 25,
-      total: 1125
-    },
-    {
-      description: 'Peinture plafond - Salon',
-      quantite: 20,
-      unite: 'm²',
-      prixUnitaire: 30,
-      total: 600
-    },
-    {
-      description: 'Préparation des surfaces',
-      quantite: 1,
-      unite: 'forfait',
-      prixUnitaire: 350,
-      total: 350
-    }
-  ],
-  conditions: 'Paiement à 30 jours à compter de la date de facturation.',
-  notes: 'Merci pour votre confiance.'
-};
-
 export default function ModifierFacture({ params }: { params: { id: string } }) {
-  const [client, setClient] = useState('');
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement de la facture...</p>
+        </div>
+      </div>
+    }>
+      <ModifierFactureForm id={params.id} />
+    </Suspense>
+  );
+}
+
+function ModifierFactureForm({ id }: { id: string }) {
+  const router = useRouter();
+  
   const [date, setDate] = useState('');
   const [echeance, setEcheance] = useState('');
   const [lignes, setLignes] = useState<LigneFacture[]>([]);
   const [conditions, setConditions] = useState('');
   const [notes, setNotes] = useState('');
-  const [devisAssocie, setDevisAssocie] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-
-  // Clients fictifs pour le dropdown
-  const clients = [
-    { id: 1, nom: 'Dupont SAS' },
-    { id: 2, nom: 'Martin Construction' },
-    { id: 3, nom: 'Dubois SARL' },
-    { id: 4, nom: 'Résidences du Parc' },
-  ];
-
-  // Devis fictifs pour le dropdown
-  const devis = [
-    { id: 1, numero: 'D-2023-056', client: 'Dupont SAS' },
-    { id: 2, numero: 'D-2023-055', client: 'Martin Construction' },
-  ];
+  const [numero, setNumero] = useState('');
+  const [clientId, setClientId] = useState('');
+  const [devisId, setDevisId] = useState('');
+  
+  interface Client {
+    id: number;
+    nom: string;
+    email?: string;
+  }
+  
+  interface Devis {
+    id: number;
+    numero: string;
+    client?: {
+      id: number;
+      nom: string;
+    };
+  }
+  
+  const [clients, setClients] = useState<Client[]>([]);
+  const [devisList, setDevisList] = useState<Devis[]>([]);
 
   // Chargement des données de la facture
   useEffect(() => {
-    // Simulation d'un appel API pour récupérer les données de la facture
-    setTimeout(() => {
-      setClient(factureExistante.client);
-      setDate(factureExistante.date);
-      setEcheance(factureExistante.echeance);
-      setLignes(factureExistante.lignes);
-      setConditions(factureExistante.conditions);
-      setNotes(factureExistante.notes);
-      setDevisAssocie(factureExistante.devisAssocie);
-      setIsLoading(false);
-    }, 500);
-  }, [params.id]);
+    const fetchFacture = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/factures/${id}`);
+        
+        if (!response.ok) {
+          throw new Error('Impossible de charger les données de la facture');
+        }
+        
+        const data = await response.json();
+        console.log('Données de la facture chargées:', data);
+        
+        setNumero(data.numero);
+        setClientId(data.clientId.toString());
+        setDate(new Date(data.date).toISOString().split('T')[0]);
+        setEcheance(new Date(data.echeance).toISOString().split('T')[0]);
+        
+        // Parse des lignes si elles sont stockées en format JSON
+        let lignesData = [];
+        try {
+          if (typeof data.lignes === 'string') {
+            lignesData = JSON.parse(data.lignes);
+          } else if (Array.isArray(data.lignes)) {
+            lignesData = data.lignes;
+          }
+        } catch (e) {
+          console.error('Erreur lors du parsing des lignes:', e);
+          lignesData = [];
+        }
+        
+        setLignes(lignesData);
+        setConditions(data.conditions || '');
+        setNotes(data.notes || '');
+        setDevisId(data.devisId?.toString() || '');
+      } catch (error) {
+        console.error('Erreur lors du chargement de la facture:', error);
+        toast.error('Erreur lors du chargement de la facture');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const fetchClients = async () => {
+      try {
+        const response = await fetch('/api/clients');
+        if (response.ok) {
+          const data = await response.json();
+          setClients(data);
+        } else {
+          console.error('Erreur lors du chargement des clients');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+      }
+    };
+
+    const fetchDevis = async () => {
+      try {
+        const response = await fetch('/api/devis');
+        if (response.ok) {
+          const data = await response.json();
+          setDevisList(data);
+        } else {
+          console.error('Erreur lors du chargement des devis');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+      }
+    };
+
+    fetchFacture();
+    fetchClients();
+    fetchDevis();
+  }, [id]);
 
   // Mise à jour d'une ligne
   const handleLigneChange = (index: number, field: keyof LigneFacture, value: string | number) => {
@@ -128,14 +178,40 @@ export default function ModifierFacture({ params }: { params: { id: string } }) 
   }, 0);
 
   // Soumission du formulaire
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Ici, vous enverriez les données à votre API
-    alert('Facture modifiée avec succès !');
-    
-    // Redirection vers la page de détail de la facture
-    window.location.href = `/factures/${params.id}`;
+    try {
+      const facture = {
+        clientId: parseInt(clientId),
+        date,
+        echeance,
+        statut: 'En attente', // Statut par défaut
+        lignes,
+        conditions,
+        notes,
+        devisId: devisId ? parseInt(devisId) : null,
+      };
+
+      const response = await fetch(`/api/factures/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(facture),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erreur lors de la modification de la facture');
+      }
+
+      toast.success('Facture modifiée avec succès !');
+      router.push(`/factures/${id}`);
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error(`Erreur: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    }
   };
 
   if (isLoading) {
@@ -153,12 +229,12 @@ export default function ModifierFacture({ params }: { params: { id: string } }) 
     <div>
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Modifier la facture {factureExistante.numero}</h1>
+          <h1 className="text-3xl font-bold">Modifier la facture {numero}</h1>
           <p className="text-gray-600">Modifiez les informations de la facture</p>
         </div>
         <div className="flex space-x-2">
           <Link 
-            href={`/factures/${params.id}`} 
+            href={`/factures/${id}`} 
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center"
           >
             <FaTimes className="mr-2" /> Annuler
@@ -179,14 +255,16 @@ export default function ModifierFacture({ params }: { params: { id: string } }) 
               Client
             </label>
             <select
-              value={client}
-              onChange={(e) => setClient(e.target.value)}
+              value={clientId}
+              onChange={(e) => {
+                setClientId(e.target.value);
+              }}
               className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="">Sélectionnez un client</option>
               {clients.map((c) => (
-                <option key={c.id} value={c.nom}>
+                <option key={c.id} value={c.id.toString()}>
                   {c.nom}
                 </option>
               ))}
@@ -197,14 +275,16 @@ export default function ModifierFacture({ params }: { params: { id: string } }) 
               Devis associé (optionnel)
             </label>
             <select
-              value={devisAssocie}
-              onChange={(e) => setDevisAssocie(e.target.value)}
+              value={devisId}
+              onChange={(e) => {
+                setDevisId(e.target.value);
+              }}
               className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Aucun devis associé</option>
-              {devis.map((d) => (
-                <option key={d.id} value={d.numero}>
-                  {d.numero} - {d.client}
+              {devisList.map((d) => (
+                <option key={d.id} value={d.id.toString()}>
+                  {d.numero} - {d.client?.nom || 'Client inconnu'}
                 </option>
               ))}
             </select>

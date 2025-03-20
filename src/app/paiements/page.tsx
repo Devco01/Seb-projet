@@ -66,7 +66,7 @@ export default function Paiements() {
     filterPaiements(value);
   };
 
-  // Fonction combinée de filtrage
+  // Fonction de filtrage combinée
   const filterPaiements = (search: string) => {
     let filtered = paiements;
     
@@ -81,6 +81,32 @@ export default function Paiements() {
     }
     
     setFilteredPaiements(filtered);
+  };
+
+  // Fonction pour supprimer un paiement
+  const handleDeletePaiement = async (id: number) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ce paiement ?`)) {
+      try {
+        const response = await fetch(`/api/paiements/${id}`, {
+          method: 'DELETE',
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Erreur lors de la suppression du paiement');
+        }
+        
+        // Mettre à jour la liste des paiements
+        setPaiements(prevPaiements => prevPaiements.filter(p => p.id !== id));
+        setFilteredPaiements(prevFiltered => prevFiltered.filter(p => p.id !== id));
+        
+        alert('Paiement supprimé avec succès !');
+      } catch (err) {
+        console.error('Erreur lors de la suppression:', err);
+        alert(`Erreur lors de la suppression: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
+    }
   };
 
   // Calcul des totaux pour les statistiques
@@ -248,7 +274,7 @@ export default function Paiements() {
                       </Link>
                       <button
                         className="text-red-600 hover:text-red-900"
-                        onClick={() => alert(`Supprimer le paiement ${paiement.id}?`)}
+                        onClick={() => handleDeletePaiement(paiement.id)}
                       >
                         <FaTrashAlt title="Supprimer" />
                       </button>
@@ -298,7 +324,7 @@ export default function Paiements() {
                 </Link>
                 <button
                   className="bg-red-100 text-red-600 p-2 rounded-full w-8 h-8 flex items-center justify-center"
-                  onClick={() => alert(`Supprimer le paiement ${paiement.id}?`)}
+                  onClick={() => handleDeletePaiement(paiement.id)}
                 >
                   <FaTrashAlt className="w-4 h-4" title="Supprimer" />
                 </button>
