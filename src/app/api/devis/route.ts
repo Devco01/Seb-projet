@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         date: new Date(data.date),
         validite: new Date(data.validite),
         statut: data.statut || 'brouillon',
-        lignes: data.lignes, // Directement en JSON pour PostgreSQL
+        lignes: JSON.stringify(data.lignes), // Conversion en JSON string car le modèle Prisma attend une chaîne
         totalHT,
         totalTTC,
         conditions: data.conditions,
