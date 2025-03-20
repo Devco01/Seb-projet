@@ -99,7 +99,6 @@ model Parametres {
   phone                 String?
   email                 String
   siret                 String?
-  tvaPercent            Float     @default(0)
   paymentDelay          Int       @default(30)
   logoUrl               String?   // Chemin vers le logo stocké
   prefixeDevis          String    @default("D-")

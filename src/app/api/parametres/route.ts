@@ -18,7 +18,6 @@ const ParametresSchema = z.object({
   email: z.string().email("Email invalide").min(1, "L'email est requis"),
   siret: z.string().optional(),
   paymentDelay: z.number().default(30),
-  tvaPercent: z.number().default(0),
   prefixeDevis: z.string().default("D-"),
   prefixeFacture: z.string().default("F-"),
   mentionsLegalesDevis: z.string().nullable(),
@@ -46,7 +45,6 @@ interface ApiParameters {
   email: string;
   siret: string | null;
   paymentDelay: number;
-  tvaPercent: number;
   prefixeDevis: string;
   prefixeFacture: string;
   mentionsLegalesDevis: string | null;
@@ -82,7 +80,6 @@ export async function GET() {
       email: parametres.email,
       siret: parametres.siret || "",
       paymentDelay: parametres.paymentDelay,
-      tvaPercent: parametres.tvaPercent,
       prefixeDevis: parametres.prefixeDevis,
       prefixeFacture: parametres.prefixeFacture,
       mentionsLegalesDevis: parametres.mentionsLegalesDevis,
@@ -125,7 +122,6 @@ export async function POST(request: NextRequest) {
       email: String(data.email || ""),
       siret: String(data.siret || ""),
       paymentDelay: parseInt(String(data.paymentDelay || "30")),
-      tvaPercent: parseFloat(String(data.tvaPercent || "0")),
       prefixeDevis: String(data.prefixeDevis || "D-"),
       prefixeFacture: String(data.prefixeFacture || "F-"),
       mentionsLegalesDevis: data.mentionsLegalesDevis ? String(data.mentionsLegalesDevis) : null,
@@ -174,7 +170,6 @@ export async function POST(request: NextRequest) {
       email: validationData.email,
       siret: validationData.siret,
       paymentDelay: validationData.paymentDelay,
-      tvaPercent: validationData.tvaPercent,
       prefixeDevis: validationData.prefixeDevis,
       prefixeFacture: validationData.prefixeFacture,
       mentionsLegalesDevis: validationData.mentionsLegalesDevis,
@@ -210,7 +205,6 @@ export async function POST(request: NextRequest) {
       email: result.email,
       siret: result.siret || "",
       paymentDelay: result.paymentDelay,
-      tvaPercent: result.tvaPercent,
       prefixeDevis: result.prefixeDevis,
       prefixeFacture: result.prefixeFacture,
       mentionsLegalesDevis: result.mentionsLegalesDevis,
