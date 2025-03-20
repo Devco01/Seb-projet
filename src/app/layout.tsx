@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from 'next';
-import Providers from './components/Providers';
+import Providers from './providers';
 
 export const metadata: Metadata = {
   title: 'FacturePro - Gestion de facturation',

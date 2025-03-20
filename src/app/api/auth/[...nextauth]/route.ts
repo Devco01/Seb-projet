@@ -31,14 +31,14 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         // Vérification des identifiants (à modifier selon vos besoins)
-        const validUsername = "admin"; 
-        const validPassword = "adminpass123";
+        const validUsername = "facturepro"; 
+        const validPassword = "FacturePro@2023!";
 
         if (credentials?.username === validUsername && credentials?.password === validPassword) {
           return {
             id: "1",
             name: "Administrateur",
-            email: "admin@exemple.fr",
+            email: "contact@facturepro.fr",
           };
         }
         
