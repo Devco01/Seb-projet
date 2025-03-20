@@ -32,6 +32,37 @@ module.exports = {
       },
       fontSize: {
         '2xs': '0.625rem',
+        'xxs': '0.625rem',
+      },
+      screens: {
+        'xs': '480px',  // Pour les très petits appareils mobiles
+        'sm': '640px',  // Petits appareils mobiles (par défaut)
+        'md': '768px',  // Tablettes (par défaut)
+        'lg': '1024px', // Petits ordinateurs portables (par défaut)
+        'xl': '1280px', // Ordinateurs portables et desktops (par défaut)
+        '2xl': '1536px', // Grands écrans (par défaut)
+        '3xl': '1920px', // Très grands écrans
+        'print': {'raw': 'print'}, // Media query pour l'impression
+      },
+      spacing: {
+        '72': '18rem',
+        '84': '21rem',
+        '96': '24rem',
+        '112': '28rem',
+        '128': '32rem',
+      },
+      maxWidth: {
+        '8xl': '88rem', // 1408px
+        '9xl': '96rem', // 1536px
+      },
+      minHeight: {
+        'screen-75': '75vh',
+        'screen-50': '50vh',
+      },
+      gridTemplateColumns: {
+        'auto-fit-200': 'repeat(auto-fit, minmax(200px, 1fr))',
+        'auto-fit-250': 'repeat(auto-fit, minmax(250px, 1fr))',
+        'auto-fit-300': 'repeat(auto-fit, minmax(300px, 1fr))',
       },
     },
   },

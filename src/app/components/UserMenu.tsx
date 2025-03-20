@@ -5,10 +5,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 export default function UserMenu() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
 
-  if (!session) return null;
+  // N'affiche rien pendant le chargement ou si non authentifié
+  if (status === 'loading' || !session) return null;
 
   return (
     <div className="relative">
