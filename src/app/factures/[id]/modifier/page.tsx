@@ -92,7 +92,22 @@ function ModifierFactureForm({ id }: { id: string }) {
           lignesData = [];
         }
         
-        setLignes(lignesData);
+        // S'assurer que chaque ligne a toutes les propriétés requises
+        const lignesValidees = lignesData.map((ligne: Partial<LigneFacture>) => {
+          // Vérifier et corriger les valeurs numériques
+          const quantite = Number(ligne.quantite) || 0;
+          const prixUnitaire = Number(ligne.prixUnitaire) || 0;
+          
+          return {
+            description: ligne.description || '',
+            quantite: quantite,
+            prixUnitaire: prixUnitaire,
+            total: quantite * prixUnitaire,
+            unite: ligne.unite || 'm²'
+          };
+        });
+        
+        setLignes(lignesValidees);
         setConditions(data.conditions || '');
         setNotes(data.notes || '');
         setDevisId(data.devisId?.toString() || '');
@@ -141,6 +156,17 @@ function ModifierFactureForm({ id }: { id: string }) {
   const handleLigneChange = (index: number, field: keyof LigneFacture, value: string | number) => {
     const newLignes = [...lignes];
     
+    // Vérifier si la ligne existe
+    if (!newLignes[index]) {
+      console.error("La ligne à l'index", index, "n'existe pas");
+      return;
+    }
+    
+    // Initialiser la ligne avec des valeurs par défaut si des propriétés sont undefined
+    if (newLignes[index].quantite === undefined) newLignes[index].quantite = 0;
+    if (newLignes[index].prixUnitaire === undefined) newLignes[index].prixUnitaire = 0;
+    if (newLignes[index].total === undefined) newLignes[index].total = 0;
+    
     if (field === 'description' || field === 'unite') {
       newLignes[index][field] = value as string;
     } else {
@@ -148,14 +174,10 @@ function ModifierFactureForm({ id }: { id: string }) {
     }
     
     // Recalcul du total de la ligne
-    if (field === 'quantite' || field === 'prixUnitaire') {
-      const quantite = newLignes[index].quantite || 0;
-      const prixUnitaire = newLignes[index].prixUnitaire || 0;
-      
-      const total = quantite * prixUnitaire;
-      
-      newLignes[index].total = total;
-    }
+    const quantite = Number(newLignes[index].quantite) || 0;
+    const prixUnitaire = Number(newLignes[index].prixUnitaire) || 0;
+    
+    newLignes[index].total = quantite * prixUnitaire;
     
     setLignes(newLignes);
   };
