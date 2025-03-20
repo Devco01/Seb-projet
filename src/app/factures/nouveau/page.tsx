@@ -32,6 +32,7 @@ function FactureFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const devisParam = searchParams?.get('devis');
+  const factureId = searchParams?.get('id');
   
   const [clientId, setClientId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -47,10 +48,17 @@ function FactureFormContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingClients, setIsLoadingClients] = useState(true);
   const [isLoadingDevis, setIsLoadingDevis] = useState(true);
+  const [isLoadingFacture, setIsLoadingFacture] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [formInitialized, setFormInitialized] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isModification, setIsModification] = useState(false);
+  const [pageTitle, setPageTitle] = useState('Nouvelle Facture');
+
+  // Marquer que nous sommes côté client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Récupérer les clients depuis l'API
   useEffect(() => {
@@ -118,31 +126,93 @@ function FactureFormContent() {
     }
   }, [echeance]);
 
-  // Charger les données du formulaire depuis le localStorage
+  // Charger la facture à modifier si ID passé en paramètre
   useEffect(() => {
-    // Marquer que nous sommes côté client
-    setIsClient(true);
-    
-    if (!formInitialized) {
-      // Charger les données nécessaires
-      const fetchData = async () => {
-        try {
-          const clientsResponse = await fetch('/api/clients');
-          const clientsData = await clientsResponse.json();
-          setClients(clientsData);
+    if (factureId) {
+      setIsLoadingFacture(true);
+      setIsModification(true);
+      setPageTitle('Modifier Facture');
       
-          // Générer un numéro de facture
-          // ... code existant ...
+      const fetchFacture = async () => {
+        try {
+          const response = await fetch(`/api/factures/${factureId}`);
+          if (!response.ok) {
+            throw new Error(`Erreur lors du chargement de la facture: ${response.status}`);
+          }
           
-          setFormInitialized(true);
-        } catch (error) {
-          console.error('Erreur lors du chargement des données:', error);
+          const data = await response.json();
+          console.log('Facture chargée:', data);
+          
+          // Formatage des dates
+          const formatDateForInput = (dateString: string) => {
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+          };
+          
+          // Mise à jour des états avec les données de la facture
+          setClientId(data.clientId?.toString() || '');
+          setDate(formatDateForInput(data.date));
+          setEcheance(formatDateForInput(data.echeance));
+          
+          if (data.devisId) {
+            setDevisId(data.devisId.toString());
+          }
+          
+          if (data.conditions) {
+            setConditions(data.conditions);
+          }
+          
+          if (data.notes) {
+            setNotes(data.notes);
+          }
+          
+          // Traitement des lignes
+          let lignesData = [];
+          if (data.lignes) {
+            // Si les lignes sont stockées en format JSON string, les parser
+            if (typeof data.lignes === 'string') {
+              try {
+                lignesData = JSON.parse(data.lignes);
+              } catch (e) {
+                console.error('Erreur lors du parsing des lignes de la facture:', e);
+                lignesData = [];
+              }
+            } else if (Array.isArray(data.lignes)) {
+              lignesData = data.lignes;
+            }
+            
+            if (lignesData.length > 0) {
+              const formattedLignes = lignesData.map((ligne: {
+                description?: string;
+                quantite?: number;
+                prixUnitaire?: number;
+              }) => {
+                const quantite = ligne.quantite || 0;
+                const prixUnitaire = ligne.prixUnitaire || 0;
+                
+                return {
+                  description: ligne.description || '',
+                  quantite: quantite,
+                  prixUnitaire: prixUnitaire,
+                  total: Number((quantite * prixUnitaire).toFixed(2))
+                };
+              });
+              
+              setLignes(formattedLignes);
+            }
+          }
+          
+        } catch (err) {
+          console.error('Erreur lors du chargement de la facture:', err);
+          setError(`Impossible de charger la facture: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+        } finally {
+          setIsLoadingFacture(false);
         }
       };
       
-      fetchData();
+      fetchFacture();
     }
-  }, [formInitialized]);
+  }, [factureId]);
 
   // Mise à jour d'une ligne
   const handleLigneChange = (index: number, field: keyof LigneFacture, value: string | number) => {
@@ -256,7 +326,7 @@ function FactureFormContent() {
   const totalHT = lignes.reduce((sum, ligne) => sum + (ligne.quantite * ligne.prixUnitaire), 0);
   const totalTTC = totalHT;
 
-  // Soumission du formulaire
+  // Mise à jour de la fonction handleSubmit pour gérer la modification
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -285,14 +355,16 @@ function FactureFormContent() {
           prixUnitaire: ligne.prixUnitaire
         })),
         conditions,
-        notes,
-        totalHT,
-        totalTTC
+        notes
       };
+
+      // URL et méthode selon si c'est une création ou une modification
+      const url = isModification ? `/api/factures/${factureId}` : '/api/factures';
+      const method = isModification ? 'PUT' : 'POST';
       
       // Envoyer les données à l'API
-      const response = await fetch('/api/factures', {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -301,14 +373,16 @@ function FactureFormContent() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la création de la facture');
+        throw new Error(errorData.error || `Erreur lors de ${isModification ? 'la modification' : 'la création'} de la facture`);
       }
       
       const result = await response.json();
-      setSuccessMessage('Facture créée avec succès');
+      setSuccessMessage(`Facture ${isModification ? 'modifiée' : 'créée'} avec succès`);
       
       // Redirection vers la page de la facture
-      router.push(`/factures/${result.id}`);
+      setTimeout(() => {
+        router.push(`/factures/${result.id || factureId}`);
+      }, 2000);
     } catch (err) {
       console.error('Erreur:', err);
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -322,10 +396,20 @@ function FactureFormContent() {
     window.print();
   };
 
+  // Afficher un état de chargement
+  if (isLoadingFacture) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="ml-3 text-gray-600">Chargement de la facture...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container px-4 py-8 mx-auto print:px-0">
       <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Nouvelle Facture</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{pageTitle}</h1>
         <div className="flex space-x-2">
           <Link
             href="/factures"
