@@ -81,21 +81,18 @@ export async function POST(request: NextRequest) {
 
     const numero = `FACT-${year}-${numeroSuffix.toString().padStart(3, '0')}`;
 
-    // Calculer les totaux
+    // Calculer les totaux sans TVA
     let totalHT = 0;
-    let totalTVA = 0;
     let totalTTC = 0;
 
     if (Array.isArray(data.lignes)) {
       for (const ligne of data.lignes) {
         const montantHT = parseFloat(ligne.quantite) * parseFloat(ligne.prixUnitaire);
-        const montantTVA = montantHT * (parseFloat(ligne.tauxTVA) / 100);
-        
         totalHT += montantHT;
-        totalTVA += montantTVA;
       }
       
-      totalTTC = totalHT + totalTVA;
+      // Sans TVA, le total TTC est identique au total HT
+      totalTTC = totalHT;
     }
 
     // Avec PostgreSQL, pas besoin de convertir en string

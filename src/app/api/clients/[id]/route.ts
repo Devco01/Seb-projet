@@ -118,8 +118,10 @@ export async function DELETE(
 ) {
   try {
     const id = parseInt(params.id);
+    console.log(`Tentative de suppression du client avec ID: ${id}`);
     
     if (isNaN(id)) {
+      console.error(`ID de client invalide: ${params.id}`);
       return NextResponse.json(
         { error: 'ID de client invalide' },
         { status: 400 }
@@ -128,34 +130,75 @@ export async function DELETE(
     
     // Vérifier si le client existe
     const existingClient = await prisma.client.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        devis: true,
+        factures: true,
+        paiements: true
+      }
     });
     
     if (!existingClient) {
+      console.error(`Client non trouvé avec ID: ${id}`);
       return NextResponse.json(
         { error: 'Client non trouvé' },
         { status: 404 }
       );
     }
     
+    // Vérifier si le client a des relations qui empêcheraient sa suppression
+    if (existingClient.devis.length > 0 || existingClient.factures.length > 0 || existingClient.paiements.length > 0) {
+      console.error(`Impossible de supprimer le client ID ${id} car il a des relations:`, {
+        nbDevis: existingClient.devis.length,
+        nbFactures: existingClient.factures.length,
+        nbPaiements: existingClient.paiements.length
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'Impossible de supprimer ce client car il possède des devis, factures ou paiements associés',
+          details: {
+            devis: existingClient.devis.length,
+            factures: existingClient.factures.length,
+            paiements: existingClient.paiements.length
+          }
+        },
+        { status: 400 }
+      );
+    }
+    
     try {
-      // Supprimer le client directement
+      // Supprimer le client
       await prisma.client.delete({
         where: { id },
       });
       
-      return NextResponse.json({ success: true });
+      console.log(`Client ID ${id} supprimé avec succès`);
+      return NextResponse.json({ success: true, message: 'Client supprimé avec succès' });
     } catch (deleteError) {
-      console.error('Erreur de suppression (probablement des relations):', deleteError);
+      console.error(`Erreur lors de la suppression du client ID ${id}:`, deleteError);
+      
+      // Afficher plus de détails sur l'erreur Prisma
+      if (deleteError.code) {
+        console.error(`Code d'erreur Prisma: ${deleteError.code}`);
+      }
+      
+      if (deleteError.meta) {
+        console.error('Métadonnées d\'erreur:', deleteError.meta);
+      }
+      
       return NextResponse.json(
-        { error: 'Impossible de supprimer ce client car il possède des devis, factures ou paiements associés' },
+        { 
+          error: 'Impossible de supprimer ce client',
+          details: deleteError.message 
+        },
         { status: 400 }
       );
     }
   } catch (error) {
     console.error('Erreur lors de la suppression du client:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la suppression du client' },
+      { error: 'Erreur lors de la suppression du client', details: error.message },
       { status: 500 }
     );
   }

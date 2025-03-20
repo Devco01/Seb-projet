@@ -7,13 +7,19 @@ import path from "path";
 // Schéma de validation avec les champs obligatoires
 const ParametresSchema = z.object({
   companyName: z.string().min(1, "Le nom de l'entreprise est requis"),
-  address: z.string().min(1, "L'adresse est requise"),
-  zipCode: z.string().min(1, "Le code postal est requis"),
-  city: z.string().min(1, "La ville est requise"),
   email: z.string().email("Email invalide").min(1, "L'email est requis"),
   paymentDelay: z.number().default(30),
-  prefixeDevis: z.string().default("D-"),
-  prefixeFacture: z.string().default("F-"),
+  prefixeDevis: z.string().default("DEV-"),
+  prefixeFacture: z.string().default("FACT-"),
+  // Champs optionnels
+  address: z.string().optional(),
+  zipCode: z.string().optional(),
+  city: z.string().optional(),
+  phone: z.string().optional(),
+  siret: z.string().optional(),
+  mentionsLegalesDevis: z.string().optional(),
+  mentionsLegalesFacture: z.string().optional(),
+  conditionsPaiement: z.string().optional(),
 });
 
 // Répertoire pour stocker les logos
@@ -67,13 +73,19 @@ export async function POST(request: NextRequest) {
     // Conversion des types pour validation
     const validationData = {
       companyName: String(data.companyName || ""),
+      email: String(data.email || ""),
+      paymentDelay: parseInt(String(data.paymentDelay || "30")),
+      prefixeDevis: String(data.prefixeDevis || "DEV-"),
+      prefixeFacture: String(data.prefixeFacture || "FACT-"),
+      // Champs optionnels avec valeurs par défaut vides
       address: String(data.address || ""),
       zipCode: String(data.zipCode || ""),
       city: String(data.city || ""),
-      email: String(data.email || ""),
-      paymentDelay: parseInt(String(data.paymentDelay || "30")),
-      prefixeDevis: String(data.prefixeDevis || "D-"),
-      prefixeFacture: String(data.prefixeFacture || "F-"),
+      phone: String(data.phone || ""),
+      siret: String(data.siret || ""),
+      mentionsLegalesDevis: String(data.mentionsLegalesDevis || ""),
+      mentionsLegalesFacture: String(data.mentionsLegalesFacture || ""),
+      conditionsPaiement: String(data.conditionsPaiement || ""),
     };
 
     // Valider les données de base
@@ -87,18 +99,21 @@ export async function POST(request: NextRequest) {
 
     // Gérer le logo s'il est présent
     const logoFile = formData.get("logo") as File | null;
-    let logoFileName = undefined;
+    let logoUrl = undefined;
     
     if (logoFile && logoFile.size > 0) {
       try {
         console.log("[API] Logo reçu, taille:", logoFile.size);
         const fileExtension = logoFile.name.split('.').pop() || 'png';
-        logoFileName = `logo_${Date.now()}.${fileExtension}`;
+        const logoFileName = `logo_${Date.now()}.${fileExtension}`;
         const filePath = path.join(UPLOAD_DIR, logoFileName);
         
         const buffer = Buffer.from(await logoFile.arrayBuffer());
         fs.writeFileSync(filePath, buffer);
         console.log("[API] Logo enregistré:", filePath);
+        
+        // Chemin relatif pour l'accès via l'API
+        logoUrl = `/uploads/${logoFileName}`;
       } catch (error) {
         console.error("[API] Erreur lors de l'enregistrement du logo:", error);
         // On continue malgré l'erreur du logo
@@ -111,22 +126,27 @@ export async function POST(request: NextRequest) {
     const existingParametres = await prisma.parametres.findFirst();
     console.log("[API] Paramètres existants:", existingParametres ? "oui" : "non");
 
-    // Créer un objet prismaData avec tous les champs obligatoires
+    // Créer un objet prismaData avec tous les champs
     const prismaData = {
       companyName: validationData.companyName,
-      address: validationData.address,
-      zipCode: validationData.zipCode,
-      city: validationData.city,
       email: validationData.email,
       paymentDelay: validationData.paymentDelay,
       prefixeDevis: validationData.prefixeDevis,
       prefixeFacture: validationData.prefixeFacture,
+      address: validationData.address,
+      zipCode: validationData.zipCode,
+      city: validationData.city,
+      phone: validationData.phone,
+      siret: validationData.siret,
+      mentionsLegalesDevis: validationData.mentionsLegalesDevis || null,
+      mentionsLegalesFacture: validationData.mentionsLegalesFacture || null,
+      conditionsPaiement: validationData.conditionsPaiement || null,
     };
 
     // Ajouter le logo s'il est présent
-    if (logoFileName) {
-      // @ts-ignore - Le champ logoUrl existe dans le schéma Prisma mais TypeScript ne le reconnaît pas
-      prismaData.logoUrl = logoFileName;
+    if (logoUrl) {
+      // @ts-expect-error - Le champ logoUrl existe dans le schéma Prisma mais TypeScript ne le reconnaît pas
+      prismaData.logoUrl = logoUrl;
     }
 
     // Créer ou mettre à jour les paramètres
@@ -149,7 +169,7 @@ export async function POST(request: NextRequest) {
       throw error;
     }
 
-    // Retourner les paramètres tels quels
+    // Retourner les paramètres
     return NextResponse.json(result);
   } catch (error) {
     console.error("[API] Erreur lors de la création/mise à jour des paramètres:", error);
