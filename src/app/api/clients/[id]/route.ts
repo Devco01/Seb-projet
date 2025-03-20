@@ -23,35 +23,7 @@ export async function GET(
     }
     
     const client = await prisma.client.findUnique({
-      where: { id },
-      include: {
-        devis: {
-          select: {
-            id: true,
-            numero: true,
-            date: true,
-            totalTTC: true,
-            statut: true,
-          },
-          orderBy: {
-            date: 'desc',
-          },
-          take: 5,
-        },
-        factures: {
-          select: {
-            id: true,
-            numero: true,
-            date: true,
-            totalTTC: true,
-            statut: true,
-          },
-          orderBy: {
-            date: 'desc',
-          },
-          take: 5,
-        },
-      },
+      where: { id }
     });
     
     if (!client) {
@@ -89,9 +61,9 @@ export async function PUT(
     const data = await request.json();
     
     // Validation des données
-    if (!data.nom || !data.email || !data.adresse || !data.codePostal || !data.ville) {
+    if (!data.nom || !data.email) {
       return NextResponse.json(
-        { error: 'Les champs nom, email, adresse, code postal et ville sont obligatoires' },
+        { error: 'Les champs nom et email sont obligatoires' },
         { status: 400 }
       );
     }
@@ -108,22 +80,25 @@ export async function PUT(
       );
     }
     
+    // Préparer les données avec des valeurs par défaut pour les champs manquants
+    const updateData = {
+      nom: data.nom,
+      email: data.email,
+      contact: data.contact || null,
+      telephone: data.telephone || null,
+      adresse: data.adresse || existingClient.adresse,
+      codePostal: data.codePostal || existingClient.codePostal,
+      ville: data.ville || existingClient.ville,
+      pays: data.pays || existingClient.pays,
+      siret: data.siret || null,
+      tva: data.tva || null,
+      notes: data.notes || null,
+    };
+    
     // Mettre à jour le client
     const updatedClient = await prisma.client.update({
       where: { id },
-      data: {
-        nom: data.nom,
-        contact: data.contact,
-        email: data.email,
-        telephone: data.telephone,
-        adresse: data.adresse,
-        codePostal: data.codePostal,
-        ville: data.ville,
-        pays: data.pays || 'France',
-        siret: data.siret,
-        tva: data.tva,
-        notes: data.notes,
-      },
+      data: updateData,
     });
     
     return NextResponse.json(updatedClient);
@@ -153,12 +128,7 @@ export async function DELETE(
     
     // Vérifier si le client existe
     const existingClient = await prisma.client.findUnique({
-      where: { id },
-      include: {
-        devis: true,
-        factures: true,
-        paiements: true,
-      },
+      where: { id }
     });
     
     if (!existingClient) {
@@ -168,20 +138,20 @@ export async function DELETE(
       );
     }
     
-    // Vérifier si le client a des devis, factures ou paiements associés
-    if (existingClient.devis.length > 0 || existingClient.factures.length > 0 || existingClient.paiements.length > 0) {
+    try {
+      // Supprimer le client directement
+      await prisma.client.delete({
+        where: { id },
+      });
+      
+      return NextResponse.json({ success: true });
+    } catch (deleteError) {
+      console.error('Erreur de suppression (probablement des relations):', deleteError);
       return NextResponse.json(
-        { error: 'Impossible de supprimer un client qui a des devis, factures ou paiements associés' },
+        { error: 'Impossible de supprimer ce client car il possède des devis, factures ou paiements associés' },
         { status: 400 }
       );
     }
-    
-    // Supprimer le client
-    await prisma.client.delete({
-      where: { id },
-    });
-    
-    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Erreur lors de la suppression du client:', error);
     return NextResponse.json(
