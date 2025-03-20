@@ -147,10 +147,25 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
   };
 
   // Fonction pour supprimer le devis
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
-      alert('Devis supprimé avec succès !');
-      router.push('/devis');
+      try {
+        const response = await fetch(`/api/devis/${params.id}`, {
+          method: 'DELETE',
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Erreur lors de la suppression du devis');
+        }
+        
+        alert('Devis supprimé avec succès !');
+        router.push('/devis');
+      } catch (err) {
+        console.error('Erreur lors de la suppression:', err);
+        alert(`Erreur lors de la suppression: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
     }
   };
 
