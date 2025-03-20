@@ -68,16 +68,23 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
+      // Force la redirection vers le dashboard après connexion réussie
+      if (url === baseUrl || url === `${baseUrl}/` || url.startsWith(`${baseUrl}/api/auth`)) {
+        return `${baseUrl}/dashboard`;
+      }
+      
       // Gérer explicitement l'URL de redirection
       // Les URL relatives ne doivent pas être traitées comme des URLs complètes
       if (url.startsWith('/')) {
         // C'est un chemin relatif, utiliser baseUrl
         return `${baseUrl}${url}`;
       }
+      
       // Si l'URL commence par le baseUrl, on l'accepte
       if (url.startsWith(baseUrl)) {
         return url;
       }
+      
       // Sinon, rediriger vers le dashboard
       return `${baseUrl}/dashboard`;
     }
