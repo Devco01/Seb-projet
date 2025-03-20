@@ -38,7 +38,7 @@ try {
   console.error("[API] Erreur lors de la création du répertoire uploads:", error);
 }
 
-// Type sécurisé pour la conversion entre API et base de données
+// Type pour l'API
 type ParametresAPI = {
   id?: number;
   companyName: string;
@@ -59,6 +59,56 @@ type ParametresAPI = {
   updatedAt?: Date;
 }
 
+// Fonction pour adapter les données de Prisma à l'API
+function adaptPrismaToAPI(prismaData: any): ParametresAPI {
+  return {
+    id: prismaData.id,
+    companyName: prismaData.companyName || prismaData.nomEntreprise,
+    address: prismaData.address || prismaData.adresse,
+    zipCode: prismaData.zipCode || prismaData.codePostal,
+    city: prismaData.city || prismaData.ville,
+    phone: prismaData.phone || prismaData.telephone || null,
+    email: prismaData.email,
+    siret: prismaData.siret || null,
+    paymentDelay: prismaData.paymentDelay || prismaData.delaiPaiement || 30,
+    prefixeDevis: prismaData.prefixeDevis,
+    prefixeFacture: prismaData.prefixeFacture,
+    mentionsLegalesDevis: prismaData.mentionsLegalesDevis || null,
+    mentionsLegalesFacture: prismaData.mentionsLegalesFacture || null,
+    conditionsPaiement: prismaData.conditionsPaiement || null,
+    logoUrl: prismaData.logoUrl ? `/uploads/${prismaData.logoUrl}` : null,
+    createdAt: prismaData.createdAt,
+    updatedAt: prismaData.updatedAt
+  };
+}
+
+// Fonction pour adapter les données de l'API à Prisma
+function adaptAPIToPrisma(apiData: any): any {
+  return {
+    // Supporter à la fois les noms en anglais et en français
+    companyName: apiData.companyName,
+    nomEntreprise: apiData.companyName,
+    address: apiData.address,
+    adresse: apiData.address,
+    zipCode: apiData.zipCode,
+    codePostal: apiData.zipCode,
+    city: apiData.city,
+    ville: apiData.city,
+    phone: apiData.phone,
+    telephone: apiData.phone,
+    email: apiData.email,
+    siret: apiData.siret,
+    paymentDelay: apiData.paymentDelay,
+    delaiPaiement: apiData.paymentDelay,
+    prefixeDevis: apiData.prefixeDevis,
+    prefixeFacture: apiData.prefixeFacture,
+    mentionsLegalesDevis: apiData.mentionsLegalesDevis,
+    mentionsLegalesFacture: apiData.mentionsLegalesFacture,
+    conditionsPaiement: apiData.conditionsPaiement,
+    logoUrl: apiData.logoUrl ? apiData.logoUrl.replace('/uploads/', '') : null
+  };
+}
+
 // GET /api/parametres - Récupérer les paramètres de l'entreprise
 export async function GET() {
   console.log("[API] GET /api/parametres - Début");
@@ -72,26 +122,8 @@ export async function GET() {
       return NextResponse.json({ error: "Aucun paramètre trouvé" }, { status: 404 });
     }
 
-    // @ts-ignore - Les champs peuvent avoir des noms différents selon l'environnement
-    const responseData: ParametresAPI = {
-      id: parametres.id,
-      companyName: parametres.companyName,
-      address: parametres.address,
-      zipCode: parametres.zipCode,
-      city: parametres.city,
-      phone: parametres.phone || null,
-      email: parametres.email,
-      siret: parametres.siret || null,
-      paymentDelay: parametres.paymentDelay,
-      prefixeDevis: parametres.prefixeDevis,
-      prefixeFacture: parametres.prefixeFacture,
-      mentionsLegalesDevis: parametres.mentionsLegalesDevis || null,
-      mentionsLegalesFacture: parametres.mentionsLegalesFacture || null,
-      conditionsPaiement: parametres.conditionsPaiement || null,
-      logoUrl: parametres.logoUrl ? `/uploads/${parametres.logoUrl}` : null,
-      createdAt: parametres.createdAt,
-      updatedAt: parametres.updatedAt
-    };
+    // Convertir les données vers le format API
+    const responseData = adaptPrismaToAPI(parametres);
 
     console.log("[API] Réponse envoyée avec succès");
     return NextResponse.json(responseData);
@@ -167,27 +199,12 @@ export async function POST(request: NextRequest) {
     const existingParametres = await prisma.parametres.findFirst();
     console.log("[API] Paramètres existants:", existingParametres ? "oui" : "non");
 
-    // @ts-ignore - Utiliser any pour éviter les erreurs de typage
-    const prismaData: any = {
-      companyName: validationData.companyName,
-      address: validationData.address,
-      zipCode: validationData.zipCode,
-      city: validationData.city,
-      phone: validationData.phone,
-      email: validationData.email,
-      siret: validationData.siret,
-      paymentDelay: validationData.paymentDelay,
-      prefixeDevis: validationData.prefixeDevis,
-      prefixeFacture: validationData.prefixeFacture,
-      mentionsLegalesDevis: validationData.mentionsLegalesDevis,
-      mentionsLegalesFacture: validationData.mentionsLegalesFacture,
-      conditionsPaiement: validationData.conditionsPaiement,
-    };
-
-    // Ajouter le logo s'il est présent
+    // Adapter les données pour Prisma
+    const apiData = { ...validationData };
     if (logoFileName) {
-      prismaData.logoUrl = logoFileName;
+      apiData.logoUrl = logoFileName;
     }
+    const prismaData = adaptAPIToPrisma(apiData);
 
     // Créer ou mettre à jour les paramètres
     let result;
@@ -209,26 +226,8 @@ export async function POST(request: NextRequest) {
       throw error; // Re-lancer pour la gestion d'erreur globale
     }
 
-    // @ts-ignore - Les champs peuvent avoir des noms différents selon l'environnement
-    const responseData: ParametresAPI = {
-      id: result.id,
-      companyName: result.companyName,
-      address: result.address,
-      zipCode: result.zipCode,
-      city: result.city,
-      phone: result.phone || null,
-      email: result.email,
-      siret: result.siret || null,
-      paymentDelay: result.paymentDelay,
-      prefixeDevis: result.prefixeDevis,
-      prefixeFacture: result.prefixeFacture,
-      mentionsLegalesDevis: result.mentionsLegalesDevis || null,
-      mentionsLegalesFacture: result.mentionsLegalesFacture || null,
-      conditionsPaiement: result.conditionsPaiement || null,
-      logoUrl: result.logoUrl ? `/uploads/${result.logoUrl}` : null,
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt
-    };
+    // Convertir les données retournées vers l'API
+    const responseData = adaptPrismaToAPI(result);
 
     // Retourner les paramètres mis à jour
     return NextResponse.json(responseData);
