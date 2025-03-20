@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+// Composant pour le contenu du login qui utilise useSearchParams
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -152,5 +153,26 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+// Fallback pour le composant Suspense
+function LoginFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg text-center">
+        <h2 className="text-2xl font-bold">Chargement...</h2>
+        <div className="animate-spin mx-auto mt-6 h-12 w-12 border-t-2 border-b-2 border-indigo-500 rounded-full"></div>
+      </div>
+    </div>
+  );
+}
+
+// Composant principal qui utilise Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginContent />
+    </Suspense>
   );
 } 
