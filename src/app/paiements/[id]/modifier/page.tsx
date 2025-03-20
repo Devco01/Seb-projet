@@ -43,7 +43,7 @@ function ModifierPaiementForm({ id }: { id: string }) {
   const [clientId, setClientId] = useState('');
   const [montant, setMontant] = useState('');
   const [datePaiement, setDatePaiement] = useState('');
-  const [modePaiement, setModePaiement] = useState('');
+  const [modePaiement, setModePaiement] = useState('Espèces');
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   
@@ -272,11 +272,7 @@ function ModifierPaiementForm({ id }: { id: string }) {
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
-                <option value="">Sélectionner un mode de paiement</option>
-                <option value="Virement">Virement bancaire</option>
-                <option value="Chèque">Chèque</option>
                 <option value="Espèces">Espèces</option>
-                <option value="Carte">Carte bancaire</option>
               </select>
             </div>
 

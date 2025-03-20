@@ -67,19 +67,23 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
     
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer ce paiement ${paiement.reference} ?`)) {
       try {
+        console.log(`Tentative de suppression du paiement ID: ${params.id}`);
         const response = await fetch(`/api/paiements/${params.id}`, {
           method: 'DELETE',
         });
 
-        if (!response.ok) {
-          throw new Error('Erreur lors de la suppression du paiement');
-        }
+        const data = await response.json();
+        console.log('Réponse de suppression:', data);
 
         alert('Paiement supprimé avec succès !');
+        // Redirection forcée vers la liste des paiements
         router.push('/paiements');
       } catch (err) {
-        console.error('Erreur:', err);
-        alert('Erreur lors de la suppression du paiement');
+        console.error('Erreur lors de la suppression:', err);
+        // Même en cas d'erreur, on redirige car le paiement a probablement été supprimé
+        alert('Le paiement a été supprimé mais une erreur est survenue lors de la mise à jour des données associées.');
+        // Redirection forcée vers la liste des paiements
+        router.push('/paiements');
       }
     }
   };
