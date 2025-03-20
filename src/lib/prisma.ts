@@ -1,21 +1,24 @@
 import { PrismaClient } from '@prisma/client';
-import path from 'path';
 
-// Éviter de créer plusieurs instances de Prisma Client en développement
-// https://www.prisma.io/docs/guides/performance-and-optimization/connection-management
+// Déclaration pour améliorer TypeScript avec globalThis
+declare global {
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined;
+}
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-// Utilisation de la variable d'environnement pour SQLite
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL || `file:${path.resolve('./prisma/dev.db')}`,
-      },
+// Garde une instance unique de Prisma Client en développement pour éviter plusieurs instances
+export const prisma = global.prisma || new PrismaClient({
+  log: ['query', 'error', 'warn'],
+  datasources: {
+    db: {
+      // Force l'URL de la base de données pour Vercel
+      url: process.env.NODE_ENV === 'production' 
+        ? process.env.DATABASE_URL 
+        : "file:./prisma/dev.db"
     },
-  });
+  },
+});
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== 'production') {
+  global.prisma = prisma;
+}
