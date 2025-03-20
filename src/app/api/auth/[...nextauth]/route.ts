@@ -48,11 +48,28 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 3600, // 1 heure de session
+    maxAge: 30 * 24 * 60 * 60, // 30 jours
+  },
+  jwt: {
+    // Utilisation d'un algorithme plus simple pour les développements locaux
+    // et d'un secret plus court
+    secret: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET,
+    maxAge: 30 * 24 * 60 * 60, // 30 jours
   },
   pages: {
     signIn: "/auth/login",
     error: "/auth/error",
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -69,7 +86,7 @@ export const authOptions: NextAuthOptions = {
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development",
+  debug: true, // Activer le debug pour identifier plus facilement les problèmes
 };
 
 // Handler pour les routes d'authentification
