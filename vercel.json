@@ -1,7 +1,7 @@
 {
-  "buildCommand": "next build",
+  "version": 2,
+  "buildCommand": "npm run vercel-build",
   "installCommand": "npm install",
-  "framework": "nextjs",
   "outputDirectory": ".next",
-  "regions": ["cdg1"]
+  "cleanUrls": true
 } 
