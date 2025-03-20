@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -41,14 +41,14 @@ export default function LoginPage() {
 
     try {
       const result = await signIn('credentials', {
-        email,
+        username: email,
         password,
         redirect: false,
         callbackUrl: '/dashboard'
       });
 
       if (result?.error) {
-        setError('Email ou mot de passe incorrect');
+        setError('Identifiants incorrects');
       } else if (result?.ok) {
         setIsSuccess(true);
         // La redirection se fera automatiquement via useEffect quand le statut sera mis à jour
@@ -79,27 +79,20 @@ export default function LoginPage() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Connexion à FacturePro
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Utilisez les identifiants par défaut:
-          </p>
-          <p className="text-center text-sm text-gray-500">
-            Email: admin@example.com <br />
-            Mot de passe: admin123
-          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
-                Adresse email
+                Identifiant
               </label>
               <input
                 id="email"
                 name="email"
-                type="email"
+                type="text"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Adresse email"
+                placeholder="Identifiant"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -27,7 +27,8 @@ type Devis = {
   statut: string;
 };
 
-export default function NouvelleFacture() {
+// Composant qui utilise useSearchParams
+function FactureFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const devisParam = searchParams?.get('devis');
@@ -248,24 +249,24 @@ export default function NouvelleFacture() {
         throw new Error('Veuillez remplir correctement toutes les lignes de la facture');
       }
       
-      // Préparer les données
+      // Préparer les données pour l'API
       const factureData = {
         clientId: parseInt(clientId),
         date,
         echeance,
+        devisId: devisId ? parseInt(devisId) : null,
         lignes: lignes.map(ligne => ({
           description: ligne.description,
           quantite: ligne.quantite,
-          prixUnitaire: ligne.prixUnitaire,
+          prixUnitaire: ligne.prixUnitaire
         })),
         conditions,
         notes,
-        devisId: devisId ? parseInt(devisId) : undefined,
         totalHT,
         totalTTC
       };
       
-      // Envoi des données à l'API
+      // Envoyer les données à l'API
       const response = await fetch('/api/factures', {
         method: 'POST',
         headers: {
@@ -276,19 +277,14 @@ export default function NouvelleFacture() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la création de la facture');
+        throw new Error(errorData.error || 'Erreur lors de la création de la facture');
       }
       
-      const data = await response.json();
+      const result = await response.json();
       setSuccessMessage('Facture créée avec succès');
       
-      // Effacer les données du localStorage après création réussie
-      localStorage.removeItem('nouvelleFactureForm');
-      
-      // Rediriger vers la page de détails de la facture après 2 secondes
-      setTimeout(() => {
-        router.push(`/factures/${data.id}`);
-      }, 2000);
+      // Redirection vers la page de la facture
+      router.push(`/factures/${result.id}`);
     } catch (err) {
       console.error('Erreur:', err);
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -297,317 +293,341 @@ export default function NouvelleFacture() {
     }
   };
 
-  // Fonction pour imprimer la facture
+  // Fonction pour imprimer
   const handlePrint = () => {
     window.print();
   };
 
-  // Conditionnellement rendre le contenu uniquement côté client
-  if (!isClient) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Nouvelle facture</h1>
-          <p className="text-gray-600">Créez une nouvelle facture pour un client</p>
-        </div>
-        <div className="flex space-x-2 mt-4 sm:mt-0">
-          <button
-            onClick={handlePrint}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center"
-          >
-            <FaPrint className="mr-2" /> Imprimer
-          </button>
+    <div className="container px-4 py-8 mx-auto print:px-0">
+      <div className="mb-6 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800">Nouvelle Facture</h1>
+        <div className="flex space-x-2">
           <Link
             href="/factures"
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center"
+            className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 flex items-center"
           >
             <FaTimes className="mr-2" /> Annuler
           </Link>
           <button
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+            onClick={handlePrint}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center"
           >
-            {isLoading ? <FaSpinner className="mr-2 animate-spin" /> : <FaSave className="mr-2" />}
-            Enregistrer
+            <FaPrint className="mr-2" /> Aperçu
           </button>
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-          {successMessage}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Client <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              disabled={isLoadingClients}
-            >
-              <option value="">Sélectionnez un client</option>
-              {isLoadingClients ? (
-                <option value="" disabled>Chargement des clients...</option>
-              ) : (
-                Array.isArray(clients) ? 
-                clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.nom}
-                  </option>
-                )) : 
-                <option value="" disabled>Erreur lors du chargement des clients</option>
-              )}
-            </select>
+      <div className="bg-white shadow-md rounded-lg p-6 mb-6 print:shadow-none print:p-0">
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md print:hidden">
+            {error}
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
+        )}
+        
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md print:hidden">
+            {successMessage}
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date d&apos;échéance <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={echeance}
-              onChange={(e) => setEcheance(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Devis associé (optionnel)
-            </label>
-            <select
-              value={devisId}
-              onChange={(e) => handleDevisChange(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Aucun devis associé</option>
-              {isLoadingDevis ? (
-                <option value="" disabled>Chargement des devis...</option>
-              ) : (
-                Array.isArray(devisList) ? 
-                devisList.map((devis) => (
+        )}
+        
+        <form onSubmit={handleSubmit} className="print:block">
+          <div className="print:hidden">
+            <EnteteDocument title="Facture" />
+            
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="client">
+                  Client
+                </label>
+                <select
+                  id="client"
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  disabled={isLoadingClients || Boolean(devisId)}
+                >
+                  <option value="">Sélectionner un client</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.nom}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="date">
+                  Date de facturation
+                </label>
+                <input
+                  type="date"
+                  id="date"
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="echeance">
+                  Date d&apos;échéance
+                </label>
+                <input
+                  type="date"
+                  id="echeance"
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  value={echeance}
+                  onChange={(e) => setEcheance(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="devis">
+                Basé sur un devis
+              </label>
+              <select
+                id="devis"
+                className="w-full p-2 border border-gray-300 rounded-md"
+                value={devisId}
+                onChange={(e) => handleDevisChange(e.target.value)}
+                disabled={isLoadingDevis}
+              >
+                <option value="">Aucun</option>
+                {devisList.map((devis) => (
                   <option key={devis.id} value={devis.id}>
-                    {devis.numero} - {devis.clientId} - {devis.totalTTC.toFixed(2)} €
+                    {devis.numero} - Total: {devis.totalTTC.toFixed(2)} €
                   </option>
-                )) :
-                <option value="" disabled>Erreur lors du chargement des devis</option>
-              )}
-            </select>
-          </div>
-        </div>
-
-        <h2 className="text-xl font-bold mb-4 border-b pb-2">Lignes de la facture</h2>
-        
-        <div className="mb-6 overflow-x-auto">
-          <table className="min-w-full border divide-y divide-gray-200">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="px-2 md:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                <th className="px-2 md:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Qté</th>
-                <th className="px-2 md:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">PU (€)</th>
-                <th className="px-2 md:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Total</th>
-                <th className="px-2 md:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lignes.map((ligne, index) => (
-                <tr key={index} className="border-b">
-                  <td className="px-2 md:px-4 py-2">
-                    <input
-                      type="text"
-                      value={ligne.description}
-                      onChange={(e) => handleLigneChange(index, 'description', e.target.value)}
-                      className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Description de la prestation ou du produit"
-                      required
-                    />
-                  </td>
-                  <td className="px-2 md:px-4 py-2">
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={ligne.quantite}
-                      onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
-                      className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-sm"
-                      required
-                    />
-                  </td>
-                  <td className="px-2 md:px-4 py-2">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={ligne.prixUnitaire}
-                      onChange={(e) => handleLigneChange(index, 'prixUnitaire', e.target.value)}
-                      className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-sm"
-                      required
-                    />
-                  </td>
-                  <td className="px-2 md:px-4 py-2 text-right font-medium text-sm">
-                    {ligne.total.toFixed(2)} €
-                  </td>
-                  <td className="px-2 md:px-4 py-2 text-center">
-                    <button
-                      type="button"
-                      onClick={() => handleSupprimerLigne(index)}
-                      className="text-red-600 hover:text-red-800"
-                      disabled={lignes.length === 1}
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        <button
-          type="button"
-          onClick={handleAjouterLigne}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg flex items-center text-sm"
-        >
-          <FaPlus className="mr-2" /> Ajouter une ligne
-        </button>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Conditions de paiement
-            </label>
-            <textarea
-              value={conditions}
-              onChange={(e) => setConditions(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-            ></textarea>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notes
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-            ></textarea>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <div className="w-full md:w-64">
-            <div className="flex justify-between py-2 font-bold text-lg">
-              <span>Total:</span>
-              <span>{totalTTC.toFixed(2)} €</span>
+                ))}
+              </select>
+            </div>
+            
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-medium">Lignes de facture</h3>
+                <button
+                  type="button"
+                  onClick={handleAjouterLigne}
+                  className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 flex items-center text-sm"
+                >
+                  <FaPlus className="mr-1" /> Ajouter une ligne
+                </button>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="p-2 text-left">Description</th>
+                      <th className="p-2 text-right w-24">Quantité</th>
+                      <th className="p-2 text-right w-32">Prix unitaire</th>
+                      <th className="p-2 text-right w-32">Total</th>
+                      <th className="p-2 w-16"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lignes.map((ligne, index) => (
+                      <tr key={index} className="border-t">
+                        <td className="p-2">
+                          <input
+                            type="text"
+                            className="w-full p-1 border border-gray-300 rounded-md"
+                            value={ligne.description}
+                            onChange={(e) => handleLigneChange(index, 'description', e.target.value)}
+                            required
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="number"
+                            className="w-full p-1 border border-gray-300 rounded-md text-right"
+                            value={ligne.quantite}
+                            onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
+                            min="1"
+                            step="1"
+                            required
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="number"
+                            className="w-full p-1 border border-gray-300 rounded-md text-right"
+                            value={ligne.prixUnitaire}
+                            onChange={(e) => handleLigneChange(index, 'prixUnitaire', e.target.value)}
+                            min="0"
+                            step="0.01"
+                            required
+                          />
+                        </td>
+                        <td className="p-2 text-right">
+                          {ligne.total.toFixed(2)} €
+                        </td>
+                        <td className="p-2 text-center">
+                          {lignes.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleSupprimerLigne(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <FaTrash />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t font-medium">
+                      <td colSpan={3} className="p-2 text-right">Total HT:</td>
+                      <td className="p-2 text-right">{totalHT.toFixed(2)} €</td>
+                      <td></td>
+                    </tr>
+                    <tr className="border-t font-bold">
+                      <td colSpan={3} className="p-2 text-right">Total TTC:</td>
+                      <td className="p-2 text-right">{totalTTC.toFixed(2)} €</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="conditions">
+                  Conditions de paiement
+                </label>
+                <textarea
+                  id="conditions"
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  rows={3}
+                  value={conditions}
+                  onChange={(e) => setConditions(e.target.value)}
+                ></textarea>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="notes">
+                  Notes
+                </label>
+                <textarea
+                  id="notes"
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                ></textarea>
+              </div>
+            </div>
+            
+            <div className="text-right">
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 flex items-center ml-auto"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" /> Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <FaSave className="mr-2" /> Enregistrer
+                  </>
+                )}
+              </button>
             </div>
           </div>
-        </div>
-      </form>
-
-      {/* Section d'aperçu pour l'impression */}
-      <div className="hidden print:block mt-8">
-        <EnteteDocument title="Facture" subtitle={`Facture créée le ${date}`} />
-        
-        {/* Contenu pour l'impression */}
-        <div className="mt-6">
-          {clientId && (
-            <div className="mb-4">
-              <h2 className="font-bold mb-2">Client</h2>
-              <p>{clients.find(c => c.id.toString() === clientId)?.nom}</p>
-            </div>
-          )}
           
-          <div className="mb-4">
-            <h2 className="font-bold mb-2">Détails de la facture</h2>
-            <p>Date: {date}</p>
-            <p>Échéance: {echeance}</p>
-            {devisId && <p>Devis associé: {devisList.find(d => d.id.toString() === devisId)?.numero}</p>}
+          {/* Version imprimable */}
+          <div className="hidden print:block">
+            {isClient && (
+              <>
+                <EnteteDocument title="Facture" />
+                
+                <div className="mb-8">
+                  <div className="flex justify-between mb-6">
+                    <div>
+                      <p><strong>Date:</strong> {new Date(date).toLocaleDateString('fr-FR')}</p>
+                      <p><strong>Échéance:</strong> {new Date(echeance).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                    
+                    <div className="text-right">
+                      <p><strong>Client:</strong> {clients.find(c => c.id.toString() === clientId)?.nom || ''}</p>
+                    </div>
+                  </div>
+                  
+                  <table className="w-full mb-6">
+                    <thead>
+                      <tr className="border-b-2 border-gray-400">
+                        <th className="py-2 text-left">Description</th>
+                        <th className="py-2 text-right">Qté</th>
+                        <th className="py-2 text-right">Prix unitaire</th>
+                        <th className="py-2 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lignes.map((ligne, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="py-2">{ligne.description}</td>
+                          <td className="py-2 text-right">{ligne.quantite}</td>
+                          <td className="py-2 text-right">{ligne.prixUnitaire.toFixed(2)} €</td>
+                          <td className="py-2 text-right">{ligne.total.toFixed(2)} €</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="font-bold border-t">
+                        <td colSpan={3} className="py-2 text-right">Total TTC:</td>
+                        <td className="py-2 text-right">{totalTTC.toFixed(2)} €</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                  
+                  <div className="mb-4">
+                    <h3 className="font-bold mb-1">Conditions de paiement:</h3>
+                    <p>{conditions}</p>
+                  </div>
+                  
+                  {notes && (
+                    <div>
+                      <h3 className="font-bold mb-1">Notes:</h3>
+                      <p>{notes}</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
-          
-          <table className="w-full mb-4">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left pb-2">Description</th>
-                <th className="text-right pb-2">Quantité</th>
-                <th className="text-right pb-2">Prix unitaire</th>
-                <th className="text-right pb-2">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lignes.map((ligne, index) => (
-                <tr key={index} className="border-b">
-                  <td className="py-2">{ligne.description}</td>
-                  <td className="text-right py-2">{ligne.quantite}</td>
-                  <td className="text-right py-2">{ligne.prixUnitaire.toFixed(2)} €</td>
-                  <td className="text-right py-2">{ligne.total.toFixed(2)} €</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={3} className="text-right pt-2 font-bold">Total:</td>
-                <td className="text-right pt-2 font-bold">
-                  {lignes.reduce((sum, ligne) => sum + ligne.total, 0).toFixed(2)} €
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-          
-          {conditions && (
-            <div className="mb-4">
-              <h2 className="font-bold mb-2">Conditions</h2>
-              <p>{conditions}</p>
-            </div>
-          )}
-          
-          {notes && (
-            <div>
-              <h2 className="font-bold mb-2">Notes</h2>
-              <p>{notes}</p>
-            </div>
-          )}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Composant de chargement pour le Suspense
+function FactureLoading() {
+  return (
+    <div className="container px-4 py-8 mx-auto">
+      <div className="mb-6 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800">Nouvelle Facture</h1>
+      </div>
+      <div className="bg-white shadow-md rounded-lg p-6 mb-6 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin h-8 w-8 border-t-2 border-b-2 border-blue-500 rounded-full mb-4"></div>
+          <p className="text-gray-600">Chargement du formulaire...</p>
         </div>
       </div>
     </div>
+  );
+}
+
+// Composant principal enveloppé dans Suspense
+export default function NouvelleFacture() {
+  return (
+    <Suspense fallback={<FactureLoading />}>
+      <FactureFormContent />
+    </Suspense>
   );
 } 
