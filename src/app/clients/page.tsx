@@ -58,7 +58,7 @@ export default function Clients() {
       console.log('Clients récupérés:', data);
       
       // Formater les données
-      const formattedClients = Array.isArray(data) ? data.map((client: any) => ({
+      const formattedClients = Array.isArray(data) ? data.map((client: Client) => ({
         ...client,
         nbDevis: 0, // Par défaut
         nbFactures: 0, // Par défaut
@@ -172,7 +172,7 @@ export default function Clients() {
         </div>
         <div className="bg-white rounded-lg shadow p-6 text-center">
           <p className="text-lg font-medium text-red-500">Impossible de charger les clients</p>
-          <p className="mt-1">Veuillez réessayer plus tard ou contacter l'assistance.</p>
+          <p className="mt-1">Veuillez réessayer plus tard ou contacter l&apos;assistance.</p>
         </div>
       </div>
     );
@@ -365,14 +365,16 @@ export default function Clients() {
                       <Link 
                         href={`/clients/${client.id}`}
                         className="text-blue-600 hover:text-blue-900"
+                        title="Voir le détail"
                       >
-                        Voir
+                        <FaEye />
                       </Link>
                       <button
                         onClick={() => handleDeleteClient(client.id, client.nom)}
                         className="text-red-600 hover:text-red-900"
+                        title="Supprimer le client"
                       >
-                        Supprimer
+                        <FaTrashAlt />
                       </button>
                     </div>
                   </td>
