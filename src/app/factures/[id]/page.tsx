@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import EnteteDocument from '@/app/components/EnteteDocument';
 
 // Interface pour les lignes de facture
@@ -48,6 +49,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
   const [facture, setFacture] = useState<Facture | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const loadFacture = async () => {
@@ -125,25 +127,46 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
   }, 0);
 
   // Fonction pour marquer la facture comme payée
-  const handleMarkAsPaid = () => {
+  const handleMarkAsPaid = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir marquer cette facture comme payée ?')) {
-      setFacture({
-        ...facture,
-        statut: 'Payée',
-        statutColor: 'bg-green-100 text-green-800'
-      });
-      alert('Facture marquée comme payée avec succès !');
+      try {
+        const response = await fetch(`/api/factures/${params.id}/payer`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Erreur lors de la mise à jour du statut de la facture');
+        }
+        
+        // Mettre à jour l'interface utilisateur
+        setFacture({
+          ...facture,
+          statut: 'Payée',
+          statutColor: 'bg-green-100 text-green-800'
+        });
+        
+        alert('Facture marquée comme payée avec succès !');
+      } catch (err) {
+        console.error('Erreur:', err);
+        alert(`Erreur lors de la mise à jour: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
     }
-  };
-
-  // Fonction pour télécharger la facture
-  const handleDownload = () => {
-    alert('Téléchargement de la facture en PDF...');
   };
 
   // Fonction pour envoyer la facture par email
   const handleSendEmail = () => {
-    alert('Envoi de la facture par email...');
+    if (facture && facture.client && facture.client.email) {
+      const subject = encodeURIComponent(`Facture ${facture.numero}`);
+      const body = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint notre facture ${facture.numero}.\n\nCordialement,`);
+      window.location.href = `mailto:${facture.client.email}?subject=${subject}&body=${body}`;
+    } else {
+      alert('Adresse email du client non disponible');
+    }
   };
 
   // Fonction pour imprimer la facture
@@ -152,10 +175,25 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
   };
 
   // Fonction pour supprimer la facture
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
-      alert('Facture supprimée avec succès !');
-      window.location.href = '/factures';
+      try {
+        const response = await fetch(`/api/factures/${params.id}`, {
+          method: 'DELETE',
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Erreur lors de la suppression de la facture');
+        }
+        
+        alert('Facture supprimée avec succès !');
+        router.push('/factures');
+      } catch (err) {
+        console.error('Erreur lors de la suppression:', err);
+        alert(`Erreur lors de la suppression: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
     }
   };
 
@@ -179,19 +217,13 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
             <FaPrint className="mr-2" /> Imprimer
           </button>
           <button 
-            onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
-          >
-            <FaFileDownload className="mr-2" /> PDF
-          </button>
-          <button 
             onClick={handleSendEmail}
             className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaEnvelope className="mr-2" /> Email
           </button>
           <Link 
-            href={`/factures/${params.id}/modifier`}
+            href={`/factures/nouveau?id=${params.id}`}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaEdit className="mr-2" /> Modifier
