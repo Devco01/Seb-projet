@@ -14,15 +14,15 @@ const ParametresSchema = z.object({
   address: z.string().min(1, "L'adresse est requise"),
   zipCode: z.string().min(1, "Le code postal est requis"),
   city: z.string().min(1, "La ville est requise"),
-  phone: z.string().optional(),
+  phone: z.string().optional().nullable(),
   email: z.string().email("Email invalide").min(1, "L'email est requis"),
-  siret: z.string().optional(),
+  siret: z.string().optional().nullable(),
   paymentDelay: z.number().default(30),
   prefixeDevis: z.string().default("D-"),
   prefixeFacture: z.string().default("F-"),
-  mentionsLegalesDevis: z.string().nullable(),
-  mentionsLegalesFacture: z.string().nullable(),
-  conditionsPaiement: z.string().nullable(),
+  mentionsLegalesDevis: z.string().nullable().optional(),
+  mentionsLegalesFacture: z.string().nullable().optional(),
+  conditionsPaiement: z.string().nullable().optional(),
   logoUrl: z.string().nullable().optional(),
 });
 
@@ -30,12 +30,16 @@ const ParametresSchema = z.object({
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
 // Vérifier si le répertoire existe, sinon le créer
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  }
+} catch (error) {
+  console.error("[API] Erreur lors de la création du répertoire uploads:", error);
 }
 
 // Type sécurisé pour la conversion entre API et base de données
-type ApiParameters = {
+type ParametresAPI = {
   id?: number;
   companyName: string;
   address: string;
@@ -68,17 +72,16 @@ export async function GET() {
       return NextResponse.json({ error: "Aucun paramètre trouvé" }, { status: 404 });
     }
 
-    // Convertir les données de Prisma vers l'API avec un casting explicite
-    // @ts-expect-error - Nous savons que les champs correspondent au modèle
-    const responseData: ApiParameters = {
+    // Convertir les données de Prisma vers l'API
+    const responseData: ParametresAPI = {
       id: parametres.id,
       companyName: parametres.companyName,
       address: parametres.address,
       zipCode: parametres.zipCode,
       city: parametres.city,
-      phone: parametres.phone || "",
+      phone: parametres.phone || null,
       email: parametres.email,
-      siret: parametres.siret || "",
+      siret: parametres.siret || null,
       paymentDelay: parametres.paymentDelay,
       prefixeDevis: parametres.prefixeDevis,
       prefixeFacture: parametres.prefixeFacture,
@@ -118,9 +121,9 @@ export async function POST(request: NextRequest) {
       address: String(data.address || ""),
       zipCode: String(data.zipCode || ""),
       city: String(data.city || ""),
-      phone: String(data.phone || ""),
+      phone: data.phone ? String(data.phone) : null,
       email: String(data.email || ""),
-      siret: String(data.siret || ""),
+      siret: data.siret ? String(data.siret) : null,
       paymentDelay: parseInt(String(data.paymentDelay || "30")),
       prefixeDevis: String(data.prefixeDevis || "D-"),
       prefixeFacture: String(data.prefixeFacture || "F-"),
@@ -143,14 +146,19 @@ export async function POST(request: NextRequest) {
     let logoFileName = undefined;
     
     if (logoFile && logoFile.size > 0) {
-      console.log("[API] Logo reçu, taille:", logoFile.size);
-      const fileExtension = logoFile.name.split('.').pop() || 'png';
-      logoFileName = `logo_${Date.now()}.${fileExtension}`;
-      const filePath = path.join(UPLOAD_DIR, logoFileName);
-      
-      const buffer = Buffer.from(await logoFile.arrayBuffer());
-      fs.writeFileSync(filePath, buffer);
-      console.log("[API] Logo enregistré:", filePath);
+      try {
+        console.log("[API] Logo reçu, taille:", logoFile.size);
+        const fileExtension = logoFile.name.split('.').pop() || 'png';
+        logoFileName = `logo_${Date.now()}.${fileExtension}`;
+        const filePath = path.join(UPLOAD_DIR, logoFileName);
+        
+        const buffer = Buffer.from(await logoFile.arrayBuffer());
+        fs.writeFileSync(filePath, buffer);
+        console.log("[API] Logo enregistré:", filePath);
+      } catch (error) {
+        console.error("[API] Erreur lors de l'enregistrement du logo:", error);
+        // On continue malgré l'erreur du logo
+      }
     } else {
       console.log("[API] Pas de nouveau logo");
     }
@@ -160,15 +168,14 @@ export async function POST(request: NextRequest) {
     console.log("[API] Paramètres existants:", existingParametres ? "oui" : "non");
 
     // Créer l'objet avec les données pour Prisma en spécifiant le type approprié
-    // @ts-expect-error - Nous savons que les champs correspondent au modèle
-    const prismaData: Prisma.ParametresUpdateInput = {
+    const prismaData: Prisma.ParametresUpdateInput | Prisma.ParametresCreateInput = {
       companyName: validationData.companyName,
       address: validationData.address,
       zipCode: validationData.zipCode,
       city: validationData.city,
-      phone: validationData.phone || null,
+      phone: validationData.phone,
       email: validationData.email,
-      siret: validationData.siret || null,
+      siret: validationData.siret,
       paymentDelay: validationData.paymentDelay,
       prefixeDevis: validationData.prefixeDevis,
       prefixeFacture: validationData.prefixeFacture,
@@ -184,30 +191,34 @@ export async function POST(request: NextRequest) {
 
     // Créer ou mettre à jour les paramètres
     let result;
-    if (existingParametres) {
-      result = await prisma.parametres.update({
-        where: { id: existingParametres.id },
-        data: prismaData,
-      });
-      console.log("[API] Paramètres mis à jour");
-    } else {
-      result = await prisma.parametres.create({
-        data: prismaData as Prisma.ParametresCreateInput,
-      });
-      console.log("[API] Paramètres créés");
+    try {
+      if (existingParametres) {
+        result = await prisma.parametres.update({
+          where: { id: existingParametres.id },
+          data: prismaData,
+        });
+        console.log("[API] Paramètres mis à jour");
+      } else {
+        result = await prisma.parametres.create({
+          data: prismaData,
+        });
+        console.log("[API] Paramètres créés");
+      }
+    } catch (error) {
+      console.error("[API] Erreur prisma détaillée:", error);
+      throw error; // Re-lancer pour la gestion d'erreur globale
     }
 
     // Convertir les données retournées vers l'API
-    // @ts-expect-error - Nous savons que les champs correspondent au modèle
-    const responseData: ApiParameters = {
+    const responseData: ParametresAPI = {
       id: result.id,
       companyName: result.companyName,
       address: result.address,
       zipCode: result.zipCode,
       city: result.city,
-      phone: result.phone || null,
+      phone: result.phone,
       email: result.email,
-      siret: result.siret || null,
+      siret: result.siret,
       paymentDelay: result.paymentDelay,
       prefixeDevis: result.prefixeDevis,
       prefixeFacture: result.prefixeFacture,

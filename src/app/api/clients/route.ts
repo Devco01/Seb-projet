@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Prisma } from '@prisma/client';
 
 // GET /api/clients - Récupérer tous les clients
 export async function GET() {
@@ -80,28 +81,41 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Assurer que nous avons des valeurs nulles pour les champs optionnels manquants
+    const clientData: Prisma.ClientCreateInput = {
+      nom: data.nom,
+      email: data.email,
+      telephone: data.telephone || null,
+      adresse: data.adresse,
+      codePostal: data.codePostal,
+      ville: data.ville,
+      pays: data.pays || 'France',
+      notes: data.notes || null,
+      contact: data.contact || null,
+      siret: data.siret || null,
+      tva: data.tva || null
+    };
+    
     // Créer le client avec les champs du schéma Prisma
     const client = await prisma.client.create({
-      data: {
-        nom: data.nom,
-        email: data.email,
-        telephone: data.telephone,
-        adresse: data.adresse,
-        codePostal: data.codePostal,
-        ville: data.ville,
-        pays: data.pays || 'France',
-        notes: data.notes,
-        // Ajouter ces champs s'ils existent dans votre schéma
-        ...(data.contact && { contact: data.contact }),
-        ...(data.siret && { siret: data.siret }),
-        ...(data.tva && { tva: data.tva }),
-      },
+      data: clientData
     });
     
     console.log('Client créé avec succès:', client);
     return NextResponse.json(client, { status: 201 });
   } catch (error) {
     console.error('Erreur détaillée lors de la création du client:', error);
+    
+    // Gestion spécifique des erreurs Prisma
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return NextResponse.json(
+          { error: 'Un client avec cet email existe déjà' },
+          { status: 409 }
+        );
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Erreur lors de la création du client' },
       { status: 500 }
