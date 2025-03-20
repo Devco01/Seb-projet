@@ -100,40 +100,44 @@ export async function PUT(
       );
     }
 
-    // Calculer les totaux
+    // Calculer les totaux sans TVA
     let totalHT = 0;
-    let totalTVA = 0;
 
     interface LigneFacture {
       quantite: number;
       prixUnitaire: number;
-      tva: number;
     }
 
     lignes.forEach((ligne: LigneFacture) => {
-      const ligneHT = ligne.quantite * ligne.prixUnitaire;
-      const ligneTVA = ligneHT * (ligne.tva / 100);
-      
+      const ligneHT = ligne.quantite * ligne.prixUnitaire;      
       totalHT += ligneHT;
-      totalTVA += ligneTVA;
     });
 
-    const totalTTC = totalHT + totalTVA;
-    const resteAPayer = totalTTC - facture.totalPaye;
+    // Sans TVA, le total TTC est identique au total HT
+    const totalTTC = totalHT;
+    
+    // Calculer le montant restant à payer en tenant compte des paiements existants
+    const totalPaiements = facture.paiements.reduce((sum, p) => sum + p.montant, 0);
+    const resteAPayer = totalTTC - totalPaiements;
+
+    console.log(`Mise à jour de la facture ${id}:`, {
+      totalHT,
+      totalTTC,
+      totalPaiements,
+      resteAPayer
+    });
 
     // Mettre à jour la facture
     const factureModifiee = await prisma.facture.update({
       where: { id },
       data: {
         clientId,
-        date,
-        echeance,
+        date: new Date(date),
+        echeance: new Date(echeance),
         statut: data.statut || facture.statut,
-        lignes,
+        lignes: JSON.stringify(lignes), // Convertir en string JSON pour le stockage
         totalHT,
-        totalTVA,
         totalTTC,
-        resteAPayer,
         conditions: data.conditions,
         notes: data.notes,
       },
@@ -156,8 +160,10 @@ export async function DELETE(
 ) {
   try {
     const id = parseInt(params.id);
+    console.log(`Tentative de suppression de la facture avec ID: ${id}`);
     
     if (isNaN(id)) {
+      console.error(`ID de facture invalide: ${params.id}`);
       return NextResponse.json(
         { message: 'ID de facture invalide' },
         { status: 400 }
@@ -173,6 +179,7 @@ export async function DELETE(
     });
 
     if (!facture) {
+      console.error(`Facture non trouvée avec ID: ${id}`);
       return NextResponse.json(
         { message: 'Facture non trouvée' },
         { status: 404 }
@@ -181,8 +188,17 @@ export async function DELETE(
 
     // Vérifier si la facture a des paiements
     if (facture.paiements.length > 0) {
+      console.error(`Impossible de supprimer la facture ID ${id} car elle a des paiements. Nombre de paiements: ${facture.paiements.length}`);
+      
       return NextResponse.json(
-        { message: 'Impossible de supprimer une facture avec des paiements' },
+        { 
+          message: 'Impossible de supprimer une facture avec des paiements',
+          details: {
+            nbPaiements: facture.paiements.length,
+            paiementIds: facture.paiements.map(p => p.id),
+            totalPaiements: facture.paiements.reduce((sum, p) => sum + p.montant, 0)
+          }
+        },
         { status: 400 }
       );
     }
@@ -192,11 +208,28 @@ export async function DELETE(
       where: { id },
     });
 
-    return NextResponse.json({ message: 'Facture supprimée avec succès' });
+    console.log(`Facture ID ${id} supprimée avec succès`);
+    return NextResponse.json({ 
+      message: 'Facture supprimée avec succès',
+      success: true
+    });
   } catch (error) {
-    console.error('Erreur lors de la suppression de la facture:', error);
+    console.error(`Erreur lors de la suppression de la facture ID ${params.id}:`, error);
+    
+    // Afficher plus de détails sur l'erreur
+    if (error.code) {
+      console.error(`Code d'erreur: ${error.code}`);
+    }
+    
+    if (error.meta) {
+      console.error('Métadonnées d\'erreur:', error.meta);
+    }
+    
     return NextResponse.json(
-      { message: 'Erreur lors de la suppression de la facture' },
+      { 
+        message: 'Erreur lors de la suppression de la facture',
+        details: error.message
+      },
       { status: 500 }
     );
   }
