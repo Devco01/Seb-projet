@@ -125,19 +125,15 @@ export default function NouveauDevis() {
     }
 
     try {
-      // Calculer le total HT
-      const totalHT = lignes.reduce((sum, ligne) => sum + ligne.total, 0);
-      
       // Préparer les données du devis
       const devisData = {
         clientId: parseInt(clientId),
         date,
         validite,
-        lignes: JSON.stringify(lignes),
+        lignes: lignes, // Envoi direct des lignes sans conversion JSON
         conditions,
         notes,
-        totalHT,
-        totalTTC: totalHT, // Pas de TVA pour les auto-entrepreneurs
+        statut: 'En attente'
       };
 
       // Envoyer les données au serveur
@@ -151,7 +147,7 @@ export default function NouveauDevis() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de la création du devis');
+        throw new Error(errorData.error || 'Erreur lors de la création du devis');
       }
 
       const data = await response.json();
