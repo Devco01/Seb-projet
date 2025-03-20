@@ -16,7 +16,7 @@
     "clean": "rm -rf .next node_modules .vercel",
     "postinstall": "npx prisma generate",
     "create-placeholder": "node create-placeholder-img.js",
-    "vercel-build": "npx prisma generate && npx prisma db push && next build"
+    "vercel-build": "NODE_OPTIONS=\"--max-old-space-size=1536\" npx prisma generate && next build"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
