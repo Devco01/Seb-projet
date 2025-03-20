@@ -25,6 +25,13 @@ function getPrismaInstance() {
     return {} as unknown as PrismaClient;
   }
 
+  // Vérifier si nous avons une URL de base de données
+  const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!databaseUrl && !isBuild) {
+    console.error('❌ ERREUR: Aucune URL de base de données trouvée dans les variables d\'environnement');
+    throw new Error('URL de base de données manquante');
+  }
+
   // En développement, réutiliser l'instance existante
   if (process.env.NODE_ENV === 'development') {
     if (!globalThis.prisma) {
