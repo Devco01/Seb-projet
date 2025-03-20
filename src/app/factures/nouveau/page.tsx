@@ -198,19 +198,43 @@ function FactureFormContent() {
         setClientId(devis.clientId.toString());
         
         // Mettre à jour les lignes
-        if (devis.lignes && devis.lignes.length > 0) {
-          const newLignes = devis.lignes.map((ligne: {
-            description: string;
-            quantite: number;
-            prixUnitaire: number;
-          }) => ({
-            description: ligne.description,
-            quantite: ligne.quantite,
-            prixUnitaire: ligne.prixUnitaire,
-            total: Number((ligne.quantite * ligne.prixUnitaire).toFixed(2))
-          }));
+        if (devis.lignes) {
+          let lignesData;
           
-          setLignes(newLignes);
+          // Si les lignes sont stockées en format JSON string, les parser
+          if (typeof devis.lignes === 'string') {
+            try {
+              lignesData = JSON.parse(devis.lignes);
+            } catch (e) {
+              console.error('Erreur lors du parsing des lignes du devis:', e);
+              lignesData = [];
+            }
+          } else if (Array.isArray(devis.lignes)) {
+            lignesData = devis.lignes;
+          } else {
+            lignesData = [];
+          }
+          
+          if (lignesData.length > 0) {
+            const newLignes = lignesData.map((ligne: { 
+              description?: string; 
+              quantite?: number; 
+              prixUnitaire?: number; 
+              total?: number;
+            }) => {
+              const quantite = ligne.quantite || 0;
+              const prixUnitaire = ligne.prixUnitaire || 0;
+              
+              return {
+                description: ligne.description || '',
+                quantite: quantite,
+                prixUnitaire: prixUnitaire,
+                total: Number((quantite * prixUnitaire).toFixed(2))
+              };
+            });
+            
+            setLignes(newLignes);
+          }
         }
         
         // Mettre à jour les conditions et notes
