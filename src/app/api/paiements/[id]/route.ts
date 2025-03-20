@@ -152,8 +152,10 @@ export async function DELETE(
 ) {
   try {
     const id = parseInt(params.id);
+    console.log(`Tentative de suppression du paiement avec ID: ${id}`);
     
     if (isNaN(id)) {
+      console.error(`ID de paiement invalide: ${params.id}`);
       return NextResponse.json(
         { message: 'ID de paiement invalide' },
         { status: 400 }
@@ -166,6 +168,7 @@ export async function DELETE(
     });
 
     if (!paiement) {
+      console.error(`Paiement non trouvé avec ID: ${id}`);
       return NextResponse.json(
         { message: 'Paiement non trouvé' },
         { status: 404 }
@@ -174,19 +177,46 @@ export async function DELETE(
 
     // Récupérer l'ID de la facture avant de supprimer le paiement
     const factureId = paiement.factureId;
+    console.log(`ID de la facture associée: ${factureId}`);
 
-    // Supprimer le paiement
-    await prisma.paiement.delete({
-      where: { id },
-    });
+    try {
+      // Supprimer le paiement
+      await prisma.paiement.delete({
+        where: { id },
+      });
+      console.log(`Paiement ID ${id} supprimé avec succès`);
+    } catch (deleteError) {
+      console.error(`Erreur lors de la suppression du paiement ID ${id}:`, deleteError);
+      throw deleteError;
+    }
 
     // Mettre à jour le statut de la facture
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/factures/${factureId}/payer`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    try {
+      // Construire l'URL avec une valeur par défaut si l'env n'est pas défini
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+      const apiUrl = baseUrl 
+        ? `${baseUrl}/api/factures/${factureId}/payer` 
+        : `/api/factures/${factureId}/payer`;
+      
+      console.log(`Mise à jour du statut de la facture via API: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        console.error(`Erreur lors de la mise à jour du statut de la facture: ${response.status} ${response.statusText}`);
+        // On continue malgré l'erreur car le paiement a déjà été supprimé
+      } else {
+        console.log(`Statut de la facture ID ${factureId} mis à jour avec succès`);
+      }
+    } catch (updateError) {
+      console.error(`Erreur lors de la mise à jour du statut de la facture ID ${factureId}:`, updateError);
+      // On continue malgré l'erreur car le paiement a déjà été supprimé
+    }
 
     return NextResponse.json({ message: 'Paiement supprimé avec succès' });
   } catch (error) {

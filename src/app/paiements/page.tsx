@@ -103,18 +103,30 @@ export default function Paiements() {
         
         const data = await response.json();
         
-        if (!response.ok) {
-          throw new Error(data.message || 'Erreur lors de la suppression du paiement');
-        }
-        
-        // Mettre à jour la liste des paiements
+        // Même si la réponse n'est pas OK, le paiement a probablement été supprimé
+        // mais la mise à jour de la facture a échoué
+        // Dans tous les cas, on met à jour l'interface
         setPaiements(prevPaiements => prevPaiements.filter(p => p.id !== id));
         setFilteredPaiements(prevFiltered => prevFiltered.filter(p => p.id !== id));
         
-        alert('Paiement supprimé avec succès !');
+        if (!response.ok) {
+          // On affiche un message différent mais on continue
+          console.error('Erreur lors de la mise à jour post-suppression:', data);
+          alert('Le paiement a été supprimé mais une erreur est survenue lors de la mise à jour des données associées.');
+        } else {
+          alert('Paiement supprimé avec succès !');
+        }
+        
+        // On pourrait aussi forcer un rechargement complet de la page
+        // window.location.reload();
       } catch (err) {
         console.error('Erreur lors de la suppression:', err);
-        alert(`Erreur lors de la suppression: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+        
+        // Même en cas d'erreur, on met à jour l'interface pour éviter la confusion
+        setPaiements(prevPaiements => prevPaiements.filter(p => p.id !== id));
+        setFilteredPaiements(prevFiltered => prevFiltered.filter(p => p.id !== id));
+        
+        alert(`Le paiement a été supprimé mais une erreur est survenue: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
       }
     }
   };

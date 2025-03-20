@@ -23,7 +23,7 @@ export default function NouveauPaiement() {
   const [factureId, setFactureId] = useState('');
   const [montant, setMontant] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [methode, setMethode] = useState('Virement');
+  const [methode, setMethode] = useState('Espèces');
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -43,6 +43,7 @@ export default function NouveauPaiement() {
         }
         
         const data = await response.json();
+        console.log('Factures récupérées:', data.length);
         
         // Calculer le reste à payer pour chaque facture
         const facturesAvecReste = data.map((facture: Facture) => {
@@ -61,6 +62,7 @@ export default function NouveauPaiement() {
           facture.statut !== 'Payée' && facture.resteAPayer > 0
         );
         
+        console.log('Factures non payées disponibles:', facturesNonPayees.length);
         setFactures(facturesNonPayees);
       } catch (err) {
         console.error('Erreur:', err);
@@ -144,11 +146,14 @@ export default function NouveauPaiement() {
         body: JSON.stringify(paiementData),
       });
       
-      const responseData = await response.json();
-      
       if (!response.ok) {
+        const responseData = await response.json();
+        console.error('Erreur API:', responseData);
         throw new Error(responseData.message || 'Erreur lors de l\'enregistrement du paiement');
       }
+      
+      const responseData = await response.json();
+      console.log('Réponse API:', responseData);
       
       toast.success('Paiement enregistré avec succès');
       router.push('/paiements');
@@ -277,15 +282,18 @@ export default function NouveauPaiement() {
                 id="methode"
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={methode}
-                onChange={(e) => setMethode(e.target.value)}
+                onChange={(e) => {
+                  console.log("Méthode sélectionnée:", e.target.value);
+                  setMethode(e.target.value);
+                }}
                 required
                 disabled={isLoading}
               >
-                <option value="Virement">Virement bancaire</option>
-                <option value="Chèque">Chèque</option>
                 <option value="Espèces">Espèces</option>
-                <option value="Carte">Carte bancaire</option>
               </select>
+              <div className="mt-1 text-xs text-gray-500">
+                Méthode actuelle: {methode}
+              </div>
             </div>
 
             {/* Référence */}
