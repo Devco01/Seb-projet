@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+// Composant pour le contenu du login qui utilise useSearchParams
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -13,13 +14,16 @@ export default function LoginPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const { status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
   
   // Utilisation de useEffect pour la redirection
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/dashboard');
+      console.log("Redirection vers:", callbackUrl);
+      router.push(callbackUrl);
     }
-  }, [status, router]);
+  }, [status, router, callbackUrl]);
   
   // Afficher un écran de chargement si déjà connecté
   if (status === 'authenticated') {
@@ -27,7 +31,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
         <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg text-center">
           <h2 className="text-2xl font-bold">Vous êtes déjà connecté</h2>
-          <p className="mt-2">Redirection en cours...</p>
+          <p className="mt-2">Redirection en cours vers {callbackUrl}...</p>
           <div className="animate-spin mx-auto mt-6 h-12 w-12 border-t-2 border-b-2 border-indigo-500 rounded-full"></div>
         </div>
       </div>
@@ -44,16 +48,18 @@ export default function LoginPage() {
         username: email,
         password,
         redirect: false,
-        callbackUrl: '/dashboard'
+        callbackUrl: callbackUrl
       });
 
       if (result?.error) {
         setError('Identifiants incorrects');
       } else if (result?.ok) {
         setIsSuccess(true);
+        console.log("Connexion réussie, redirection prévue vers:", callbackUrl);
         // La redirection se fera automatiquement via useEffect quand le statut sera mis à jour
       }
-    } catch {
+    } catch (err) {
+      console.error("Erreur de connexion:", err);
       setError('Une erreur est survenue lors de la connexion');
     } finally {
       setIsLoading(false);
@@ -65,7 +71,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
         <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg text-center">
           <h2 className="text-2xl font-bold text-green-600">Connexion réussie!</h2>
-          <p>Redirection en cours...</p>
+          <p>Redirection en cours vers {callbackUrl}...</p>
           <div className="animate-spin mx-auto mt-6 h-12 w-12 border-t-2 border-b-2 border-indigo-500 rounded-full"></div>
         </div>
       </div>
@@ -147,5 +153,26 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+// Fallback pour le composant Suspense
+function LoginFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white shadow-lg rounded-lg text-center">
+        <h2 className="text-2xl font-bold">Chargement...</h2>
+        <div className="animate-spin mx-auto mt-6 h-12 w-12 border-t-2 border-b-2 border-indigo-500 rounded-full"></div>
+      </div>
+    </div>
+  );
+}
+
+// Composant principal qui utilise Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginContent />
+    </Suspense>
   );
 } 

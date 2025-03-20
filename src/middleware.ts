@@ -21,7 +21,11 @@ function isPublicPath(path: string) {
   return PUBLIC_PATHS.some(publicPath => 
     path === publicPath || 
     path.startsWith('/api/auth/callback/') || 
-    path.startsWith('/_next/')
+    path.startsWith('/_next/') ||
+    path.includes('/favicon.ico') ||
+    path.includes('.png') ||
+    path.includes('.jpg') ||
+    path.includes('.svg')
   );
 }
 
@@ -33,8 +37,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Vérifier si le cookie de session existe
-  const sessionToken = request.cookies.get('next-auth.session-token');
+  // Vérifier si le cookie de session existe (en tenant compte de l'environnement)
+  const isProd = process.env.NODE_ENV === 'production';
+  const sessionTokenName = isProd ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+  
+  // Chercher le cookie en fonction de l'environnement
+  const sessionToken = request.cookies.get(sessionTokenName) || 
+                         // Fallback pour être sûr
+                         request.cookies.get('next-auth.session-token') ||
+                         request.cookies.get('__Secure-next-auth.session-token');
   
   // Si le cookie existe, on laisse passer la requête
   if (sessionToken) {
@@ -44,6 +55,7 @@ export function middleware(request: NextRequest) {
   // Sinon, on redirige vers la page de connexion NextAuth
   const url = request.nextUrl.clone();
   url.pathname = '/auth/login';
+  url.searchParams.set('callbackUrl', request.nextUrl.pathname);
   return NextResponse.redirect(url);
 }
 
@@ -56,6 +68,7 @@ export const config = {
     '/clients/:path*',
     '/dashboard/:path*',
     '/tableaux-de-bord',
-    '/parametres/:path*'
+    '/parametres/:path*',
+    '/paiements/:path*'
   ]
 }; 

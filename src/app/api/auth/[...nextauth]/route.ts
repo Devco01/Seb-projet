@@ -30,11 +30,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Mot de passe", type: "password" }
       },
       async authorize(credentials) {
-
         // Identifiants corrects fournis par le client
-
-        // Vérification des identifiants (à modifier selon vos besoins)
-
         const validUsername = "facturepro"; 
         const validPassword = "FacturePro@2023!";
 
@@ -42,7 +38,7 @@ export const authOptions: NextAuthOptions = {
           return {
             id: "1",
             name: "Administrateur",
-            email: "contact@facturepro.fr",
+            email: "admin@exemple.fr",
           };
         }
         
@@ -70,6 +66,15 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Gérer explicitement l'URL de redirection
+      // Si l'URL commence par le baseUrl ou est une URL relative, on l'accepte
+      if (url.startsWith(baseUrl) || url.startsWith('/')) {
+        return url;
+      }
+      // Sinon, rediriger vers le dashboard
+      return baseUrl + '/dashboard';
     }
   },
   cookies: {
