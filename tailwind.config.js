@@ -35,11 +35,8 @@ module.exports = {
       },
     },
   },
-  // @ts-expect-error - Le plugin forms est correctement installé
   plugins: [
-    // Plugin Tailwind Forms - requis pour les styles de formulaire
-    // eslint-disable-next-line
-    require('@tailwindcss/forms'),
+    require('@tailwindcss/forms')
   ],
   safelist: [
     // Classes pour les différents statuts
