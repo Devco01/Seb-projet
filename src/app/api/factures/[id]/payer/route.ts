@@ -7,9 +7,11 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log(`Mise à jour du statut de paiement pour la facture ID: ${params.id}`);
     const id = parseInt(params.id);
     
     if (isNaN(id)) {
+      console.error(`ID de facture invalide: ${params.id}`);
       return NextResponse.json(
         { message: 'ID de facture invalide' },
         { status: 400 }
@@ -25,6 +27,7 @@ export async function PUT(
     });
 
     if (!facture) {
+      console.error(`Facture non trouvée avec ID: ${id}`);
       return NextResponse.json(
         { message: 'Facture non trouvée' },
         { status: 404 }
@@ -33,8 +36,8 @@ export async function PUT(
 
     // Calculer le total payé
     const totalPaye = facture.paiements.reduce((sum: number, paiement: { montant: number }) => sum + paiement.montant, 0);
-    const resteAPayer = facture.totalTTC - totalPaye;
-
+    console.log(`Facture ID ${id}: Total TTC = ${facture.totalTTC}, Total payé = ${totalPaye}`);
+    
     // Déterminer le statut en fonction du montant payé
     let statut = 'En attente';
     if (totalPaye >= facture.totalTTC) {
@@ -44,14 +47,14 @@ export async function PUT(
     } else if (new Date(facture.echeance) < new Date()) {
       statut = 'En retard';
     }
+    
+    console.log(`Mise à jour du statut de la facture ID ${id} vers: ${statut}`);
 
-    // Mettre à jour la facture
+    // Mettre à jour uniquement le statut de la facture
     const factureModifiee = await prisma.facture.update({
       where: { id },
       data: {
         statut,
-        totalPaye,
-        resteAPayer,
       },
     });
 

@@ -40,10 +40,12 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
+    console.log('Données reçues pour la création du paiement:', data);
 
     // Validation des données
     const { factureId, clientId, date, montant, methode } = data;
     if (!factureId || !clientId || !date || !montant || !methode) {
+      console.error('Données manquantes:', { factureId, clientId, date, montant, methode });
       return NextResponse.json(
         { message: 'Données invalides. FactureId, clientId, date, montant et méthode sont requis' },
         { status: 400 }
@@ -56,6 +58,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!facture) {
+      console.error(`Facture non trouvée avec ID: ${factureId}`);
       return NextResponse.json(
         { message: 'Facture non trouvée' },
         { status: 404 }
@@ -68,11 +71,23 @@ export async function POST(request: NextRequest) {
     });
 
     if (!client) {
+      console.error(`Client non trouvé avec ID: ${clientId}`);
       return NextResponse.json(
         { message: 'Client non trouvé' },
         { status: 404 }
       );
     }
+
+    // Générer une référence unique si non fournie
+    let reference = data.reference;
+    if (!reference) {
+      // Créer une référence basée sur la date et un nombre aléatoire
+      const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const randomStr = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      reference = `PAY-${dateStr}-${randomStr}`;
+    }
+
+    console.log(`Création d'un paiement avec référence: ${reference}`);
 
     // Créer le paiement
     const nouveauPaiement = await prisma.paiement.create({
@@ -82,24 +97,35 @@ export async function POST(request: NextRequest) {
         date,
         montant: parseFloat(montant.toString()),
         methode,
-        reference: data.reference,
+        reference,
+        referenceTransaction: data.reference,
         notes: data.notes,
       },
     });
 
-    // Mettre à jour le statut de la facture
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/factures/${factureId}/payer`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    console.log('Paiement créé avec succès:', nouveauPaiement);
 
-    return NextResponse.json(nouveauPaiement);
+    // Mettre à jour le statut de la facture
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/factures/${factureId}/payer`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        console.error(`Erreur lors de la mise à jour du statut de la facture: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut de la facture:', error);
+    }
+
+    return NextResponse.json(nouveauPaiement, { status: 201 });
   } catch (error) {
     console.error('Erreur lors de la création du paiement:', error);
     return NextResponse.json(
-      { message: 'Erreur lors de la création du paiement' },
+      { message: 'Erreur lors de la création du paiement', details: error.message },
       { status: 500 }
     );
   }

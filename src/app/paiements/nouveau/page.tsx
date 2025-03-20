@@ -117,17 +117,23 @@ export default function NouveauPaiement() {
       if (!methode) {
         throw new Error('Veuillez sélectionner un mode de paiement');
       }
+
+      if (!clientId) {
+        throw new Error('ID client manquant. Veuillez sélectionner une facture valide.');
+      }
       
       // Préparer les données pour l'API
       const paiementData = {
         factureId: parseInt(factureId),
         clientId: parseInt(clientId),
-        montant: parseFloat(montant),
         date,
+        montant: parseFloat(montant),
         methode,
-        reference,
-        notes
+        reference: reference || '',
+        notes: notes || ''
       };
+      
+      console.log('Données du paiement à envoyer:', paiementData);
       
       // Envoyer les données à l'API
       const response = await fetch('/api/paiements', {
@@ -138,9 +144,10 @@ export default function NouveauPaiement() {
         body: JSON.stringify(paiementData),
       });
       
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de l\'enregistrement du paiement');
+        throw new Error(responseData.message || 'Erreur lors de l\'enregistrement du paiement');
       }
       
       toast.success('Paiement enregistré avec succès');

@@ -149,8 +149,8 @@ function ModifierFactureForm({ id }: { id: string }) {
     
     // Recalcul du total de la ligne
     if (field === 'quantite' || field === 'prixUnitaire') {
-      const quantite = newLignes[index].quantite;
-      const prixUnitaire = newLignes[index].prixUnitaire;
+      const quantite = newLignes[index].quantite || 0;
+      const prixUnitaire = newLignes[index].prixUnitaire || 0;
       
       const total = quantite * prixUnitaire;
       
@@ -162,7 +162,13 @@ function ModifierFactureForm({ id }: { id: string }) {
 
   // Ajout d'une nouvelle ligne
   const handleAjouterLigne = () => {
-    setLignes([...lignes, { description: '', quantite: 1, prixUnitaire: 0, total: 0, unite: 'm²' }]);
+    setLignes([...lignes, { 
+      description: '', 
+      quantite: 1, 
+      prixUnitaire: 0, 
+      total: 0, 
+      unite: 'm²' 
+    }]);
   };
 
   // Suppression d'une ligne
@@ -174,7 +180,10 @@ function ModifierFactureForm({ id }: { id: string }) {
 
   // Calcul du total HT
   const total = lignes.reduce((sum, ligne) => {
-    return sum + (ligne.quantite * ligne.prixUnitaire);
+    // Vérifier si les propriétés nécessaires existent
+    const quantite = ligne.quantite || 0;
+    const prixUnitaire = ligne.prixUnitaire || 0;
+    return sum + (quantite * prixUnitaire);
   }, 0);
 
   // Soumission du formulaire
