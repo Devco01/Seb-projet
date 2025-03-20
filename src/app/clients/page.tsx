@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   FaUsers, 
   FaUserPlus, 
@@ -19,22 +19,60 @@ import {
 interface Client {
   id: number;
   nom: string;
-  contact: string;
+  contact: string | null;
   email: string;
-  telephone: string;
+  telephone: string | null;
   adresse: string;
-  nbDevis: number;
-  nbFactures: number;
-  dateCreation: string;
+  codePostal: string;
+  ville: string;
+  pays: string | null;
+  nbDevis?: number;
+  nbFactures?: number;
+  createdAt: string;
 }
 
 export default function Clients() {
-  // Tableau de clients vide par défaut
-  const clientsData: Client[] = [];
-
-  // États pour la recherche et le tri
+  // États
+  const [clientsData, setClientsData] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [clients, setClients] = useState<Client[]>(clientsData);
+  const [clients, setClients] = useState<Client[]>([]);
+
+  // Charger les clients depuis l'API
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/clients');
+        
+        if (!response.ok) {
+          throw new Error(`Erreur lors de la récupération des clients: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Clients récupérés:', data);
+        
+        // Formater les données
+        const formattedClients = Array.isArray(data) ? data.map((client: any) => ({
+          ...client,
+          nbDevis: 0, // Par défaut
+          nbFactures: 0, // Par défaut
+          createdAt: client.createdAt ? new Date(client.createdAt).toLocaleDateString('fr-FR') : 'N/A'
+        })) : [];
+        
+        setClientsData(formattedClients);
+        setClients(formattedClients);
+      } catch (err) {
+        console.error('Erreur:', err);
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClients();
+  }, []);
 
   // Fonction de recherche
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +84,7 @@ export default function Clients() {
     } else {
       const filteredClients = clientsData.filter(client => 
         client.nom.toLowerCase().includes(value) || 
-        client.contact.toLowerCase().includes(value) || 
+        (client.contact && client.contact.toLowerCase().includes(value)) || 
         client.email.toLowerCase().includes(value) ||
         client.adresse.toLowerCase().includes(value)
       );
@@ -56,14 +94,53 @@ export default function Clients() {
 
   // Statut du client basé sur le nombre de factures et devis
   const getClientStatus = (client: Client) => {
-    if (client.nbFactures > 0) {
+    if ((client.nbFactures || 0) > 0) {
       return "text-green-600";
-    } else if (client.nbDevis > 0) {
+    } else if ((client.nbDevis || 0) > 0) {
       return "text-amber-600";
     } else {
       return "text-gray-600";
     }
   };
+
+  // Affichage pendant le chargement
+  if (loading) {
+    return (
+      <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-blue-800">Clients</h2>
+            <p className="text-gray-500">Chargement des clients...</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="h-12 w-12 bg-gray-200 rounded-full mb-3"></div>
+            <div className="h-4 w-32 bg-gray-200 rounded mb-3"></div>
+            <div className="h-3 w-48 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Affichage en cas d'erreur
+  if (error) {
+    return (
+      <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-blue-800">Clients</h2>
+            <p className="text-red-500">Erreur: {error}</p>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <p className="text-lg font-medium text-red-500">Impossible de charger les clients</p>
+          <p className="mt-1">Veuillez réessayer plus tard ou contacter l'assistance.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
@@ -142,36 +219,40 @@ export default function Clients() {
       </div>
 
       {/* Message quand aucun client n'est présent */}
-      <div className="bg-white rounded-lg shadow p-6 text-center">
-        <FaUsers className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-        <p className="text-lg font-medium">Aucun client</p>
-        <p className="mt-1">Commencez par ajouter votre premier client en cliquant sur &apos;Nouveau client&apos;.</p>
-      </div>
+      {clients.length === 0 && (
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <FaUsers className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+          <p className="text-lg font-medium">Aucun client</p>
+          <p className="mt-1">Commencez par ajouter votre premier client en cliquant sur &apos;Nouveau client&apos;.</p>
+        </div>
+      )}
 
-      {/* Liste des clients - Version mobile (cards) - Sera affichée quand il y aura des clients */}
+      {/* Liste des clients - Version mobile (cards) */}
       {clients.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:hidden">
           {clients.map((client) => (
             <div key={client.id} className="bg-white rounded-lg shadow p-4">
               <div>
                 <h3 className={`text-lg font-bold ${getClientStatus(client)}`}>{client.nom}</h3>
-                <p className="text-gray-700 font-medium">{client.contact}</p>
+                <p className="text-gray-700 font-medium">{client.contact || 'N/A'}</p>
                 <div className="mt-1 space-y-1 text-sm">
                   <div className="flex items-center text-gray-500">
                     <FaEnvelope className="mr-2 h-3 w-3" />
                     <a href={`mailto:${client.email}`} className="hover:underline">{client.email}</a>
                   </div>
-                  <div className="flex items-center text-gray-500">
-                    <FaPhone className="mr-2 h-3 w-3" />
-                    <a href={`tel:${client.telephone}`}>{client.telephone}</a>
-                  </div>
+                  {client.telephone && (
+                    <div className="flex items-center text-gray-500">
+                      <FaPhone className="mr-2 h-3 w-3" />
+                      <a href={`tel:${client.telephone}`}>{client.telephone}</a>
+                    </div>
+                  )}
                   <div className="flex items-center text-gray-500">
                     <FaMapMarkerAlt className="mr-2 h-3 w-3" />
-                    <span>{client.adresse}</span>
+                    <span>{client.adresse}, {client.codePostal} {client.ville}</span>
                   </div>
                   <div className="flex items-center text-gray-500">
                     <FaCalendarAlt className="mr-2 h-3 w-3" />
-                    <span>Créé le {client.dateCreation}</span>
+                    <span>Créé le {client.createdAt}</span>
                   </div>
                 </div>
               </div>
@@ -194,7 +275,7 @@ export default function Clients() {
         </div>
       )}
 
-      {/* Liste des clients - Version desktop (table) - Sera affichée quand il y aura des clients */}
+      {/* Liste des clients - Version desktop (table) */}
       {clients.length > 0 && (
         <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full">
@@ -222,24 +303,24 @@ export default function Clients() {
                 <tr key={client.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-gray-900">{client.nom}</div>
-                    <div className="text-xs text-gray-500">{client.adresse}</div>
+                    <div className="text-xs text-gray-500">{client.adresse}, {client.codePostal} {client.ville}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{client.contact}</div>
+                    <div className="text-sm text-gray-900">{client.contact || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-blue-600">
                       <a href={`mailto:${client.email}`}>{client.email}</a>
                     </div>
-                    <div className="text-sm text-gray-500">{client.telephone}</div>
+                    <div className="text-sm text-gray-500">{client.telephone || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex space-x-3">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                        {client.nbDevis} devis
+                        {client.nbDevis || 0} devis
                       </span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {client.nbFactures} factures
+                        {client.nbFactures || 0} factures
                       </span>
                     </div>
                   </td>
