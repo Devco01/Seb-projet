@@ -3,7 +3,8 @@ const nextConfig = {
   reactStrictMode: false,
   swcMinify: true,
   experimental: {
-    serverExternalPackages: ['@prisma/client'],
+    // Suppression de l'option obsolète
+    // serverExternalPackages: ['@prisma/client'],
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -32,10 +33,10 @@ const nextConfig = {
   publicRuntimeConfig: {
     PORT: 3001
   },
-  // Forcer l'utilisation du port 3001
-  devServer: {
-    port: 3001
-  }
+  // Suppression de la configuration obsolète
+  // devServer: {
+  //   port: 3001
+  // }
 };
 
 module.exports = nextConfig;
