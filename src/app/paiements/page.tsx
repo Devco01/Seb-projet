@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   FaMoneyBillWave, 
   FaPlus, 
@@ -13,24 +13,51 @@ import {
 
 export default function Paiements() {
   interface Paiement {
-    id: string;
+    id: number;
     facture: string;
-    factureId: string;
+    factureId: number;
     client: string;
     clientId: number;
-    montant: string;
+    montant: number;
     date: string;
     mode: string;
     statut: string;
-    notes: string;
+    notes?: string;
   }
 
-  // Tableau de paiements vide par défaut
-  const paiementsData: Paiement[] = [];
+  // États pour la liste des paiements et leur chargement
+  const [paiements, setPaiements] = useState<Paiement[]>([]);
+  const [filteredPaiements, setFilteredPaiements] = useState<Paiement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // États pour la recherche et le filtrage
   const [searchTerm, setSearchTerm] = useState("");
-  const [paiements, setPaiements] = useState(paiementsData);
+
+  // Charger les paiements depuis l'API
+  useEffect(() => {
+    const fetchPaiements = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/paiements');
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des paiements');
+        }
+        
+        const data = await response.json();
+        console.log('Paiements chargés:', data);
+        setPaiements(data);
+        setFilteredPaiements(data);
+      } catch (err) {
+        console.error('Erreur:', err);
+        setError('Impossible de charger les paiements. Veuillez réessayer plus tard.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPaiements();
+  }, []);
 
   // Fonction de recherche
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,26 +68,41 @@ export default function Paiements() {
 
   // Fonction combinée de filtrage
   const filterPaiements = (search: string) => {
-    let filtered = paiementsData;
+    let filtered = paiements;
     
     // Filtre par recherche
     if (search) {
       filtered = filtered.filter(paiement => 
-        paiement.id.toLowerCase().includes(search) || 
+        paiement.id.toString().includes(search) || 
         paiement.facture.toLowerCase().includes(search) || 
         paiement.client.toLowerCase().includes(search) || 
-        paiement.notes.toLowerCase().includes(search)
+        (paiement.notes?.toLowerCase() || '').includes(search)
       );
     }
     
-    setPaiements(filtered);
+    setFilteredPaiements(filtered);
   };
 
   // Calcul des totaux pour les statistiques
-  const totalMontant = paiementsData.reduce((sum, paiement) => {
-    const montant = parseFloat(paiement.montant.replace(/[^\d,-]/g, '').replace(',', '.'));
-    return sum + montant;
-  }, 0).toFixed(2).replace('.', ',') + " €";
+  const totalMontant = paiements.reduce((sum, paiement) => sum + paiement.montant, 0);
+  const virementsTotal = paiements
+    .filter(p => p.mode.toLowerCase() === 'virement')
+    .reduce((sum, p) => sum + p.montant, 0);
+  const virementsCount = paiements.filter(p => p.mode.toLowerCase() === 'virement').length;
+
+  // Formater un montant en euros
+  const formatMontant = (montant: number): string => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(montant);
+  };
+
+  // Formater une date pour l'affichage
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR');
+  };
 
   return (
     <div className="space-y-6 pb-16 px-4 sm:px-6 max-w-7xl mx-auto">
@@ -101,8 +143,8 @@ export default function Paiements() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Total encaissé</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-800">{totalMontant}</p>
-              <p className="text-xs text-gray-500 mt-1">{paiementsData.length} paiements</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">{formatMontant(totalMontant)}</p>
+              <p className="text-xs text-gray-500 mt-1">{paiements.length} paiements</p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
               <FaMoneyBillWave className="h-5 w-5 text-green-600" />
@@ -114,9 +156,9 @@ export default function Paiements() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Virements bancaires</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-800">{totalMontant}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">{formatMontant(virementsTotal)}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {paiementsData.length} paiements
+                {virementsCount} paiements
               </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
@@ -126,15 +168,32 @@ export default function Paiements() {
         </div>
       </div>
 
+      {/* Affichage pendant le chargement */}
+      {loading && (
+        <div className="flex justify-center items-center p-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {/* Message d'erreur */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <p className="font-bold">Erreur</p>
+          <p>{error}</p>
+        </div>
+      )}
+
       {/* Message quand aucun paiement n'est présent */}
-      <div className="bg-white rounded-lg shadow p-6 text-center">
-        <FaMoneyBillWave className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-        <p className="text-lg font-medium">Aucun paiement</p>
-        <p className="mt-1">Commencez par enregistrer votre premier paiement en cliquant sur &apos;Enregistrer un paiement&apos;.</p>
-      </div>
+      {!loading && !error && filteredPaiements.length === 0 && (
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <FaMoneyBillWave className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+          <p className="text-lg font-medium">Aucun paiement</p>
+          <p className="mt-1">Commencez par enregistrer votre premier paiement en cliquant sur &apos;Enregistrer un paiement&apos;.</p>
+        </div>
+      )}
 
       {/* Liste des paiements - version desktop */}
-      {paiements.length > 0 && (
+      {filteredPaiements.length > 0 && (
         <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full">
             <thead>
@@ -157,7 +216,7 @@ export default function Paiements() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paiements.map((paiement) => (
+              {filteredPaiements.map((paiement) => (
                 <tr key={paiement.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-blue-600">
@@ -177,10 +236,10 @@ export default function Paiements() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{paiement.date}</div>
+                    <div className="text-sm text-gray-900">{formatDate(paiement.date)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{paiement.montant}</div>
+                    <div className="text-sm font-medium text-gray-900">{formatMontant(paiement.montant)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-3">
@@ -203,9 +262,9 @@ export default function Paiements() {
       )}
 
       {/* Liste des paiements - version mobile */}
-      {paiements.length > 0 && (
+      {filteredPaiements.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:hidden">
-          {paiements.map((paiement) => (
+          {filteredPaiements.map((paiement) => (
             <div key={paiement.id} className="bg-white rounded-lg shadow p-4">
               <div className="flex justify-between items-center mb-2">
                 <Link href={`/paiements/${paiement.id}`} className="font-medium text-blue-600">
@@ -227,10 +286,10 @@ export default function Paiements() {
               </div>
               <div className="flex justify-between text-sm text-gray-500 mb-3">
                 <div>
-                  <p>Date: {paiement.date}</p>
+                  <p>Date: {formatDate(paiement.date)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-gray-900">{paiement.montant}</p>
+                  <p className="font-medium text-gray-900">{formatMontant(paiement.montant)}</p>
                 </div>
               </div>
               <div className="flex justify-between items-center border-t border-gray-200 pt-3">

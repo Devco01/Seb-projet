@@ -6,73 +6,121 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import EnteteDocument from '@/app/components/EnteteDocument';
 
-// Données fictives pour un devis
-const devisData = {
-  id: 1,
-  numero: 'D-2023-056',
-  client: {
-    nom: 'Dupont SAS',
-    adresse: '15 rue des Lilas',
-    codePostal: '75001',
-    ville: 'Paris',
-    email: 'contact@dupont-sas.fr',
-    telephone: '01 23 45 67 89'
-  },
-  date: '20/06/2023',
-  validite: '20/07/2023',
-  statut: 'En attente',
-  statutColor: 'bg-yellow-100 text-yellow-800',
-  lignes: [
-    {
-      description: 'Peinture murs intérieurs - Salon',
-      quantite: 45,
-      unite: 'm²',
-      prixUnitaire: 25,
-      total: 1125
-    },
-    {
-      description: 'Peinture plafond - Salon',
-      quantite: 20,
-      unite: 'm²',
-      prixUnitaire: 30,
-      total: 600
-    },
-    {
-      description: 'Préparation des surfaces',
-      quantite: 1,
-      unite: 'forfait',
-      prixUnitaire: 350,
-      total: 350
-    }
-  ],
-  conditions: 'Paiement à 30 jours à compter de la date de facturation.',
-  notes: 'Devis valable pour une durée de 30 jours. Les travaux pourront commencer 2 semaines après acceptation du devis.'
-};
+// Interface pour les lignes de devis
+interface DevisLigne {
+  description: string;
+  quantite: number;
+  unite: string;
+  prixUnitaire: number;
+  total: number;
+}
+
+// Interface pour le client
+interface DevisClient {
+  id: number;
+  nom: string;
+  email: string;
+  adresse?: string;
+  codePostal?: string;
+  ville?: string;
+  telephone?: string;
+}
+
+// Interface pour le devis
+interface Devis {
+  id: number;
+  numero: string;
+  client: DevisClient;
+  date: string;
+  validite: string;
+  statut: string;
+  statutColor: string;
+  lignes: DevisLigne[];
+  conditions?: string;
+  notes?: string;
+  totalHT: number;
+  totalTTC: number;
+}
 
 export default function DetailDevis({ params }: { params: { id: string } }) {
-  const [devis, setDevis] = useState(devisData);
+  const [devis, setDevis] = useState<Devis | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const loadDevis = async () => {
-      const id = parseInt(params.id);
-      // Simulation d'un chargement de données
-      if (id) {
-        // Dans un cas réel, vous feriez un appel API ici
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/devis/${params.id}`);
+        if (!response.ok) {
+          throw new Error(`Erreur lors du chargement du devis: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // Analyser les lignes qui sont stockées en JSON
+        if (data && data.lignes && typeof data.lignes === 'string') {
+          data.lignes = JSON.parse(data.lignes);
+        }
+        
+        // Déterminer la couleur du statut
+        let statutColor = 'bg-yellow-100 text-yellow-800'; // Par défaut (En attente)
+        if (data.statut === 'Accepté') {
+          statutColor = 'bg-green-100 text-green-800';
+        } else if (data.statut === 'Refusé') {
+          statutColor = 'bg-red-100 text-red-800';
+        } else if (data.statut === 'Expiré') {
+          statutColor = 'bg-gray-100 text-gray-800';
+        }
+        
+        // Formater les dates pour l'affichage
+        const formatDate = (dateString: string) => {
+          const date = new Date(dateString);
+          return date.toLocaleDateString('fr-FR');
+        };
+        
         setDevis({
-          ...devisData,
-          id: id,
-          numero: `D-2023-${id.toString().padStart(3, '0')}`
+          ...data,
+          statutColor,
+          date: formatDate(data.date),
+          validite: formatDate(data.validite)
         });
+      } catch (err) {
+        console.error('Erreur lors du chargement du devis:', err);
+        setError('Impossible de charger les données du devis. Veuillez réessayer plus tard.');
+      } finally {
+        setLoading(false);
       }
     };
 
     loadDevis();
   }, [params.id]);
 
+  // Afficher un état de chargement
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Afficher un message d'erreur si nécessaire
+  if (error || !devis) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <p className="font-bold">Erreur</p>
+        <p>{error || "Devis non trouvé"}</p>
+        <Link href="/devis" className="mt-4 inline-block text-blue-600 hover:text-blue-800">
+          <FaArrowLeft className="inline mr-2" /> Retour à la liste des devis
+        </Link>
+      </div>
+    );
+  }
+
   // Calcul du total
-  const total = devis.lignes.reduce((sum, ligne) => {
-    return sum + (ligne.quantite * ligne.prixUnitaire);
+  const total = devis.lignes.reduce((sum: number, ligne: DevisLigne) => {
+    return sum + (parseFloat(ligne.quantite.toString()) * parseFloat(ligne.prixUnitaire.toString()));
   }, 0);
 
   // Fonction pour convertir le devis en facture

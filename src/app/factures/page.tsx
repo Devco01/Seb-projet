@@ -1,32 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaPlus, FaSearch, FaEye, FaEdit, FaTrashAlt, FaFilePdf } from "react-icons/fa";
 
 export default function Factures() {
   // Types nécessaires pour les factures
   interface Facture {
-    id: string;
+    id: number;
     numero: string;
     date: string;
     echeance: string;
     client: {
-      id: string;
+      id: number;
       nom: string;
+      email: string;
     };
-    montantHT: number;
-    montantTTC: number;
+    totalHT: number;
+    totalTTC: number;
     statut: string;
   }
 
-  // Tableau de factures vide par défaut
-  const facturesData: Facture[] = [];
+  // États pour la liste des factures et leur chargement
+  const [factures, setFactures] = useState<Facture[]>([]);
+  const [filteredFactures, setFilteredFactures] = useState<Facture[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // États pour la recherche et le filtrage
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Toutes");
-  const [factures, setFactures] = useState<Facture[]>(facturesData);
+
+  // Charger les factures depuis l'API
+  useEffect(() => {
+    const fetchFactures = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/factures');
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des factures');
+        }
+        
+        const data = await response.json();
+        console.log('Factures chargées:', data);
+        setFactures(data);
+        setFilteredFactures(data);
+      } catch (err) {
+        console.error('Erreur:', err);
+        setError('Impossible de charger les factures. Veuillez réessayer plus tard.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFactures();
+  }, []);
 
   // Fonction pour formater un montant en euros
   const formatMontant = (montant: number): string => {
@@ -54,7 +82,7 @@ export default function Factures() {
 
   // Fonction de filtrage combinée
   const filterFactures = (search: string, status: string) => {
-    let filtered = facturesData;
+    let filtered = factures;
     
     // Filtre de recherche
     if (search) {
@@ -69,17 +97,20 @@ export default function Factures() {
       filtered = filtered.filter(facture => facture.statut === status);
     }
     
-    setFactures(filtered);
+    setFilteredFactures(filtered);
   };
 
   // Fonction pour obtenir la couleur du statut
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'Payée':
+      case 'payée':
         return 'bg-green-100 text-green-800';
       case 'En attente':
+      case 'en attente':
         return 'bg-yellow-100 text-yellow-800';
       case 'En retard':
+      case 'en retard':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -155,15 +186,32 @@ export default function Factures() {
         </button>
       </div>
 
+      {/* Affichage pendant le chargement */}
+      {loading && (
+        <div className="flex justify-center items-center p-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {/* Message d'erreur */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <p className="font-bold">Erreur</p>
+          <p>{error}</p>
+        </div>
+      )}
+
       {/* Message quand aucune facture n'est présente */}
-      <div className="bg-white rounded-lg shadow p-6 text-center">
-        <FaFilePdf className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-        <p className="text-lg font-medium">Aucune facture</p>
-        <p className="mt-1">Commencez par créer votre première facture en cliquant sur &apos;Nouvelle facture&apos;.</p>
-      </div>
+      {!loading && !error && filteredFactures.length === 0 && (
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <FaFilePdf className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+          <p className="text-lg font-medium">Aucune facture</p>
+          <p className="mt-1">Commencez par créer votre première facture en cliquant sur &apos;Nouvelle facture&apos;.</p>
+        </div>
+      )}
 
       {/* Table des factures - version desktop */}
-      {factures.length > 0 && (
+      {filteredFactures.length > 0 && (
         <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full">
             <thead>
@@ -189,7 +237,7 @@ export default function Factures() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {factures.map((facture) => (
+              {filteredFactures.map((facture) => (
                 <tr key={facture.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Link href={`/factures/${facture.id}`} className="text-blue-600 font-medium">
@@ -209,10 +257,10 @@ export default function Factures() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-gray-900">
-                      {formatMontant(facture.montantTTC)}
+                      {formatMontant(facture.totalTTC)}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      HT: {formatMontant(facture.montantHT)}
+                      HT: {formatMontant(facture.totalHT)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -244,9 +292,9 @@ export default function Factures() {
       )}
 
       {/* Liste des factures - version mobile */}
-      {factures.length > 0 && (
+      {filteredFactures.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:hidden">
-          {factures.map((facture) => (
+          {filteredFactures.map((facture) => (
             <div key={facture.id} className="bg-white rounded-lg shadow p-4">
               <div className="flex justify-between items-center mb-2">
                 <Link href={`/factures/${facture.id}`} className="font-medium text-blue-600">
@@ -267,8 +315,8 @@ export default function Factures() {
                   <p>Échéance: {formatDate(facture.echeance)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-gray-900">{formatMontant(facture.montantTTC)}</p>
-                  <p>HT: {formatMontant(facture.montantHT)}</p>
+                  <p className="font-medium text-gray-900">{formatMontant(facture.totalTTC)}</p>
+                  <p>HT: {formatMontant(facture.totalHT)}</p>
                 </div>
               </div>
               <div className="flex justify-between items-center border-t border-gray-200 pt-3">
