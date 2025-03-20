@@ -18,7 +18,6 @@ export interface Facture {
   statut: 'En attente' | 'Payée' | 'Partiellement payée' | 'En retard' | 'Annulée';
   lignes: LigneFacture[];
   totalHT: number;
-  totalTVA: number;
   totalTTC: number;
   totalPaye: number;
   resteAPayer: number;
@@ -197,19 +196,15 @@ export function useFactures() {
   // Calculer les totaux d'une facture
   const calculerTotaux = (lignes: Omit<LigneFacture, 'id'>[]) => {
     let totalHT = 0;
-    let totalTVA = 0;
     
     lignes.forEach(ligne => {
       const ligneHT = ligne.quantite * ligne.prixUnitaire;
-      const ligneTVA = ligneHT * (ligne.tva / 100);
-      
       totalHT += ligneHT;
-      totalTVA += ligneTVA;
     });
     
-    const totalTTC = totalHT + totalTVA;
+    const totalTTC = totalHT;
     
-    return { totalHT, totalTVA, totalTTC };
+    return { totalHT, totalTTC };
   };
 
   // Charger les factures au montage du composant

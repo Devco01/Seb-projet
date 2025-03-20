@@ -20,24 +20,9 @@ export async function GET() {
       },
     });
 
-    // Pour SQLite, convertir les lignes de JSON string en objet
-    const formattedDevis = devis.map(d => {
-      try {
-        // Vérifier si lignes est une chaîne et la parser si oui
-        const parsedLignes = typeof d.lignes === 'string' ? JSON.parse(d.lignes as string) : d.lignes;
-        return {
-          ...d,
-          lignes: parsedLignes
-        };
-      } catch (error) {
-        console.error(`Erreur lors du parsing des lignes pour le devis ${d.id}:`, error);
-        // Retourner le devis sans modifier les lignes en cas d'erreur
-        return d;
-      }
-    });
-
-    console.log(`${formattedDevis.length} devis récupérés`);
-    return NextResponse.json(formattedDevis);
+    // Avec PostgreSQL, les lignes sont déjà en format JSON
+    console.log(`${devis.length} devis récupérés`);
+    return NextResponse.json(devis);
   } catch (error) {
     console.error('Erreur lors de la récupération des devis:', error);
     return NextResponse.json(
@@ -113,9 +98,7 @@ export async function POST(request: NextRequest) {
       totalTTC = totalHT + totalTVA;
     }
 
-    // Pour SQLite, convertir les lignes en JSON string
-    const lignesString = JSON.stringify(data.lignes);
-
+    // Avec PostgreSQL, pas besoin de convertir en string
     // Créer le devis
     const devis = await prisma.devis.create({
       data: {
@@ -124,9 +107,8 @@ export async function POST(request: NextRequest) {
         date: new Date(data.date),
         validite: new Date(data.validite),
         statut: data.statut || 'brouillon',
-        lignes: lignesString, // String pour SQLite
+        lignes: data.lignes, // Directement en JSON pour PostgreSQL
         totalHT,
-        totalTVA,
         totalTTC,
         conditions: data.conditions,
         notes: data.notes,
@@ -144,11 +126,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Devis créé avec succès:', devis);
     
-    // Retourner le devis avec les lignes parsées (original, pas le string)
-    return NextResponse.json({
-      ...devis,
-      lignes: data.lignes // Retourner les lignes originales, pas le string
-    }, { status: 201 });
+    return NextResponse.json(devis, { status: 201 });
   } catch (error) {
     console.error('Erreur lors de la création du devis:', error);
     return NextResponse.json(

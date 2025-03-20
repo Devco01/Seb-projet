@@ -1,10 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import Sidebar from './Sidebar';
+import UserMenu from './UserMenu';
 import { FaBars } from 'react-icons/fa';
 
-export default function MainLayout({ children }) {
+interface MainLayoutProps {
+  children: ReactNode;
+}
+
+export default function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState('');
   
@@ -45,7 +50,8 @@ export default function MainLayout({ children }) {
             <FaBars size={24} />
           </button>
           <div className="ml-auto flex space-x-4">
-            {/* Zone pour ajouter des actions de header */}
+            {/* Menu utilisateur */}
+            <UserMenu />
           </div>
         </header>
         

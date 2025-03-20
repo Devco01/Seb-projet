@@ -1,5 +1,6 @@
 {
   "extends": "next/core-web-vitals",
+  "ignorePatterns": ["*.js", "!src/**/*.js", "!app/**/*.js", "!pages/**/*.js", "!components/**/*.js"],
   "rules": {
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
     "react/no-unescaped-entities": "off"

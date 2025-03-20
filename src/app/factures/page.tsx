@@ -20,81 +20,13 @@ export default function Factures() {
     statut: string;
   }
 
-  // Données de facturation fictives
-  const facturesData: Facture[] = [
-    {
-      id: "1",
-      numero: "F-2023-001",
-      date: "2023-05-15",
-      echeance: "2023-06-15",
-      client: {
-        id: "1",
-        nom: "Dupont Immobilier"
-      },
-      montantHT: 1000,
-      montantTTC: 1200,
-      statut: "Payée"
-    },
-    {
-      id: "2",
-      numero: "F-2023-002",
-      date: "2023-06-05",
-      echeance: "2023-07-05",
-      client: {
-        id: "2",
-        nom: "Martin Résidences"
-      },
-      montantHT: 1500,
-      montantTTC: 1800,
-      statut: "En attente"
-    },
-    {
-      id: "3",
-      numero: "F-2023-003",
-      date: "2023-07-12",
-      echeance: "2023-08-12",
-      client: {
-        id: "3",
-        nom: "Dubois & Fils"
-      },
-      montantHT: 2000,
-      montantTTC: 2400,
-      statut: "En retard"
-    },
-    {
-      id: "4",
-      numero: "F-2023-004",
-      date: "2023-08-20",
-      echeance: "2023-09-20",
-      client: {
-        id: "4",
-        nom: "SCI Lepetit"
-      },
-      montantHT: 1200,
-      montantTTC: 1440,
-      statut: "Payée"
-    },
-    {
-      id: "5",
-      numero: "F-2023-005",
-      date: "2023-09-08",
-      echeance: "2023-10-08",
-      client: {
-        id: "5",
-        nom: "Moreau Construction"
-      },
-      montantHT: 3000,
-      montantTTC: 3600,
-      statut: "En attente"
-    }
-  ];
+  // Tableau de factures vide par défaut
+  const facturesData: Facture[] = [];
 
   // États pour la recherche et le filtrage
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Toutes");
   const [factures, setFactures] = useState<Facture[]>(facturesData);
-  // État de chargement (pour afficher un état de chargement si nécessaire)
-  const [isLoading] = useState(false);
 
   // Fonction pour formater un montant en euros
   const formatMontant = (montant: number): string => {
@@ -223,145 +155,145 @@ export default function Factures() {
         </button>
       </div>
 
+      {/* Message quand aucune facture n'est présente */}
+      <div className="bg-white rounded-lg shadow p-6 text-center">
+        <FaFilePdf className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+        <p className="text-lg font-medium">Aucune facture</p>
+        <p className="mt-1">Commencez par créer votre première facture en cliquant sur &apos;Nouvelle facture&apos;.</p>
+      </div>
+
       {/* Table des factures - version desktop */}
-      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                FACTURE
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                CLIENT
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                DATE / ÉCHÉANCE
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                MONTANT
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                STATUT
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ACTIONS
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {isLoading ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
-                  <p className="text-lg font-medium">Chargement des factures...</p>
-                </td>
+      {factures.length > 0 && (
+        <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  FACTURE
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  CLIENT
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  DATE / ÉCHÉANCE
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  MONTANT
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  STATUT
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ACTIONS
+                </th>
               </tr>
-            ) : factures.length > 0 ? (
-              factures.map((facture) => (
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {factures.map((facture) => (
                 <tr key={facture.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <Link href={`/factures/${facture.id}`} className="font-medium text-blue-600 hover:text-blue-800">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link href={`/factures/${facture.id}`} className="text-blue-600 font-medium">
                       {facture.numero}
                     </Link>
                   </td>
-                  <td className="px-6 py-4">{facture.client.nom}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link href={`/clients/${facture.client.id}`} className="text-gray-900 hover:text-blue-600">
+                      {facture.client.nom}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-gray-900">{formatDate(facture.date)}</div>
-                    <div className="text-gray-500 text-sm">Échéance: {formatDate(facture.echeance)}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Échéance: {formatDate(facture.echeance)}
+                    </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-gray-900 font-medium">{formatMontant(facture.montantTTC)}</div>
-                    <div className="text-gray-500 text-sm">HT: {formatMontant(facture.montantHT)}</div>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium text-gray-900">
+                      {formatMontant(facture.montantTTC)}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      HT: {formatMontant(facture.montantHT)}
+                    </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      facture.statut === "Payée" ? "bg-green-100 text-green-800" :
-                      facture.statut === "En attente" ? "bg-yellow-100 text-yellow-800" :
-                      "bg-red-100 text-red-800"
-                    }`}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(facture.statut)}`}>
                       {facture.statut}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
-                    <div className="flex space-x-3 justify-end">
-                      <Link href={`/factures/${facture.id}`} className="text-blue-600 hover:text-blue-900" title="Voir">
-                        <FaEye />
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center justify-end space-x-3">
+                      <Link href={`/factures/${facture.id}`} className="text-blue-600 hover:text-blue-900">
+                        <FaEye title="Voir" />
                       </Link>
-                      <Link href={`/factures/${facture.id}/modifier`} className="text-indigo-600 hover:text-indigo-900" title="Modifier">
-                        <FaEdit />
+                      <Link href={`/factures/${facture.id}/modifier`} className="text-amber-600 hover:text-amber-900">
+                        <FaEdit title="Modifier" />
                       </Link>
-                      <button className="text-red-600 hover:text-red-900" title="Supprimer">
-                        <FaTrashAlt />
-                      </button>
-                      <button className="text-green-600 hover:text-green-900" title="Télécharger PDF">
-                        <FaFilePdf />
+                      <button
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => alert(`Supprimer la facture ${facture.numero}?`)}
+                      >
+                        <FaTrashAlt title="Supprimer" />
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
-                  <p className="text-lg font-medium">Aucune facture trouvée</p>
-                  <p className="mt-1">Essayez de modifier vos filtres ou créez votre première facture.</p>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Cartes des factures - version mobile */}
-      <div className="sm:hidden space-y-4">
-        {isLoading ? (
-          <div className="bg-white rounded-lg shadow p-4 text-center text-gray-500">
-            <p className="text-lg font-medium">Chargement des factures...</p>
-          </div>
-        ) : factures.length > 0 ? (
-          factures.map((facture) => (
+      {/* Liste des factures - version mobile */}
+      {factures.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:hidden">
+          {factures.map((facture) => (
             <div key={facture.id} className="bg-white rounded-lg shadow p-4">
-              <div className="flex justify-between items-start mb-3">
-                <Link href={`/factures/${facture.id}`} className="font-medium text-blue-600 text-lg">
+              <div className="flex justify-between items-center mb-2">
+                <Link href={`/factures/${facture.id}`} className="font-medium text-blue-600">
                   {facture.numero}
                 </Link>
-                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(facture.statut)}`}>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(facture.statut)}`}>
                   {facture.statut}
                 </span>
               </div>
-              
-              <div className="mb-3">
-                <p className="text-gray-700 font-semibold">{facture.client.nom}</p>
-                <div className="flex flex-col text-sm text-gray-500 mt-1">
-                  <span>Date: {formatDate(facture.date)}</span>
-                  <span>Échéance: {formatDate(facture.echeance)}</span>
+              <div className="mb-2">
+                <Link href={`/clients/${facture.client.id}`} className="font-medium text-gray-800">
+                  {facture.client.nom}
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-3">
+                <div>
+                  <p>Date: {formatDate(facture.date)}</p>
+                  <p>Échéance: {formatDate(facture.echeance)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-gray-900">{formatMontant(facture.montantTTC)}</p>
+                  <p>HT: {formatMontant(facture.montantHT)}</p>
                 </div>
               </div>
-              
-              <div className="mb-3">
-                <p className="text-gray-900 font-bold">{formatMontant(facture.montantTTC)}</p>
-                <p className="text-sm text-gray-500">HT: {formatMontant(facture.montantHT)}</p>
-              </div>
-              
-              <div className="flex justify-between border-t pt-3">
-                <Link href={`/factures/${facture.id}`} className="text-blue-600 flex items-center text-sm">
-                  <FaEye className="mr-1" /> Voir
+              <div className="flex justify-between items-center border-t border-gray-200 pt-3">
+                <Link href={`/factures/${facture.id}`} className="text-blue-600">
+                  Voir détails
                 </Link>
-                <Link href={`/factures/${facture.id}/modifier`} className="text-indigo-600 flex items-center text-sm">
-                  <FaEdit className="mr-1" /> Modifier
-                </Link>
-                <button className="text-green-600 flex items-center text-sm">
-                  <FaFilePdf className="mr-1" /> PDF
-                </button>
+                <div className="flex space-x-2">
+                  <Link 
+                    href={`/factures/${facture.id}/modifier`} 
+                    className="bg-amber-100 text-amber-600 p-2 rounded-full w-8 h-8 flex items-center justify-center"
+                  >
+                    <FaEdit className="w-4 h-4" title="Modifier" />
+                  </Link>
+                  <button 
+                    className="bg-red-100 text-red-600 p-2 rounded-full w-8 h-8 flex items-center justify-center"
+                    onClick={() => alert(`Supprimer la facture ${facture.numero}?`)}
+                  >
+                    <FaTrashAlt className="w-4 h-4" title="Supprimer" />
+                  </button>
+                </div>
               </div>
             </div>
-          ))
-        ) : (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-            <p className="text-lg font-medium">Aucune facture trouvée</p>
-            <p className="mt-1">Essayez de modifier vos filtres ou créez votre première facture.</p>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 

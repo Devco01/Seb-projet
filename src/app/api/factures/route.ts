@@ -20,24 +20,9 @@ export async function GET() {
       },
     });
 
-    // Pour SQLite, convertir les lignes de JSON string en objet
-    const formattedFactures = factures.map(f => {
-      try {
-        // Vérifier si lignes est une chaîne et la parser si oui
-        const parsedLignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes as string) : f.lignes;
-        return {
-          ...f,
-          lignes: parsedLignes
-        };
-      } catch (error) {
-        console.error(`Erreur lors du parsing des lignes pour la facture ${f.id}:`, error);
-        // Retourner la facture sans modifier les lignes en cas d'erreur
-        return f;
-      }
-    });
-
-    console.log(`${formattedFactures.length} factures récupérées`);
-    return NextResponse.json(formattedFactures);
+    // Avec PostgreSQL, les lignes sont déjà en format JSON
+    console.log(`${factures.length} factures récupérées`);
+    return NextResponse.json(factures);
   } catch (error) {
     console.error('Erreur lors de la récupération des factures:', error);
     return NextResponse.json(
@@ -113,9 +98,7 @@ export async function POST(request: NextRequest) {
       totalTTC = totalHT + totalTVA;
     }
 
-    // Pour SQLite, convertir les lignes en JSON string
-    const lignesString = JSON.stringify(data.lignes);
-
+    // Avec PostgreSQL, pas besoin de convertir en string
     // Créer la facture
     const facture = await prisma.facture.create({
       data: {
@@ -124,9 +107,8 @@ export async function POST(request: NextRequest) {
         date: new Date(data.date),
         echeance: new Date(data.echeance),
         statut: data.statut || 'en attente',
-        lignes: lignesString, // String pour SQLite
+        lignes: data.lignes, // Directement en JSON pour PostgreSQL
         totalHT,
-        totalTVA,
         totalTTC,
         conditions: data.conditions,
         notes: data.notes,
@@ -145,11 +127,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Facture créée avec succès:', facture);
     
-    // Retourner la facture avec les lignes parsées (original, pas le string)
-    return NextResponse.json({
-      ...facture,
-      lignes: data.lignes // Retourner les lignes originales, pas le string
-    }, { status: 201 });
+    return NextResponse.json(facture, { status: 201 });
   } catch (error) {
     console.error('Erreur lors de la création de la facture:', error);
     return NextResponse.json(

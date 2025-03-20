@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import EnteteDocument from '@/app/components/EnteteDocument';
 
 interface LigneFacture {
   description: string;
   quantite: number;
   prixUnitaire: number;
-  tva: number;
   total: number;
 }
 
@@ -29,15 +29,18 @@ type Devis = {
 
 export default function NouvelleFacture() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const devisParam = searchParams?.get('devis');
+  
   const [clientId, setClientId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [echeance, setEcheance] = useState('');
+  const [devisId, setDevisId] = useState(devisParam || '');
   const [lignes, setLignes] = useState<LigneFacture[]>([
-    { description: '', quantite: 1, prixUnitaire: 0, tva: 20, total: 0 }
+    { description: '', quantite: 1, prixUnitaire: 0, total: 0 }
   ]);
   const [conditions, setConditions] = useState('Paiement à 30 jours à compter de la date de facturation.');
   const [notes, setNotes] = useState('');
-  const [devisId, setDevisId] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [devisList, setDevisList] = useState<Devis[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -151,15 +154,13 @@ export default function NouvelleFacture() {
     }
     
     // Recalculer le total de la ligne
-    if (field === 'quantite' || field === 'prixUnitaire' || field === 'tva') {
+    if (field === 'quantite' || field === 'prixUnitaire') {
       const quantite = newLignes[index].quantite;
       const prixUnitaire = newLignes[index].prixUnitaire;
-      const tva = newLignes[index].tva;
       
-      const totalHT = quantite * prixUnitaire;
-      const totalTTC = totalHT * (1 + tva / 100);
+      const total = quantite * prixUnitaire;
       
-      newLignes[index].total = Number(totalTTC.toFixed(2));
+      newLignes[index].total = Number(total.toFixed(2));
     }
     
     setLignes(newLignes);
@@ -167,7 +168,7 @@ export default function NouvelleFacture() {
 
   // Ajouter une nouvelle ligne
   const handleAjouterLigne = () => {
-    setLignes([...lignes, { description: '', quantite: 1, prixUnitaire: 0, tva: 20, total: 0 }]);
+    setLignes([...lignes, { description: '', quantite: 1, prixUnitaire: 0, total: 0 }]);
   };
 
   // Supprimer une ligne
@@ -201,13 +202,11 @@ export default function NouvelleFacture() {
             description: string;
             quantite: number;
             prixUnitaire: number;
-            tva: number;
           }) => ({
             description: ligne.description,
             quantite: ligne.quantite,
             prixUnitaire: ligne.prixUnitaire,
-            tva: ligne.tva,
-            total: Number((ligne.quantite * ligne.prixUnitaire * (1 + ligne.tva / 100)).toFixed(2))
+            total: Number((ligne.quantite * ligne.prixUnitaire).toFixed(2))
           }));
           
           setLignes(newLignes);
@@ -230,11 +229,7 @@ export default function NouvelleFacture() {
 
   // Calculer les totaux
   const totalHT = lignes.reduce((sum, ligne) => sum + (ligne.quantite * ligne.prixUnitaire), 0);
-  const totalTVA = lignes.reduce((sum, ligne) => {
-    const ht = ligne.quantite * ligne.prixUnitaire;
-    return sum + (ht * ligne.tva / 100);
-  }, 0);
-  const totalTTC = totalHT + totalTVA;
+  const totalTTC = totalHT;
 
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
@@ -262,13 +257,11 @@ export default function NouvelleFacture() {
           description: ligne.description,
           quantite: ligne.quantite,
           prixUnitaire: ligne.prixUnitaire,
-          tva: ligne.tva
         })),
         conditions,
         notes,
         devisId: devisId ? parseInt(devisId) : undefined,
         totalHT,
-        totalTVA,
         totalTTC
       };
       
@@ -304,6 +297,11 @@ export default function NouvelleFacture() {
     }
   };
 
+  // Fonction pour imprimer la facture
+  const handlePrint = () => {
+    window.print();
+  };
+
   // Conditionnellement rendre le contenu uniquement côté client
   if (!isClient) {
     return (
@@ -321,6 +319,12 @@ export default function NouvelleFacture() {
           <p className="text-gray-600">Créez une nouvelle facture pour un client</p>
         </div>
         <div className="flex space-x-2 mt-4 sm:mt-0">
+          <button
+            onClick={handlePrint}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center"
+          >
+            <FaPrint className="mr-2" /> Imprimer
+          </button>
           <Link
             href="/factures"
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center"
@@ -350,7 +354,7 @@ export default function NouvelleFacture() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-4 md:p-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -429,94 +433,80 @@ export default function NouvelleFacture() {
           </div>
         </div>
 
-        <div className="mb-6">
-          <h2 className="text-lg font-medium mb-4">Lignes de la facture</h2>
-          
-          <div className="table-responsive">
-            <table className="w-full mb-4">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-2 md:px-4 py-2 text-left">Description</th>
-                  <th className="px-2 md:px-4 py-2 text-right">Qté</th>
-                  <th className="px-2 md:px-4 py-2 text-right">Prix €</th>
-                  <th className="px-2 md:px-4 py-2 text-right">TVA %</th>
-                  <th className="px-2 md:px-4 py-2 text-right">Total €</th>
-                  <th className="px-2 md:px-4 py-2 text-center w-10">Actions</th>
+        <h2 className="text-xl font-bold mb-4 border-b pb-2">Lignes de la facture</h2>
+        
+        <div className="mb-6 overflow-x-auto">
+          <table className="min-w-full border divide-y divide-gray-200">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-2 md:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                <th className="px-2 md:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Qté</th>
+                <th className="px-2 md:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">PU (€)</th>
+                <th className="px-2 md:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Total</th>
+                <th className="px-2 md:px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lignes.map((ligne, index) => (
+                <tr key={index} className="border-b">
+                  <td className="px-2 md:px-4 py-2">
+                    <input
+                      type="text"
+                      value={ligne.description}
+                      onChange={(e) => handleLigneChange(index, 'description', e.target.value)}
+                      className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Description de la prestation ou du produit"
+                      required
+                    />
+                  </td>
+                  <td className="px-2 md:px-4 py-2">
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={ligne.quantite}
+                      onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
+                      className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-sm"
+                      required
+                    />
+                  </td>
+                  <td className="px-2 md:px-4 py-2">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={ligne.prixUnitaire}
+                      onChange={(e) => handleLigneChange(index, 'prixUnitaire', e.target.value)}
+                      className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-sm"
+                      required
+                    />
+                  </td>
+                  <td className="px-2 md:px-4 py-2 text-right font-medium text-sm">
+                    {ligne.total.toFixed(2)} €
+                  </td>
+                  <td className="px-2 md:px-4 py-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => handleSupprimerLigne(index)}
+                      className="text-red-600 hover:text-red-800"
+                      disabled={lignes.length === 1}
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {lignes.map((ligne, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="px-2 md:px-4 py-2">
-                      <input
-                        type="text"
-                        value={ligne.description}
-                        onChange={(e) => handleLigneChange(index, 'description', e.target.value)}
-                        className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        placeholder="Description"
-                        required
-                      />
-                    </td>
-                    <td className="px-2 md:px-4 py-2">
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={ligne.quantite}
-                        onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
-                        className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-sm"
-                        required
-                      />
-                    </td>
-                    <td className="px-2 md:px-4 py-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={ligne.prixUnitaire}
-                        onChange={(e) => handleLigneChange(index, 'prixUnitaire', e.target.value)}
-                        className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-sm"
-                        required
-                      />
-                    </td>
-                    <td className="px-2 md:px-4 py-2">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={ligne.tva}
-                        onChange={(e) => handleLigneChange(index, 'tva', e.target.value)}
-                        className="w-full border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-right text-sm"
-                        required
-                      />
-                    </td>
-                    <td className="px-2 md:px-4 py-2 text-right font-medium text-sm">
-                      {ligne.total.toFixed(2)} €
-                    </td>
-                    <td className="px-2 md:px-4 py-2 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleSupprimerLigne(index)}
-                        className="text-red-600 hover:text-red-800"
-                        disabled={lignes.length === 1}
-                      >
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          <button
-            type="button"
-            onClick={handleAjouterLigne}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg flex items-center text-sm"
-          >
-            <FaPlus className="mr-2" /> Ajouter une ligne
-          </button>
+              ))}
+            </tbody>
+          </table>
         </div>
+        
+        <button
+          type="button"
+          onClick={handleAjouterLigne}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg flex items-center text-sm"
+        >
+          <FaPlus className="mr-2" /> Ajouter une ligne
+        </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
           <div>
@@ -546,21 +536,78 @@ export default function NouvelleFacture() {
 
         <div className="flex justify-end">
           <div className="w-full md:w-64">
-            <div className="flex justify-between py-2 border-b">
-              <span className="font-medium">Total HT:</span>
-              <span>{totalHT.toFixed(2)} €</span>
-            </div>
-            <div className="flex justify-between py-2 border-b">
-              <span className="font-medium">Total TVA:</span>
-              <span>{totalTVA.toFixed(2)} €</span>
-            </div>
             <div className="flex justify-between py-2 font-bold text-lg">
-              <span>Total TTC:</span>
+              <span>Total:</span>
               <span>{totalTTC.toFixed(2)} €</span>
             </div>
           </div>
         </div>
       </form>
+
+      {/* Section d'aperçu pour l'impression */}
+      <div className="hidden print:block mt-8">
+        <EnteteDocument title="Facture" subtitle={`Facture créée le ${date}`} />
+        
+        {/* Contenu pour l'impression */}
+        <div className="mt-6">
+          {clientId && (
+            <div className="mb-4">
+              <h2 className="font-bold mb-2">Client</h2>
+              <p>{clients.find(c => c.id.toString() === clientId)?.nom}</p>
+            </div>
+          )}
+          
+          <div className="mb-4">
+            <h2 className="font-bold mb-2">Détails de la facture</h2>
+            <p>Date: {date}</p>
+            <p>Échéance: {echeance}</p>
+            {devisId && <p>Devis associé: {devisList.find(d => d.id.toString() === devisId)?.numero}</p>}
+          </div>
+          
+          <table className="w-full mb-4">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left pb-2">Description</th>
+                <th className="text-right pb-2">Quantité</th>
+                <th className="text-right pb-2">Prix unitaire</th>
+                <th className="text-right pb-2">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lignes.map((ligne, index) => (
+                <tr key={index} className="border-b">
+                  <td className="py-2">{ligne.description}</td>
+                  <td className="text-right py-2">{ligne.quantite}</td>
+                  <td className="text-right py-2">{ligne.prixUnitaire.toFixed(2)} €</td>
+                  <td className="text-right py-2">{ligne.total.toFixed(2)} €</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={3} className="text-right pt-2 font-bold">Total:</td>
+                <td className="text-right pt-2 font-bold">
+                  {lignes.reduce((sum, ligne) => sum + ligne.total, 0).toFixed(2)} €
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+          
+          {conditions && (
+            <div className="mb-4">
+              <h2 className="font-bold mb-2">Conditions</h2>
+              <p>{conditions}</p>
+            </div>
+          )}
+          
+          {notes && (
+            <div>
+              <h2 className="font-bold mb-2">Notes</h2>
+              <p>{notes}</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 } 

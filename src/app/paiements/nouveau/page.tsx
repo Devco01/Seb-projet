@@ -1,71 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { FaSave, FaTimes, FaSpinner, FaFileInvoiceDollar } from 'react-icons/fa';
+import { useState } from 'react';
+import { FaSave, FaTimes, FaSpinner, FaPrint, FaMoneyBillWave } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-type Facture = {
-  id: number;
-  numero: string;
-  clientId: number;
-  clientNom: string;
-  date: string;
-  totalTTC: number;
-  statut: string;
-};
 
 export default function NouveauPaiement() {
   const router = useRouter();
   const [factureId, setFactureId] = useState('');
   const [montant, setMontant] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [moyenPaiement, setMoyenPaiement] = useState('virement');
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
-  const [factures, setFactures] = useState<Facture[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Récupérer les factures depuis l'API
-  useEffect(() => {
-    const fetchFactures = async () => {
-      try {
-        const response = await fetch('/api/factures');
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des factures');
-        }
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          // Filtrer les factures qui ont un statut "émise" ou "partiellement payée"
-          const facturesPayables = data.filter((facture: Facture) => 
-            facture.statut === 'émise' || facture.statut === 'partiellement payée'
-          );
-          setFactures(facturesPayables);
-        } else {
-          console.error('Les données factures reçues ne sont pas un tableau:', data);
-          setFactures([]);
-        }
-      } catch (err) {
-        console.error('Erreur:', err);
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-        setFactures([]);
-      }
-    };
-
-    fetchFactures();
-  }, []);
-
-  // Mettre à jour le montant automatiquement lorsqu'une facture est sélectionnée
-  useEffect(() => {
-    if (factureId) {
-      const facture = factures.find(f => f.id.toString() === factureId);
-      if (facture) {
-        setMontant(facture.totalTTC.toString());
-      }
-    }
-  }, [factureId, factures]);
+  // Fonction pour imprimer le paiement
+  const handlePrint = () => {
+    window.print();
+  };
 
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,37 +38,16 @@ export default function NouveauPaiement() {
         throw new Error('Le montant doit être supérieur à 0');
       }
       
-      // Préparer les données
-      const paiementData = {
-        factureId: parseInt(factureId),
-        date,
-        montant: parseFloat(montant),
-        moyenPaiement,
-        reference,
-        notes
-      };
-      
-      // Envoi des données à l'API
-      const response = await fetch('/api/paiements', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(paiementData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de l\'enregistrement du paiement');
-      }
-      
-      await response.json(); // On récupère les données mais on ne les utilise pas
-      setSuccessMessage('Paiement enregistré avec succès');
-      
-      // Rediriger vers la page des paiements après 2 secondes
+      // Simulation de succès (pas d'appel API réel)
       setTimeout(() => {
-        router.push('/paiements');
-      }, 2000);
+        setSuccessMessage('Paiement en espèces enregistré avec succès');
+        
+        // Rediriger vers la page des paiements après 2 secondes
+        setTimeout(() => {
+          router.push('/paiements');
+        }, 2000);
+      }, 1000);
+      
     } catch (err) {
       console.error('Erreur:', err);
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -127,10 +60,16 @@ export default function NouveauPaiement() {
     <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Nouveau paiement</h1>
-          <p className="text-gray-600">Enregistrez un paiement pour une facture</p>
+          <h1 className="text-3xl font-bold">Nouveau paiement en espèces</h1>
+          <p className="text-gray-600">Enregistrez un paiement en espèces pour une facture</p>
         </div>
         <div className="flex space-x-2 mt-4 sm:mt-0">
+          <button
+            onClick={handlePrint}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center"
+          >
+            <FaPrint className="mr-2" /> Imprimer
+          </button>
           <Link
             href="/paiements"
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center"
@@ -166,24 +105,19 @@ export default function NouveauPaiement() {
             <label className="block text-gray-700 font-medium mb-2" htmlFor="facture">
               Facture <span className="text-red-500">*</span>
             </label>
-            <select
-              id="facture"
-              name="facture"
-              value={factureId}
-              onChange={(e) => setFactureId(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Sélectionner une facture</option>
-              {Array.isArray(factures) ? 
-                factures.map((facture) => (
-                  <option key={facture.id} value={facture.id}>
-                    {facture.numero} - {facture.clientNom} ({facture.totalTTC.toFixed(2)} €)
-                  </option>
-                )) : 
-                <option value="" disabled>Erreur lors du chargement des factures</option>
-              }
-            </select>
+            <div className="flex items-center border border-gray-300 rounded-lg px-4 py-2">
+              <input
+                type="text"
+                id="facture"
+                name="facture"
+                value={factureId}
+                onChange={(e) => setFactureId(e.target.value)}
+                className="w-full focus:outline-none"
+                placeholder="Entrez le numéro de facture"
+                required
+              />
+            </div>
+            <p className="text-sm text-gray-500 mt-1">Entrez manuellement le numéro de votre facture</p>
           </div>
           
           <div>
@@ -207,37 +141,32 @@ export default function NouveauPaiement() {
             <label className="block text-gray-700 font-medium mb-2" htmlFor="montant">
               Montant (€) <span className="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              id="montant"
-              name="montant"
-              value={montant}
-              onChange={(e) => setMontant(e.target.value)}
-              step="0.01"
-              min="0.01"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
+            <div className="relative">
+              <input
+                type="number"
+                id="montant"
+                name="montant"
+                value={montant}
+                onChange={(e) => setMontant(e.target.value)}
+                step="0.01"
+                min="0.01"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span className="text-gray-500">€</span>
+              </div>
+            </div>
           </div>
           
           <div>
             <label className="block text-gray-700 font-medium mb-2" htmlFor="moyenPaiement">
               Moyen de paiement
             </label>
-            <select
-              id="moyenPaiement"
-              name="moyenPaiement"
-              value={moyenPaiement}
-              onChange={(e) => setMoyenPaiement(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="virement">Virement bancaire</option>
-              <option value="cb">Carte bancaire</option>
-              <option value="cheque">Chèque</option>
-              <option value="especes">Espèces</option>
-              <option value="autre">Autre</option>
-            </select>
+            <div className="flex items-center border border-gray-300 rounded-lg px-4 py-2 bg-gray-100">
+              <FaMoneyBillWave className="text-green-600 mr-2" />
+              <span>Espèces</span>
+            </div>
           </div>
         </div>
 
@@ -252,7 +181,7 @@ export default function NouveauPaiement() {
             value={reference}
             onChange={(e) => setReference(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Numéro de transaction, chèque..."
+            placeholder="Référence du paiement (optionnel)"
           />
         </div>
 
@@ -265,36 +194,25 @@ export default function NouveauPaiement() {
             name="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
-            placeholder="Notes internes ou informations complémentaires..."
-          />
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Notes concernant ce paiement (optionnel)"
+          ></textarea>
         </div>
 
-        {factureId && (
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <div className="flex items-center">
-              <FaFileInvoiceDollar className="text-blue-600 mr-2" />
-              <h3 className="text-lg font-medium">Détails de la facture</h3>
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <FaMoneyBillWave className="h-5 w-5 text-blue-500" />
             </div>
-            {Array.isArray(factures) && factures.filter(f => f.id.toString() === factureId).map(facture => (
-              <div key={facture.id} className="mt-3">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="font-medium">Numéro:</div>
-                  <div>{facture.numero}</div>
-                  <div className="font-medium">Client:</div>
-                  <div>{facture.clientNom}</div>
-                  <div className="font-medium">Date:</div>
-                  <div>{facture.date}</div>
-                  <div className="font-medium">Montant:</div>
-                  <div>{facture.totalTTC.toFixed(2)} €</div>
-                  <div className="font-medium">Statut:</div>
-                  <div>{facture.statut}</div>
-                </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">Information sur le paiement en espèces</h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>Rappel : N&apos;oubliez pas de remettre un reçu à votre client pour tout paiement en espèces.</p>
               </div>
-            ))}
+            </div>
           </div>
-        )}
+        </div>
       </form>
     </div>
   );

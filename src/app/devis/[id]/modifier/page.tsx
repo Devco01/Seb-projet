@@ -9,7 +9,6 @@ interface LigneDevis {
   description: string;
   quantite: number;
   prixUnitaire: number;
-  tva: number;
   total: number;
   unite?: string;
 }
@@ -28,24 +27,21 @@ const devisExistant = {
       quantite: 45,
       unite: 'm²',
       prixUnitaire: 25,
-      tva: 20,
-      total: 1350
+      total: 1125
     },
     {
       description: 'Peinture plafond - Salon',
       quantite: 20,
       unite: 'm²',
       prixUnitaire: 30,
-      tva: 20,
-      total: 720
+      total: 600
     },
     {
       description: 'Préparation des surfaces',
       quantite: 1,
       unite: 'forfait',
       prixUnitaire: 350,
-      tva: 20,
-      total: 420
+      total: 350
     }
   ],
   conditions: 'Paiement à 30 jours à compter de la date de facturation.',
@@ -94,15 +90,13 @@ export default function ModifierDevis({ params }: { params: { id: string } }) {
     }
     
     // Recalcul du total de la ligne
-    if (field === 'quantite' || field === 'prixUnitaire' || field === 'tva') {
+    if (field === 'quantite' || field === 'prixUnitaire') {
       const quantite = newLignes[index].quantite;
       const prixUnitaire = newLignes[index].prixUnitaire;
-      const tva = newLignes[index].tva;
       
-      const totalHT = quantite * prixUnitaire;
-      const totalTTC = totalHT * (1 + tva / 100);
+      const total = quantite * prixUnitaire;
       
-      newLignes[index].total = totalTTC;
+      newLignes[index].total = total;
     }
     
     setLignes(newLignes);
@@ -110,7 +104,7 @@ export default function ModifierDevis({ params }: { params: { id: string } }) {
 
   // Ajout d'une nouvelle ligne
   const handleAjouterLigne = () => {
-    setLignes([...lignes, { description: '', quantite: 1, prixUnitaire: 0, tva: 20, total: 0, unite: 'm²' }]);
+    setLignes([...lignes, { description: '', quantite: 1, prixUnitaire: 0, total: 0, unite: 'm²' }]);
   };
 
   // Suppression d'une ligne
@@ -120,18 +114,10 @@ export default function ModifierDevis({ params }: { params: { id: string } }) {
     setLignes(newLignes);
   };
 
-  // Calcul du total HT
-  const totalHT = lignes.reduce((sum, ligne) => {
+  // Calcul du total
+  const total = lignes.reduce((sum, ligne) => {
     return sum + (ligne.quantite * ligne.prixUnitaire);
   }, 0);
-
-  // Calcul du total TVA
-  const totalTVA = lignes.reduce((sum, ligne) => {
-    return sum + (ligne.quantite * ligne.prixUnitaire * ligne.tva / 100);
-  }, 0);
-
-  // Calcul du total TTC
-  const totalTTC = totalHT + totalTVA;
 
   // Soumission du formulaire
   const handleSubmit = (e: React.FormEvent) => {
@@ -247,23 +233,20 @@ export default function ModifierDevis({ params }: { params: { id: string } }) {
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Description
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quantité
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Unité
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Prix unitaire (€)
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    TVA (%)
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total (€)
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                  <th className="px-4 py-2">
+                    <span className="sr-only">Actions</span>
                   </th>
                 </tr>
               </thead>
@@ -302,27 +285,21 @@ export default function ModifierDevis({ params }: { params: { id: string } }) {
                     <td className="px-4 py-2">
                       <input
                         type="number"
-                        min="0"
                         step="0.01"
+                        min="0"
                         value={ligne.prixUnitaire}
                         onChange={(e) => handleLigneChange(index, 'prixUnitaire', e.target.value)}
-                        className="w-24 border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       />
                     </td>
                     <td className="px-4 py-2">
                       <input
                         type="number"
-                        min="0"
-                        max="100"
-                        value={ligne.tva}
-                        onChange={(e) => handleLigneChange(index, 'tva', e.target.value)}
-                        className="w-16 border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        required
+                        value={ligne.total.toFixed(2)}
+                        className="w-full border rounded-lg px-3 py-2 bg-gray-50"
+                        readOnly
                       />
-                    </td>
-                    <td className="px-4 py-2 font-medium">
-                      {ligne.total.toFixed(2)}
                     </td>
                     <td className="px-4 py-2">
                       {lignes.length > 1 && (
@@ -340,21 +317,9 @@ export default function ModifierDevis({ params }: { params: { id: string } }) {
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={4} className="px-4 py-2"></td>
-                  <td className="px-4 py-2 text-right font-medium">Total HT:</td>
-                  <td className="px-4 py-2 font-medium">{totalHT.toFixed(2)} €</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td colSpan={4} className="px-4 py-2"></td>
-                  <td className="px-4 py-2 text-right font-medium">Total TVA:</td>
-                  <td className="px-4 py-2 font-medium">{totalTVA.toFixed(2)} €</td>
-                  <td></td>
-                </tr>
-                <tr>
-                  <td colSpan={4} className="px-4 py-2"></td>
-                  <td className="px-4 py-2 text-right font-medium">Total TTC:</td>
-                  <td className="px-4 py-2 font-bold">{totalTTC.toFixed(2)} €</td>
+                  <td colSpan={3} className="px-4 py-2"></td>
+                  <td className="px-4 py-2 text-right font-medium">Total:</td>
+                  <td className="px-4 py-2 font-bold">{total.toFixed(2)} €</td>
                   <td></td>
                 </tr>
               </tfoot>

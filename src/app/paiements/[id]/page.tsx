@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import MainLayout from '../../components/MainLayout';
-import { FaEdit, FaTrash, FaFileInvoiceDollar, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaFileInvoiceDollar, FaCheckCircle, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
+import EnteteDocument from '@/app/components/EnteteDocument';
 
 // Données fictives pour un paiement
 const paiementData = {
@@ -53,8 +53,20 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
     }
   };
 
+  // Fonction pour imprimer le paiement
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
-    <MainLayout>
+    <>
+      <div className="mb-6">
+        <Link href="/paiements" className="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <FaArrowLeft className="mr-2" />
+          Retour aux paiements
+        </Link>
+      </div>
+
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/paiements" className="mr-4 text-blue-600 hover:text-blue-800">
@@ -66,6 +78,12 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
           </div>
         </div>
         <div className="flex space-x-2">
+          <button 
+            onClick={handlePrint}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
+          >
+            <FaPrint className="mr-2" /> Imprimer
+          </button>
           <Link 
             href={`/factures/${paiement.facture.id}`}
             className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center"
@@ -159,6 +177,29 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
           <p className="text-gray-700">{paiement.notes}</p>
         </div>
       )}
-    </MainLayout>
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        {/* Entête avec logo */}
+        <EnteteDocument title="Reçu de paiement" subtitle={`Référence: ${paiement.reference}`} />
+        
+        <div className="flex justify-between mb-8">
+          <div className="flex items-center">
+            <span className="font-medium">Statut:</span>
+            <span className={`px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${paiement.statutColor}`}>
+              {paiement.statut}
+            </span>
+          </div>
+          <div className="flex items-center">
+            <span className="font-medium">Montant:</span>
+            <span className="font-bold">{paiement.montant}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Section visible uniquement à l'impression */}
+      <div className="hidden print:block print:mb-8">
+        <EnteteDocument title="Reçu de paiement" subtitle={`Référence: ${paiement.reference}`} />
+      </div>
+    </>
   );
 } 
