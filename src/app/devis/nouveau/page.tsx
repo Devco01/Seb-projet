@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import EnteteDocument from '@/app/components/EnteteDocument';
 
 interface LigneDevis {
@@ -21,6 +21,9 @@ type Client = {
 
 export default function NouveauDevis() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const devisId = searchParams?.get('id');
+  
   const [clientId, setClientId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [validite, setValidite] = useState('');
@@ -31,8 +34,11 @@ export default function NouveauDevis() {
   const [notes, setNotes] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingDevis, setIsLoadingDevis] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [pageTitle, setPageTitle] = useState('Nouveau devis');
+  const [isModification, setIsModification] = useState(false);
 
   // Récupérer les clients depuis l'API
   useEffect(() => {
@@ -67,6 +73,91 @@ export default function NouveauDevis() {
       setValidite(dateObj.toISOString().split('T')[0]);
     }
   }, [validite]);
+
+  // Charger les données du devis si un ID est fourni
+  useEffect(() => {
+    if (devisId) {
+      setIsLoadingDevis(true);
+      setIsModification(true);
+      setPageTitle('Modifier devis');
+      
+      const fetchDevis = async () => {
+        try {
+          const response = await fetch(`/api/devis/${devisId}`);
+          if (!response.ok) {
+            throw new Error(`Erreur lors du chargement du devis: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('Devis chargé:', data);
+          
+          // Formatage des dates
+          const formatDateForInput = (dateString: string) => {
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+          };
+          
+          // Mise à jour des états avec les données du devis
+          setClientId(data.clientId?.toString() || '');
+          setDate(formatDateForInput(data.date));
+          setValidite(formatDateForInput(data.validite));
+          
+          if (data.conditions) {
+            setConditions(data.conditions);
+          }
+          
+          if (data.notes) {
+            setNotes(data.notes);
+          }
+          
+          // Traitement des lignes
+          let lignesData = [];
+          if (data.lignes) {
+            // Si les lignes sont stockées en format JSON string, les parser
+            if (typeof data.lignes === 'string') {
+              try {
+                lignesData = JSON.parse(data.lignes);
+              } catch (e) {
+                console.error('Erreur lors du parsing des lignes du devis:', e);
+                lignesData = [];
+              }
+            } else if (Array.isArray(data.lignes)) {
+              lignesData = data.lignes;
+            }
+            
+            if (lignesData.length > 0) {
+              const formattedLignes = lignesData.map((ligne: {
+                description?: string;
+                quantite?: number;
+                prixUnitaire?: number;
+                unite?: string;
+              }) => {
+                const quantite = ligne.quantite || 0;
+                const prixUnitaire = ligne.prixUnitaire || 0;
+                
+                return {
+                  description: ligne.description || '',
+                  quantite: quantite,
+                  prixUnitaire: prixUnitaire,
+                  total: Number((quantite * prixUnitaire).toFixed(2))
+                };
+              });
+              
+              setLignes(formattedLignes);
+            }
+          }
+          
+        } catch (err) {
+          console.error('Erreur lors du chargement du devis:', err);
+          setError(`Impossible de charger le devis: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+        } finally {
+          setIsLoadingDevis(false);
+        }
+      };
+      
+      fetchDevis();
+    }
+  }, [devisId]);
 
   // Fonction pour gérer les changements dans les lignes de devis
   const handleLigneChange = (index: number, field: keyof LigneDevis, value: string | number) => {
@@ -104,7 +195,7 @@ export default function NouveauDevis() {
     window.print();
   };
 
-  // Fonction pour soumettre le formulaire
+  // Modifier la fonction handleSubmit pour gérer à la fois la création et la modification
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -130,15 +221,19 @@ export default function NouveauDevis() {
         clientId: parseInt(clientId),
         date,
         validite,
-        lignes: lignes, // Envoi direct des lignes sans conversion JSON
+        lignes: lignes,
         conditions,
         notes,
-        statut: 'En attente'
+        statut: isModification ? undefined : 'En attente' // Ne pas changer le statut si c'est une modification
       };
 
+      // URL et méthode selon si c'est une création ou une modification
+      const url = isModification ? `/api/devis/${devisId}` : '/api/devis';
+      const method = isModification ? 'PUT' : 'POST';
+
       // Envoyer les données au serveur
-      const response = await fetch('/api/devis', {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -147,15 +242,15 @@ export default function NouveauDevis() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la création du devis');
+        throw new Error(errorData.error || `Erreur lors de ${isModification ? 'la modification' : 'la création'} du devis`);
       }
 
       const data = await response.json();
-      setSuccessMessage(`Devis ${data.numero} créé avec succès!`);
+      setSuccessMessage(`Devis ${isModification ? 'modifié' : 'créé'} avec succès!`);
       
       // Redirection après 2 secondes
       setTimeout(() => {
-        router.push(`/devis/${data.id}`);
+        router.push(`/devis/${data.id || devisId}`);
       }, 2000);
     } catch (err) {
       console.error('Erreur:', err);
@@ -165,12 +260,22 @@ export default function NouveauDevis() {
     }
   };
 
+  // Afficher un état de chargement
+  if (isLoadingDevis) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="ml-3 text-gray-600">Chargement du devis...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Nouveau devis</h1>
-          <p className="text-gray-600">Créez un nouveau devis pour un client</p>
+          <h1 className="text-3xl font-bold">{pageTitle}</h1>
+          <p className="text-gray-600">{isModification ? 'Modifiez les détails du devis' : 'Créez un nouveau devis pour un client'}</p>
         </div>
         <div className="flex space-x-2 mt-4 sm:mt-0">
           <button

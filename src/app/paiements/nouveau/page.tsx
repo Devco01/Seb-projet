@@ -1,9 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaSave, FaTimes, FaSpinner, FaPrint, FaMoneyBillWave } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
+interface Facture {
+  id: number;
+  numero: string;
+  clientId: number;
+  client?: {
+    nom: string;
+  };
+  totalTTC: number;
+  resteAPayer?: number;
+  statut: string;
+}
 
 export default function NouveauPaiement() {
   const router = useRouter();
@@ -13,8 +25,61 @@ export default function NouveauPaiement() {
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingFactures, setIsLoadingFactures] = useState(true);
+  const [factures, setFactures] = useState<Facture[]>([]);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [factureSelectionnee, setFactureSelectionnee] = useState<Facture | null>(null);
+
+  // Charger la liste des factures
+  useEffect(() => {
+    const fetchFactures = async () => {
+      try {
+        const response = await fetch('/api/factures');
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des factures');
+        }
+        
+        const data = await response.json();
+        
+        // Filtrer les factures qui ne sont pas complètement payées
+        const facturesNonPayees = data.filter((facture: Facture) => 
+          facture.statut !== 'Payée'
+        );
+        
+        setFactures(facturesNonPayees);
+      } catch (err) {
+        console.error('Erreur:', err);
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue lors du chargement des factures');
+      } finally {
+        setIsLoadingFactures(false);
+      }
+    };
+    
+    fetchFactures();
+  }, []);
+
+  // Mettre à jour les détails de la facture sélectionnée
+  useEffect(() => {
+    if (factureId) {
+      const facture = factures.find(f => f.id.toString() === factureId);
+      if (facture) {
+        setFactureSelectionnee(facture);
+        
+        // Préremplir le montant avec le reste à payer si disponible
+        if (facture.resteAPayer !== undefined) {
+          setMontant(facture.resteAPayer.toString());
+        } else {
+          setMontant(facture.totalTTC.toString());
+        }
+      } else {
+        setFactureSelectionnee(null);
+      }
+    } else {
+      setFactureSelectionnee(null);
+      setMontant('');
+    }
+  }, [factureId, factures]);
 
   // Fonction pour imprimer le paiement
   const handlePrint = () => {
@@ -38,15 +103,36 @@ export default function NouveauPaiement() {
         throw new Error('Le montant doit être supérieur à 0');
       }
       
-      // Simulation de succès (pas d'appel API réel)
+      // Préparer les données pour l'API
+      const paiementData = {
+        factureId: parseInt(factureId),
+        montant: parseFloat(montant),
+        date,
+        reference,
+        notes,
+        methode: 'Espèces'
+      };
+      
+      // Envoyer les données à l'API
+      const response = await fetch('/api/paiements', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paiementData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de l\'enregistrement du paiement');
+      }
+      
+      setSuccessMessage('Paiement en espèces enregistré avec succès');
+      
+      // Rediriger vers la page des paiements après 2 secondes
       setTimeout(() => {
-        setSuccessMessage('Paiement en espèces enregistré avec succès');
-        
-        // Rediriger vers la page des paiements après 2 secondes
-        setTimeout(() => {
-          router.push('/paiements');
-        }, 2000);
-      }, 1000);
+        router.push('/paiements');
+      }, 2000);
       
     } catch (err) {
       console.error('Erreur:', err);
@@ -105,19 +191,25 @@ export default function NouveauPaiement() {
             <label className="block text-gray-700 font-medium mb-2" htmlFor="facture">
               Facture <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center border border-gray-300 rounded-lg px-4 py-2">
-              <input
-                type="text"
-                id="facture"
-                name="facture"
-                value={factureId}
-                onChange={(e) => setFactureId(e.target.value)}
-                className="w-full focus:outline-none"
-                placeholder="Entrez le numéro de facture"
-                required
-              />
-            </div>
-            <p className="text-sm text-gray-500 mt-1">Entrez manuellement le numéro de votre facture</p>
+            <select
+              id="facture"
+              name="facture"
+              value={factureId}
+              onChange={(e) => setFactureId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              disabled={isLoadingFactures}
+            >
+              <option value="">Sélectionner une facture</option>
+              {factures.map((facture) => (
+                <option key={facture.id} value={facture.id.toString()}>
+                  {facture.numero} - {facture.client?.nom || 'Client inconnu'} - {facture.totalTTC.toFixed(2)} €
+                </option>
+              ))}
+            </select>
+            {isLoadingFactures && (
+              <p className="text-sm text-gray-500 mt-1">Chargement des factures...</p>
+            )}
           </div>
           
           <div>
@@ -135,6 +227,36 @@ export default function NouveauPaiement() {
             />
           </div>
         </div>
+
+        {/* Afficher les détails de la facture sélectionnée */}
+        {factureSelectionnee && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-medium mb-2">Détails de la facture</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-gray-600">Numéro:</p>
+                <p className="font-medium">{factureSelectionnee.numero}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Client:</p>
+                <p className="font-medium">{factureSelectionnee.client?.nom || 'Client inconnu'}</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Montant total:</p>
+                <p className="font-medium">{factureSelectionnee.totalTTC.toFixed(2)} €</p>
+              </div>
+              <div>
+                <p className="text-gray-600">Reste à payer:</p>
+                <p className="font-medium">
+                  {factureSelectionnee.resteAPayer !== undefined 
+                    ? factureSelectionnee.resteAPayer.toFixed(2) 
+                    : factureSelectionnee.totalTTC.toFixed(2)
+                  } €
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
