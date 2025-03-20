@@ -1,60 +1,128 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import EnteteDocument from '@/app/components/EnteteDocument';
 
-// Données fictives pour une facture
-const factureData = {
-  id: 1,
-  numero: 'F-2023-042',
-  client: {
-    nom: 'Dupont SAS',
-    adresse: '15 rue des Lilas',
-    codePostal: '75001',
-    ville: 'Paris',
-    email: 'contact@dupont-sas.fr',
-    telephone: '01 23 45 67 89'
-  },
-  date: '15/06/2023',
-  echeance: '15/07/2023',
-  statut: 'En attente',
-  statutColor: 'bg-yellow-100 text-yellow-800',
-  devisAssocie: 'D-2023-056',
-  lignes: [
-    {
-      description: 'Peinture murs intérieurs - Salon',
-      quantite: 45,
-      unite: 'm²',
-      prixUnitaire: 25,
-      total: 1125
-    },
-    {
-      description: 'Peinture plafond - Salon',
-      quantite: 20,
-      unite: 'm²',
-      prixUnitaire: 30,
-      total: 600
-    },
-    {
-      description: 'Préparation des surfaces',
-      quantite: 1,
-      unite: 'forfait',
-      prixUnitaire: 350,
-      total: 350
-    }
-  ],
-  conditions: 'Paiement à 30 jours à compter de la date de facturation.',
-  notes: 'Merci pour votre confiance.'
-};
+// Interface pour les lignes de facture
+interface FactureLigne {
+  description: string;
+  quantite: number;
+  unite: string;
+  prixUnitaire: number;
+  total: number;
+}
+
+// Interface pour le client
+interface FactureClient {
+  id: number;
+  nom: string;
+  email: string;
+  adresse?: string;
+  codePostal?: string;
+  ville?: string;
+  telephone?: string;
+}
+
+// Interface pour la facture
+interface Facture {
+  id: number;
+  numero: string;
+  client: FactureClient;
+  date: string;
+  echeance: string;
+  statut: string;
+  statutColor: string;
+  devisId?: number;
+  devisNumero?: string;
+  lignes: FactureLigne[];
+  conditions?: string;
+  notes?: string;
+  totalHT: number;
+  totalTTC: number;
+}
 
 export default function DetailFacture({ params }: { params: { id: string } }) {
-  const [facture, setFacture] = useState(factureData);
+  const [facture, setFacture] = useState<Facture | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadFacture = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/factures/${params.id}`);
+        if (!response.ok) {
+          throw new Error(`Erreur lors du chargement de la facture: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // Analyser les lignes qui sont stockées en JSON
+        if (data && data.lignes && typeof data.lignes === 'string') {
+          data.lignes = JSON.parse(data.lignes);
+        }
+        
+        // Déterminer la couleur du statut
+        let statutColor = 'bg-yellow-100 text-yellow-800'; // Par défaut (En attente)
+        if (data.statut === 'Payée') {
+          statutColor = 'bg-green-100 text-green-800';
+        } else if (data.statut === 'En retard') {
+          statutColor = 'bg-red-100 text-red-800';
+        } else if (data.statut === 'Annulée') {
+          statutColor = 'bg-gray-100 text-gray-800';
+        }
+        
+        // Formater les dates pour l'affichage
+        const formatDate = (dateString: string) => {
+          const date = new Date(dateString);
+          return date.toLocaleDateString('fr-FR');
+        };
+        
+        setFacture({
+          ...data,
+          statutColor,
+          date: formatDate(data.date),
+          echeance: formatDate(data.echeance)
+        });
+      } catch (err) {
+        console.error('Erreur lors du chargement de la facture:', err);
+        setError('Impossible de charger les données de la facture. Veuillez réessayer plus tard.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFacture();
+  }, [params.id]);
+
+  // Afficher un état de chargement
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Afficher un message d'erreur si nécessaire
+  if (error || !facture) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <p className="font-bold">Erreur</p>
+        <p>{error || "Facture non trouvée"}</p>
+        <Link href="/factures" className="mt-4 inline-block text-blue-600 hover:text-blue-800">
+          <FaArrowLeft className="inline mr-2" /> Retour à la liste des factures
+        </Link>
+      </div>
+    );
+  }
 
   // Calcul du total
-  const total = facture.lignes.reduce((sum, ligne) => {
-    return sum + (ligne.quantite * ligne.prixUnitaire);
+  const total = facture.lignes.reduce((sum: number, ligne: FactureLigne) => {
+    return sum + (parseFloat(ligne.quantite.toString()) * parseFloat(ligne.prixUnitaire.toString()));
   }, 0);
 
   // Fonction pour marquer la facture comme payée

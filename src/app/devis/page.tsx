@@ -6,9 +6,7 @@ import {
   FaFileAlt, 
   FaPlus, 
   FaSearch, 
-  FaArrowRight,
   FaEye,
-  FaTrashAlt,
   FaPaintBrush
 } from "react-icons/fa";
 

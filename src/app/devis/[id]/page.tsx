@@ -119,8 +119,8 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
   }
 
   // Calcul du total
-  const total = devis.lignes.reduce((sum: number, ligne: any) => {
-    return sum + (parseFloat(ligne.quantite) * parseFloat(ligne.prixUnitaire));
+  const total = devis.lignes.reduce((sum: number, ligne: DevisLigne) => {
+    return sum + (parseFloat(ligne.quantite.toString()) * parseFloat(ligne.prixUnitaire.toString()));
   }, 0);
 
   // Fonction pour convertir le devis en facture
