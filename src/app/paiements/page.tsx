@@ -14,15 +14,24 @@ import {
 export default function Paiements() {
   interface Paiement {
     id: number;
-    facture: string;
+    facture: {
+      id: number;
+      numero: string;
+      totalTTC: number;
+    };
     factureId: number;
-    client: string;
+    client: {
+      id: number;
+      nom: string;
+      email: string;
+    };
     clientId: number;
     montant: number;
     date: string;
-    mode: string;
+    methode: string;
     statut: string;
     notes?: string;
+    reference?: string;
   }
 
   // États pour la liste des paiements et leur chargement
@@ -74,9 +83,10 @@ export default function Paiements() {
     if (search) {
       filtered = filtered.filter(paiement => 
         paiement.id.toString().includes(search) || 
-        paiement.facture.toLowerCase().includes(search) || 
-        paiement.client.toLowerCase().includes(search) || 
-        (paiement.notes?.toLowerCase() || '').includes(search)
+        (paiement.facture?.numero?.toLowerCase() || '').includes(search) || 
+        (paiement.client?.nom?.toLowerCase() || '').includes(search) || 
+        (paiement.notes?.toLowerCase() || '').includes(search) ||
+        (paiement.reference?.toLowerCase() || '').includes(search)
       );
     }
     
@@ -110,11 +120,11 @@ export default function Paiements() {
   };
 
   // Calcul des totaux pour les statistiques
-  const totalMontant = paiements.reduce((sum, paiement) => sum + paiement.montant, 0);
+  const totalMontant = paiements.reduce((sum, paiement) => sum + (paiement.montant || 0), 0);
   const virementsTotal = paiements
-    .filter(p => p.mode.toLowerCase() === 'virement')
-    .reduce((sum, p) => sum + p.montant, 0);
-  const virementsCount = paiements.filter(p => p.mode.toLowerCase() === 'virement').length;
+    .filter(p => (p.methode || '').toLowerCase() === 'virement')
+    .reduce((sum, p) => sum + (p.montant || 0), 0);
+  const virementsCount = paiements.filter(p => (p.methode || '').toLowerCase() === 'virement').length;
 
   // Formater un montant en euros
   const formatMontant = (montant: number): string => {
@@ -246,18 +256,18 @@ export default function Paiements() {
                 <tr key={paiement.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-blue-600">
-                      <Link href={`/paiements/${paiement.id}`}>{paiement.id}</Link>
+                      <Link href={`/paiements/${paiement.id}`}>{paiement.reference || paiement.id}</Link>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
                       <Link href={`/clients/${paiement.clientId}`} className="hover:text-blue-600">
-                        {paiement.client}
+                        {paiement.client?.nom || 'Client inconnu'}
                       </Link>
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
                       <Link href={`/factures/${paiement.factureId}`} className="hover:text-blue-600">
-                        Facture: {paiement.facture}
+                        Facture: {paiement.facture?.numero || 'N/A'}
                       </Link>
                     </div>
                   </td>
@@ -265,7 +275,7 @@ export default function Paiements() {
                     <div className="text-sm text-gray-900">{formatDate(paiement.date)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{formatMontant(paiement.montant)}</div>
+                    <div className="text-sm font-medium text-gray-900">{formatMontant(paiement.montant || 0)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-3">
@@ -294,19 +304,19 @@ export default function Paiements() {
             <div key={paiement.id} className="bg-white rounded-lg shadow p-4">
               <div className="flex justify-between items-center mb-2">
                 <Link href={`/paiements/${paiement.id}`} className="font-medium text-blue-600">
-                  {paiement.id}
+                  {paiement.reference || paiement.id}
                 </Link>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {paiement.mode}
+                  {paiement.methode || 'N/A'}
                 </span>
               </div>
               <div className="mb-2">
                 <Link href={`/clients/${paiement.clientId}`} className="font-medium text-gray-800">
-                  {paiement.client}
+                  {paiement.client?.nom || 'Client inconnu'}
                 </Link>
                 <div className="text-xs text-gray-500 mt-1">
                   <Link href={`/factures/${paiement.factureId}`} className="hover:text-blue-600">
-                    Facture: {paiement.facture}
+                    Facture: {paiement.facture?.numero || 'N/A'}
                   </Link>
                 </div>
               </div>
@@ -315,7 +325,7 @@ export default function Paiements() {
                   <p>Date: {formatDate(paiement.date)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-gray-900">{formatMontant(paiement.montant)}</p>
+                  <p className="font-medium text-gray-900">{formatMontant(paiement.montant || 0)}</p>
                 </div>
               </div>
               <div className="flex justify-between items-center border-t border-gray-200 pt-3">
