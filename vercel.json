@@ -3,37 +3,5 @@
   "buildCommand": "npm run vercel-build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
-  "cleanUrls": true,
-  "env": {
-    "NEXTAUTH_URL": {
-      "required": true
-    },
-    "NEXTAUTH_SECRET": {
-      "required": true
-    },
-    "JWT_SECRET": {
-      "required": true
-    },
-    "POSTGRES_URL": {
-      "required": true
-    },
-    "POSTGRES_PRISMA_URL": {
-      "required": true
-    },
-    "POSTGRES_URL_NON_POOLING": {
-      "required": true
-    },
-    "POSTGRES_USER": {
-      "required": true
-    },
-    "POSTGRES_HOST": {
-      "required": true
-    },
-    "POSTGRES_PASSWORD": {
-      "required": true
-    },
-    "POSTGRES_DATABASE": {
-      "required": true
-    }
-  }
+  "cleanUrls": true
 } 
