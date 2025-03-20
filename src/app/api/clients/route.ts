@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     console.log('Données reçues pour la création du client:', data);
     
-    // Validation des données minimales
+    // Validation des données de base
     if (!data.nom || !data.email) {
       return NextResponse.json(
         { error: 'Les champs nom et email sont obligatoires' },
@@ -80,15 +80,19 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Créer des données Prisma simplifiées
+    // Préparer un objet avec des valeurs par défaut pour tous les champs possibles
     const prismaData = {
       nom: data.nom,
       email: data.email,
       telephone: data.telephone || null,
-      adresse: data.adresse || '',
-      codePostal: data.codePostal || '',
-      ville: data.ville || '',
+      adresse: data.adresse || ' ', // Nécessite au moins un espace si c'est obligatoire
+      codePostal: data.codePostal || '00000', // Valeur par défaut si c'est obligatoire
+      ville: data.ville || ' ', // Nécessite au moins un espace si c'est obligatoire
       pays: data.pays || 'France',
+      notes: data.notes || null,
+      contact: data.contact || null,
+      siret: data.siret || null,
+      tva: data.tva || null,
     };
     
     try {
@@ -101,12 +105,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(client, { status: 201 });
     } catch (error) {
       console.error('Erreur prisma détaillée:', error);
+      
+      // Afficher plus de détails sur l'erreur pour le débogage
+      if (error.message) {
+        console.error('Message d\'erreur:', error.message);
+      }
+      
+      if (error.meta) {
+        console.error('Métadonnées d\'erreur:', error.meta);
+      }
+      
       throw error;
     }
   } catch (error) {
     console.error('Erreur détaillée lors de la création du client:', error);
     
-    // Si c'est une erreur Prisma connue (comme un conflit de clé unique)
+    // Si c'est une erreur Prisma connue
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Un client avec cet email existe déjà' },
@@ -114,8 +128,16 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Si le champ est manquant ou invalide
+    if (error.code === 'P2000' || error.code === 'P2001') {
+      return NextResponse.json(
+        { error: `Erreur de validation: ${error.message}` },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Erreur lors de la création du client' },
+      { error: 'Erreur lors de la création du client', details: error.message || 'Erreur inconnue' },
       { status: 500 }
     );
   }

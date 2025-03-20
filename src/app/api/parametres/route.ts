@@ -4,9 +4,12 @@ import { z } from "zod";
 import fs from "fs";
 import path from "path";
 
-// Schéma de validation simplifié pour les paramètres
+// Schéma de validation avec les champs obligatoires
 const ParametresSchema = z.object({
   companyName: z.string().min(1, "Le nom de l'entreprise est requis"),
+  address: z.string().min(1, "L'adresse est requise"),
+  zipCode: z.string().min(1, "Le code postal est requis"),
+  city: z.string().min(1, "La ville est requise"),
   email: z.string().email("Email invalide").min(1, "L'email est requis"),
   paymentDelay: z.number().default(30),
   prefixeDevis: z.string().default("D-"),
@@ -64,6 +67,9 @@ export async function POST(request: NextRequest) {
     // Conversion des types pour validation
     const validationData = {
       companyName: String(data.companyName || ""),
+      address: String(data.address || ""),
+      zipCode: String(data.zipCode || ""),
+      city: String(data.city || ""),
       email: String(data.email || ""),
       paymentDelay: parseInt(String(data.paymentDelay || "30")),
       prefixeDevis: String(data.prefixeDevis || "D-"),
@@ -105,9 +111,12 @@ export async function POST(request: NextRequest) {
     const existingParametres = await prisma.parametres.findFirst();
     console.log("[API] Paramètres existants:", existingParametres ? "oui" : "non");
 
-    // Créer un objet prismaData avec seulement les champs obligatoires
+    // Créer un objet prismaData avec tous les champs obligatoires
     const prismaData = {
       companyName: validationData.companyName,
+      address: validationData.address,
+      zipCode: validationData.zipCode,
+      city: validationData.city,
       email: validationData.email,
       paymentDelay: validationData.paymentDelay,
       prefixeDevis: validationData.prefixeDevis,
@@ -116,6 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Ajouter le logo s'il est présent
     if (logoFileName) {
+      // @ts-ignore - Le champ logoUrl existe dans le schéma Prisma mais TypeScript ne le reconnaît pas
       prismaData.logoUrl = logoFileName;
     }
 
