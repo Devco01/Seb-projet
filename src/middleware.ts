@@ -37,15 +37,32 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
+  // Rediriger la page d'accueil vers le dashboard si l'utilisateur est connecté
+  if (path === '/') {
+    // Vérifier si le cookie de session existe (en tenant compte de l'environnement)
+    const isProd = process.env.NODE_ENV === 'production';
+    const sessionTokenName = isProd ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+    
+    // Chercher le cookie en fonction de l'environnement
+    const sessionToken = request.cookies.get(sessionTokenName) || 
+                         request.cookies.get('next-auth.session-token') ||
+                         request.cookies.get('__Secure-next-auth.session-token');
+    
+    // Si le cookie existe, rediriger vers le dashboard
+    if (sessionToken) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+  
   // Vérifier si le cookie de session existe (en tenant compte de l'environnement)
   const isProd = process.env.NODE_ENV === 'production';
   const sessionTokenName = isProd ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
   
   // Chercher le cookie en fonction de l'environnement
   const sessionToken = request.cookies.get(sessionTokenName) || 
-                         // Fallback pour être sûr
-                         request.cookies.get('next-auth.session-token') ||
-                         request.cookies.get('__Secure-next-auth.session-token');
+                       // Fallback pour être sûr
+                       request.cookies.get('next-auth.session-token') ||
+                       request.cookies.get('__Secure-next-auth.session-token');
   
   // Si le cookie existe, on laisse passer la requête
   if (sessionToken) {

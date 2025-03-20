@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 // Composant pour le contenu du login qui utilise useSearchParams
 function LoginContent() {
@@ -14,8 +14,8 @@ function LoginContent() {
   const [isSuccess, setIsSuccess] = useState(false);
   const { status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
+  // Toujours rediriger vers le dashboard, peu importe le callbackUrl
+  const callbackUrl = "/dashboard";
   
   // Utilisation de useEffect pour la redirection
   useEffect(() => {
@@ -55,7 +55,8 @@ function LoginContent() {
       } else if (result?.ok) {
         setIsSuccess(true);
         console.log("Connexion réussie, redirection prévue vers:", callbackUrl);
-        // La redirection se fera automatiquement via useEffect quand le statut sera mis à jour
+        // Force la redirection immédiate vers le dashboard
+        router.push(callbackUrl);
       }
     } catch (err) {
       console.error("Erreur de connexion:", err);
