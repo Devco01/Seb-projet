@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 // Déclaration pour améliorer TypeScript avec globalThis
 declare global {
@@ -6,19 +6,35 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-// Garde une instance unique de Prisma Client en développement pour éviter plusieurs instances
-export const prisma = global.prisma || new PrismaClient({
-  log: ['query', 'error', 'warn'],
+// Vérification des variables d'environnement requises
+const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.error('ERREUR: La variable d\'environnement POSTGRES_URL ou DATABASE_URL est requise mais non définie.');
+  // En production, on ne veut pas arrêter le processus mais afficher clairement l'erreur
+  if (process.env.NODE_ENV === 'development') {
+    throw new Error('La variable d\'environnement de base de données est requise');
+  }
+}
+
+// Configuration du client Prisma
+const globalOptions: Prisma.PrismaClientOptions = {
+  log: [
+    { level: 'query', emit: 'event' },
+    { level: 'error', emit: 'stdout' },
+    { level: 'warn', emit: 'stdout' }
+  ],
   datasources: {
     db: {
-      // Force l'URL de la base de données pour Vercel
-      url: process.env.NODE_ENV === 'production' 
-        ? process.env.DATABASE_URL 
-        : "file:./prisma/dev.db"
+      url: databaseUrl,
     },
   },
-});
+};
 
+// Garde une instance unique de Prisma Client en développement
+export const prisma = globalThis.prisma || new PrismaClient(globalOptions);
+
+// Sauvegarde de l'instance pour le développement
 if (process.env.NODE_ENV !== 'production') {
-  global.prisma = prisma;
+  globalThis.prisma = prisma;
 }
