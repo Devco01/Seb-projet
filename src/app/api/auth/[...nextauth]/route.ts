@@ -69,12 +69,17 @@ export const authOptions: NextAuthOptions = {
     },
     async redirect({ url, baseUrl }) {
       // Gérer explicitement l'URL de redirection
-      // Si l'URL commence par le baseUrl ou est une URL relative, on l'accepte
-      if (url.startsWith(baseUrl) || url.startsWith('/')) {
+      // Les URL relatives ne doivent pas être traitées comme des URLs complètes
+      if (url.startsWith('/')) {
+        // C'est un chemin relatif, utiliser baseUrl
+        return `${baseUrl}${url}`;
+      }
+      // Si l'URL commence par le baseUrl, on l'accepte
+      if (url.startsWith(baseUrl)) {
         return url;
       }
       // Sinon, rediriger vers le dashboard
-      return baseUrl + '/dashboard';
+      return `${baseUrl}/dashboard`;
     }
   },
   cookies: {
