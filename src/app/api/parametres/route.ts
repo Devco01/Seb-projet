@@ -34,8 +34,8 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-// Interfaces pour la conversion entre API et base de données
-interface ApiParameters {
+// Type sécurisé pour la conversion entre API et base de données
+type ApiParameters = {
   id?: number;
   companyName: string;
   address: string;
@@ -68,8 +68,8 @@ export async function GET() {
       return NextResponse.json({ error: "Aucun paramètre trouvé" }, { status: 404 });
     }
 
-    // Convertir les données de Prisma vers l'API
-    // @ts-expect-error - Les noms des propriétés sont corrects dans le schéma Prisma
+    // Convertir les données de Prisma vers l'API avec un casting explicite
+    // @ts-expect-error - Nous savons que les champs correspondent au modèle
     const responseData: ApiParameters = {
       id: parametres.id,
       companyName: parametres.companyName,
@@ -159,24 +159,28 @@ export async function POST(request: NextRequest) {
     const existingParametres = await prisma.parametres.findFirst();
     console.log("[API] Paramètres existants:", existingParametres ? "oui" : "non");
 
-    // Utiliser une seule annotation pour toutes les propriétés
-    // @ts-expect-error - Les noms de propriétés sont corrects dans le schéma Prisma
-    const prismaData: Prisma.ParametresCreateInput = {
+    // Créer l'objet avec les données pour Prisma en spécifiant le type approprié
+    // @ts-expect-error - Nous savons que les champs correspondent au modèle
+    const prismaData: Prisma.ParametresUpdateInput = {
       companyName: validationData.companyName,
       address: validationData.address,
       zipCode: validationData.zipCode,
       city: validationData.city,
-      phone: validationData.phone,
+      phone: validationData.phone || null,
       email: validationData.email,
-      siret: validationData.siret,
+      siret: validationData.siret || null,
       paymentDelay: validationData.paymentDelay,
       prefixeDevis: validationData.prefixeDevis,
       prefixeFacture: validationData.prefixeFacture,
       mentionsLegalesDevis: validationData.mentionsLegalesDevis,
       mentionsLegalesFacture: validationData.mentionsLegalesFacture,
       conditionsPaiement: validationData.conditionsPaiement,
-      ...(logoFileName ? { logoUrl: logoFileName } : {})
     };
+
+    // Ajouter le logo s'il est présent
+    if (logoFileName) {
+      prismaData.logoUrl = logoFileName;
+    }
 
     // Créer ou mettre à jour les paramètres
     let result;
@@ -188,22 +192,22 @@ export async function POST(request: NextRequest) {
       console.log("[API] Paramètres mis à jour");
     } else {
       result = await prisma.parametres.create({
-        data: prismaData,
+        data: prismaData as Prisma.ParametresCreateInput,
       });
       console.log("[API] Paramètres créés");
     }
 
     // Convertir les données retournées vers l'API
-    // @ts-expect-error - Les noms des propriétés sont corrects dans le schéma Prisma
+    // @ts-expect-error - Nous savons que les champs correspondent au modèle
     const responseData: ApiParameters = {
       id: result.id,
       companyName: result.companyName,
       address: result.address,
       zipCode: result.zipCode,
       city: result.city,
-      phone: result.phone || "",
+      phone: result.phone || null,
       email: result.email,
-      siret: result.siret || "",
+      siret: result.siret || null,
       paymentDelay: result.paymentDelay,
       prefixeDevis: result.prefixeDevis,
       prefixeFacture: result.prefixeFacture,

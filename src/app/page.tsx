@@ -39,12 +39,6 @@ export default function HomePage() {
               Connexion
             </Link>
           </div>
-          
-          <div className="pt-4 text-xs text-gray-500">
-            <p>Identifiants de connexion:</p>
-            <p>Email: admin@example.com</p>
-            <p>Mot de passe: admin123</p>
-          </div>
         </div>
       </div>
     </div>
