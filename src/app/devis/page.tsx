@@ -7,7 +7,8 @@ import {
   FaPlus, 
   FaSearch, 
   FaEye,
-  FaPaintBrush
+  FaPaintBrush,
+  FaTrashAlt
 } from "react-icons/fa";
 
 interface DevisItem {
@@ -124,6 +125,32 @@ export default function Devis() {
       style: 'currency',
       currency: 'EUR',
     }).format(amount);
+  };
+
+  // Fonction pour supprimer un devis
+  const handleDeleteDevis = async (id: number, numero: string) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le devis ${numero} ?`)) {
+      try {
+        const response = await fetch(`/api/devis/${id}`, {
+          method: 'DELETE',
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Erreur lors de la suppression du devis');
+        }
+        
+        alert('Devis supprimé avec succès !');
+        
+        // Mettre à jour la liste des devis
+        setDevis(prevDevis => prevDevis.filter(d => d.id !== id));
+        setFilteredDevis(prevFiltered => prevFiltered.filter(d => d.id !== id));
+      } catch (err) {
+        console.error('Erreur lors de la suppression:', err);
+        alert(`Erreur lors de la suppression: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+      }
+    }
   };
 
   return (
@@ -339,6 +366,13 @@ export default function Devis() {
                       >
                         <FaEye />
                       </Link>
+                      <button
+                        className="text-red-600 hover:text-red-900"
+                        title="Supprimer le devis"
+                        onClick={() => handleDeleteDevis(devis.id, devis.numero)}
+                      >
+                        <FaTrashAlt />
+                      </button>
                     </div>
                   </td>
                 </tr>
