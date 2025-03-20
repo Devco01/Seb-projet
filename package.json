@@ -8,13 +8,15 @@
     "start": "next start -p 3001",
     "lint": "next lint",
     "setup": "npx prisma generate && npx prisma db push",
+    "seed": "node --experimental-modules prisma/seed.mjs",
     "reset-db": "npx prisma migrate reset --force",
     "check-db": "node prisma-check.js",
     "setup-db": "node prisma-setup.js",
     "prepare-deploy": "node deploy-setup.js",
     "clean": "rm -rf .next node_modules .vercel",
     "postinstall": "npx prisma generate",
-    "create-placeholder": "node create-placeholder-img.js"
+    "create-placeholder": "node create-placeholder-img.js",
+    "vercel-build": "npx prisma generate && npx prisma db push && next build"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
