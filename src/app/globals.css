@@ -88,73 +88,123 @@ main {
 }
 
 /* Styles personnalisés */
-@layer components {
-  .btn {
-    @apply rounded font-medium;
-    padding: 0.5rem 1rem;
-  }
+.btn {
+  border-radius: 0.25rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+}
 
-  .btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700;
-  }
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #1d4ed8;
+}
 
-  .btn-secondary {
-    @apply bg-gray-500 text-white hover:bg-gray-600;
-  }
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+}
+.btn-secondary:hover {
+  background-color: #4b5563;
+}
 
-  .btn-success {
-    @apply bg-green-500 text-white hover:bg-green-600;
-  }
+.btn-success {
+  background-color: #10b981;
+  color: white;
+}
+.btn-success:hover {
+  background-color: #059669;
+}
 
-  .btn-danger {
-    @apply bg-red-500 text-white hover:bg-red-600;
-  }
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+.btn-danger:hover {
+  background-color: #dc2626;
+}
 
-  .btn-warning {
-    @apply bg-yellow-500 text-white hover:bg-yellow-600;
-  }
+.btn-warning {
+  background-color: #f59e0b;
+  color: white;
+}
+.btn-warning:hover {
+  background-color: #d97706;
+}
 
-  .btn-info {
-    @apply bg-blue-400 text-white hover:bg-blue-500;
-  }
+.btn-info {
+  background-color: #3b82f6;
+  color: white;
+}
+.btn-info:hover {
+  background-color: #2563eb;
+}
 
-  .card {
-    @apply bg-white rounded-lg shadow-md;
-    padding: 1.5rem;
-  }
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+}
 
-  .input {
-    @apply shadow border rounded w-full text-gray-700 leading-tight focus:outline-none focus:ring;
-    padding: 0.5rem 0.75rem;
-  }
+.input {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  width: 100%;
+  color: #374151;
+  line-height: 1.25;
+  padding: 0.5rem 0.75rem;
+}
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.45);
+}
 
-  .label {
-    @apply block text-gray-700 font-bold mb-2;
-  }
+.label {
+  display: block;
+  color: #374151;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
 
-  .table-container {
-    @apply overflow-x-auto;
-  }
+.table-container {
+  overflow-x: auto;
+}
 
-  .table {
-    @apply min-w-full divide-y divide-gray-200;
-  }
+.table {
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
 
-  .table-header {
-    @apply bg-gray-50;
-  }
+.table-header {
+  background-color: #f9fafb;
+}
 
-  .table-row {
-    @apply bg-white border-b hover:bg-gray-50;
-  }
+.table-row {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+.table-row:hover {
+  background-color: #f3f4f6;
+}
 
-  .table-cell {
-    @apply whitespace-nowrap text-sm text-gray-500;
-    padding: 1rem 1.5rem;
-  }
+.table-cell {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #6b7280;
+  padding: 1rem 1.5rem;
+}
 
-  .table-cell-head {
-    @apply text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
-    padding: 0.75rem 1.5rem;
-  }
+.table-cell-head {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1.5rem;
 }
