@@ -30,7 +30,11 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Mot de passe", type: "password" }
       },
       async authorize(credentials) {
+
         // Identifiants corrects fournis par le client
+
+        // Vérification des identifiants (à modifier selon vos besoins)
+
         const validUsername = "facturepro"; 
         const validPassword = "FacturePro@2023!";
 
@@ -38,7 +42,7 @@ export const authOptions: NextAuthOptions = {
           return {
             id: "1",
             name: "Administrateur",
-            email: "admin@exemple.fr",
+            email: "contact@facturepro.fr",
           };
         }
         
