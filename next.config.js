@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  swcMinify: true,
   experimental: {
     // Suppression de l'option obsolète
     // serverExternalPackages: ['@prisma/client'],

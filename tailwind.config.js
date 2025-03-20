@@ -36,6 +36,8 @@ module.exports = {
     },
   },
   plugins: [
+    // @ts-expect-error - Ignore le require pour les plugins Tailwind
+    // eslint-disable-next-line
     require('@tailwindcss/forms')
   ],
   safelist: [
