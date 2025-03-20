@@ -16,72 +16,28 @@ import {
   FaCalendarAlt
 } from "react-icons/fa";
 
+interface Client {
+  id: number;
+  nom: string;
+  contact: string;
+  email: string;
+  telephone: string;
+  adresse: string;
+  nbDevis: number;
+  nbFactures: number;
+  dateCreation: string;
+}
+
 export default function Clients() {
-  // Données clients fictives pour la démo (statiques)
-  const clientsData = [
-    { 
-      id: 1, 
-      nom: "Dupont Immobilier", 
-      contact: "Jean Dupont", 
-      email: "contact@dupontimmo.fr", 
-      telephone: "01 23 45 67 89", 
-      adresse: "12 rue des Lilas, 75001 Paris",
-      nbDevis: 5,
-      nbFactures: 3,
-      dateCreation: "15/01/2024"
-    },
-    { 
-      id: 2, 
-      nom: "Martin Résidences", 
-      contact: "Sophie Martin", 
-      email: "s.martin@residences.fr", 
-      telephone: "06 12 34 56 78", 
-      adresse: "8 avenue Victor Hugo, 69002 Lyon",
-      nbDevis: 2,
-      nbFactures: 2,
-      dateCreation: "03/02/2024"
-    },
-    { 
-      id: 3, 
-      nom: "Dubois & Fils", 
-      contact: "Pierre Dubois", 
-      email: "p.dubois@duboisetfils.fr", 
-      telephone: "04 56 78 90 12", 
-      adresse: "45 rue du Commerce, 33000 Bordeaux",
-      nbDevis: 3,
-      nbFactures: 1,
-      dateCreation: "22/02/2024"
-    },
-    { 
-      id: 4, 
-      nom: "Lepetit SCI", 
-      contact: "Marie Lepetit", 
-      email: "contact@lepetitsci.fr", 
-      telephone: "07 89 01 23 45", 
-      adresse: "5 place de la République, 31000 Toulouse",
-      nbDevis: 1,
-      nbFactures: 0,
-      dateCreation: "10/03/2024"
-    },
-    { 
-      id: 5, 
-      nom: "Moreau Construction", 
-      contact: "Philippe Moreau", 
-      email: "p.moreau@construction.fr", 
-      telephone: "09 87 65 43 21", 
-      adresse: "24 boulevard Haussmann, 75009 Paris",
-      nbDevis: 2,
-      nbFactures: 2,
-      dateCreation: "28/02/2024"
-    }
-  ];
+  // Tableau de clients vide par défaut
+  const clientsData: Client[] = [];
 
   // États pour la recherche et le tri
   const [searchTerm, setSearchTerm] = useState("");
-  const [clients, setClients] = useState(clientsData);
+  const [clients, setClients] = useState<Client[]>(clientsData);
 
   // Fonction de recherche
-  const handleSearch = (event) => {
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value.toLowerCase();
     setSearchTerm(value);
     
@@ -99,7 +55,7 @@ export default function Clients() {
   };
 
   // Statut du client basé sur le nombre de factures et devis
-  const getClientStatus = (client) => {
+  const getClientStatus = (client: Client) => {
     if (client.nbFactures > 0) {
       return "text-green-600";
     } else if (client.nbDevis > 0) {
@@ -161,7 +117,7 @@ export default function Clients() {
             <div>
               <p className="text-sm font-medium text-gray-500">Devis créés</p>
               <p className="text-2xl font-bold text-gray-800">
-                {clientsData.reduce((sum, client) => sum + client.nbDevis, 0)}
+                {clientsData.reduce((sum, client) => sum + (client.nbDevis || 0), 0)}
               </p>
             </div>
             <div className="p-3 bg-amber-100 rounded-full">
@@ -175,7 +131,7 @@ export default function Clients() {
             <div>
               <p className="text-sm font-medium text-gray-500">Factures émises</p>
               <p className="text-2xl font-bold text-gray-800">
-                {clientsData.reduce((sum, client) => sum + client.nbFactures, 0)}
+                {clientsData.reduce((sum, client) => sum + (client.nbFactures || 0), 0)}
               </p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
@@ -185,10 +141,17 @@ export default function Clients() {
         </div>
       </div>
 
-      {/* Liste des clients - Version mobile (cards) */}
-      <div className="grid grid-cols-1 gap-4 sm:hidden">
-        {clients.length > 0 ? (
-          clients.map((client) => (
+      {/* Message quand aucun client n'est présent */}
+      <div className="bg-white rounded-lg shadow p-6 text-center">
+        <FaUsers className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+        <p className="text-lg font-medium">Aucun client</p>
+        <p className="mt-1">Commencez par ajouter votre premier client en cliquant sur &apos;Nouveau client&apos;.</p>
+      </div>
+
+      {/* Liste des clients - Version mobile (cards) - Sera affichée quand il y aura des clients */}
+      {clients.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:hidden">
+          {clients.map((client) => (
             <div key={client.id} className="bg-white rounded-lg shadow p-4">
               <div>
                 <h3 className={`text-lg font-bold ${getClientStatus(client)}`}>{client.nom}</h3>
@@ -227,93 +190,81 @@ export default function Clients() {
                 </div>
               </div>
             </div>
-          ))
-        ) : (
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            <FaUsers className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-            <p className="text-lg font-medium">Aucun client trouvé</p>
-            <p className="mt-1">Ajoutez un nouveau client ou modifiez votre recherche.</p>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Liste des clients - Version desktop (table) */}
-      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Contact
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Adresse
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date de création
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {clients.length > 0 ? (
-              clients.map((client) => (
+      {/* Liste des clients - Version desktop (table) - Sera affichée quand il y aura des clients */}
+      {clients.length > 0 && (
+        <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Client
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Email / Téléphone
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Devis / Factures
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {clients.map((client) => (
                 <tr key={client.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <Link href={`/clients/${client.id}`} className="block">
-                      <div className="font-medium text-gray-900">{client.nom}</div>
-                    </Link>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium text-gray-900">{client.nom}</div>
+                    <div className="text-xs text-gray-500">{client.adresse}</div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-gray-900">{client.contact}</div>
-                    <div className="flex items-center text-gray-500 text-sm mt-1">
-                      <FaEnvelope className="mr-1 h-3 w-3" />
-                      <a href={`mailto:${client.email}`} className="hover:underline">{client.email}</a>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{client.contact}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-blue-600">
+                      <a href={`mailto:${client.email}`}>{client.email}</a>
                     </div>
-                    <div className="flex items-center text-gray-500 text-sm mt-1">
-                      <FaPhone className="mr-1 h-3 w-3" />
-                      <a href={`tel:${client.telephone}`}>{client.telephone}</a>
+                    <div className="text-sm text-gray-500">{client.telephone}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex space-x-3">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                        {client.nbDevis} devis
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {client.nbFactures} factures
+                      </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-500">
-                      {client.adresse}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {client.dateCreation}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end space-x-3">
-                      <Link href={`/clients/${client.id}`} className="text-blue-600 hover:text-blue-900">
-                        <FaEye title="Voir le détail" />
-                      </Link>
-                      <button 
-                        className="text-red-600 hover:text-red-900"
-                        onClick={() => alert(`Supprimer le client ${client.nom}`)}
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex justify-end space-x-2">
+                      <Link 
+                        href={`/clients/${client.id}`}
+                        className="text-blue-600 hover:text-blue-900"
                       >
-                        <FaTrashAlt title="Supprimer" />
+                        Voir
+                      </Link>
+                      <button
+                        onClick={() => alert(`Supprimer le client ${client.nom}`)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Supprimer
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
-                  <FaUsers className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                  <p className="text-lg font-medium">Aucun client trouvé</p>
-                  <p className="mt-1">Ajoutez un nouveau client ou modifiez votre recherche.</p>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 } 

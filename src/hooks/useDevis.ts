@@ -7,7 +7,6 @@ export interface LigneDevis {
   description: string;
   quantite: number;
   prixUnitaire: number;
-  tva: number;
   totalHT: number;
 }
 
@@ -21,7 +20,6 @@ export interface Devis {
   statut: 'Brouillon' | 'Envoyé' | 'Accepté' | 'Refusé' | 'Expiré';
   lignes: LigneDevis[];
   totalHT: number;
-  totalTVA: number;
   totalTTC: number;
   conditions?: string;
   notes?: string;
@@ -197,19 +195,15 @@ export function useDevis() {
   // Calculer les totaux d'un devis
   const calculerTotaux = (lignes: Omit<LigneDevis, 'id'>[]) => {
     let totalHT = 0;
-    let totalTVA = 0;
     
     lignes.forEach(ligne => {
       const ligneHT = ligne.quantite * ligne.prixUnitaire;
-      const ligneTVA = ligneHT * (ligne.tva / 100);
-      
       totalHT += ligneHT;
-      totalTVA += ligneTVA;
     });
     
-    const totalTTC = totalHT + totalTVA;
+    const totalTTC = totalHT;
     
-    return { totalHT, totalTVA, totalTTC };
+    return { totalHT, totalTTC };
   };
 
   // Charger les devis au montage du composant

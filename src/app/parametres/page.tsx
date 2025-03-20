@@ -1,34 +1,217 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FaBuilding, FaEuroSign, FaSave, FaImage, FaUpload } from 'react-icons/fa';
+import { FaBuilding, FaEuroSign, FaSave, FaImage, FaUpload, FaSpinner } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
 
 export default function Parametres() {
   // États pour les différents paramètres
-  const [companyName, setCompanyName] = useState("Entreprise de Peinture ABC");
-  const [address, setAddress] = useState("12 rue des Artisans, 75001 Paris");
-  const [phone, setPhone] = useState("01 23 45 67 89");
-  const [email, setEmail] = useState("contact@peinture-abc.fr");
-  const [siret, setSiret] = useState("12345678900012");
-  const [tva, setTva] = useState("FR12345678900");
-  const [defaultTva, setDefaultTva] = useState("20");
+  const [companyName, setCompanyName] = useState("");
+  const [address, setAddress] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [siret, setSiret] = useState("");
   const [paymentDelay, setPaymentDelay] = useState("30");
-  const [logoUrl, setLogoUrl] = useState("/logo-placeholder.png");
+  const [tvaPercent, setTvaPercent] = useState("0");
+  const [prefixeDevis, setPrefixeDevis] = useState("D-");
+  const [prefixeFacture, setPrefixeFacture] = useState("F-");
+  const [logoUrl, setLogoUrl] = useState("/img/logo-placeholder.png");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fonction de sauvegarde simulée
-  const handleSave = (section) => {
-    alert(`Paramètres de ${section} sauvegardés avec succès!`);
+  // Charger les paramètres au chargement de la page
+  useEffect(() => {
+    const fetchParametres = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        console.log('Chargement des paramètres...');
+        const response = await fetch('/api/parametres');
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.log('Aucun paramètre trouvé, utilisation des valeurs par défaut');
+            setIsLoading(false);
+            return;
+          }
+          throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Paramètres chargés avec succès:', data);
+        
+        setCompanyName(data.companyName || "");
+        setAddress(data.address || "");
+        setZipCode(data.zipCode || "");
+        setCity(data.city || "");
+        setPhone(data.phone || "");
+        setEmail(data.email || "");
+        setSiret(data.siret || "");
+        
+        // Extraction du délai de paiement
+        if (data.paymentDelay) {
+          setPaymentDelay(String(data.paymentDelay));
+        }
+        
+        // Extraction du taux de TVA
+        if (data.tvaPercent !== undefined) {
+          setTvaPercent(String(data.tvaPercent));
+        }
+        
+        // Préfixes
+        setPrefixeDevis(data.prefixeDevis || "D-");
+        setPrefixeFacture(data.prefixeFacture || "F-");
+        
+        // Mettre à jour le logo s'il existe
+        if (data.logoUrl) {
+          setLogoUrl(data.logoUrl);
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+        setError(errorMessage);
+        console.error('Erreur lors du chargement des paramètres:', error);
+        toast.error('Erreur lors du chargement des paramètres');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchParametres();
+  }, []);
+
+  // Fonction de sauvegarde des paramètres
+  const handleSave = async (section: string) => {
+    setIsLoading(true);
+    try {
+      // Création du FormData pour envoyer les données et le logo
+      const formData = new FormData();
+      formData.append("companyName", companyName);
+      formData.append("address", address);
+      formData.append("zipCode", zipCode);
+      formData.append("city", city);
+      formData.append("phone", phone);
+      formData.append("email", email);
+      formData.append("siret", siret);
+      formData.append("paymentDelay", paymentDelay);
+      formData.append("tvaPercent", tvaPercent);
+      formData.append("prefixeDevis", prefixeDevis);
+      formData.append("prefixeFacture", prefixeFacture);
+      formData.append("conditionsPaiement", `Paiement à ${paymentDelay} jours`);
+
+      const response = await fetch('/api/parametres', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        toast.success(`Paramètres de ${section} sauvegardés avec succès!`);
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Erreur lors de la sauvegarde des paramètres");
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error("Une erreur est survenue lors de la sauvegarde");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Fonction pour simuler l'upload d'un logo
-  const handleLogoUpload = () => {
-    // Dans une vraie application, vous utiliseriez FormData et une API pour uploader le fichier
-    alert("Cette fonctionnalité serait implémentée avec un vrai upload de fichier dans l&apos;application complète");
+  // Fonction pour uploader un logo
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+
+    const file = e.target.files[0];
     
-    // Utilisation de setLogoUrl pour éviter l'erreur ESLint
-    setLogoUrl("/logo-placeholder.png");
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      toast.error("Le fichier doit être une image");
+      return;
+    }
+
+    setIsUploading(true);
+    
+    try {
+      // Création du FormData pour envoyer le logo
+      const formData = new FormData();
+      formData.append("logo", file);
+      
+      // Ajouter les autres paramètres pour éviter de les perdre
+      formData.append("companyName", companyName);
+      formData.append("address", address);
+      formData.append("zipCode", zipCode);
+      formData.append("city", city);
+      formData.append("phone", phone);
+      formData.append("email", email);
+      formData.append("siret", siret);
+      formData.append("paymentDelay", paymentDelay);
+      formData.append("tvaPercent", tvaPercent);
+      formData.append("prefixeDevis", prefixeDevis);
+      formData.append("prefixeFacture", prefixeFacture);
+      formData.append("conditionsPaiement", `Paiement à ${paymentDelay} jours`);
+      
+      // Envoyer l'image au serveur
+      const response = await fetch('/api/parametres', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.logoUrl) {
+          setLogoUrl(data.logoUrl.startsWith('/uploads/') ? data.logoUrl : `/uploads/${data.logoUrl}`);
+          toast.success("Logo mis à jour avec succès!");
+        } else {
+          toast.error("Erreur: le logo n'a pas été mis à jour");
+        }
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Erreur lors de la mise à jour du logo");
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error("Une erreur est survenue lors de l'upload du logo");
+    } finally {
+      setIsUploading(false);
+    }
   };
+
+  // Afficher un état de chargement pendant le chargement des données
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-600">Chargement des paramètres...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Afficher une erreur si nécessaire
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
+          <p className="font-bold">Erreur de chargement</p>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-16 px-4 sm:px-6 max-w-7xl mx-auto">
@@ -56,6 +239,7 @@ export default function Parametres() {
               className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="Entrez le nom de votre entreprise"
             />
           </div>
           
@@ -69,6 +253,35 @@ export default function Parametres() {
               className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
+              placeholder="Adresse complète"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
+              Code postal
+            </label>
+            <input
+              type="text"
+              id="zipCode"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+              placeholder="Code postal"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+              Ville
+            </label>
+            <input
+              type="text"
+              id="city"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Ville"
             />
           </div>
           
@@ -82,6 +295,7 @@ export default function Parametres() {
               className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              placeholder="Numéro de téléphone"
             />
           </div>
           
@@ -95,6 +309,7 @@ export default function Parametres() {
               className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="Adresse email"
             />
           </div>
           
@@ -108,19 +323,21 @@ export default function Parametres() {
               className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
               value={siret}
               onChange={(e) => setSiret(e.target.value)}
+              placeholder="Numéro SIRET"
             />
           </div>
           
           <div>
-            <label htmlFor="tva" className="block text-sm font-medium text-gray-700 mb-1">
-              Numéro TVA
+            <label htmlFor="tvaPercent" className="block text-sm font-medium text-gray-700 mb-1">
+              Taux de TVA (%)
             </label>
             <input
-              type="text"
-              id="tva"
+              type="number"
+              id="tvaPercent"
               className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-              value={tva}
-              onChange={(e) => setTva(e.target.value)}
+              value={tvaPercent}
+              onChange={(e) => setTvaPercent(e.target.value)}
+              placeholder="Taux de TVA"
             />
           </div>
         </div>
@@ -131,7 +348,9 @@ export default function Parametres() {
               Logo de l&apos;entreprise
             </label>
             <div className="w-32 h-32 border border-gray-300 rounded-md flex items-center justify-center overflow-hidden bg-gray-50">
-              {logoUrl ? (
+              {isUploading ? (
+                <FaSpinner className="animate-spin h-10 w-10 text-blue-500" />
+              ) : logoUrl ? (
                 <div className="relative w-full h-full">
                   <Image 
                     src={logoUrl} 
@@ -157,18 +376,23 @@ export default function Parametres() {
                 className="hidden"
                 accept="image/*"
                 onChange={handleLogoUpload}
+                disabled={isUploading}
               />
             </label>
             <p className="text-xs text-gray-500 mt-1">Format recommandé: PNG ou JPEG, max 2MB</p>
+            <p className="text-xs text-gray-600 mt-2">
+              Le logo apparaîtra sur vos devis et factures.
+            </p>
           </div>
         </div>
         
         <div className="mt-6">
           <button
             onClick={() => handleSave('entreprise')}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={isLoading}
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
-            <FaSave className="mr-2" />
+            {isLoading ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
             Sauvegarder les informations
           </button>
         </div>
@@ -183,19 +407,6 @@ export default function Parametres() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <label htmlFor="defaultTva" className="block text-sm font-medium text-gray-700 mb-1">
-              Taux de TVA par défaut (%)
-            </label>
-            <input
-              type="number"
-              id="defaultTva"
-              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-              value={defaultTva}
-              onChange={(e) => setDefaultTva(e.target.value)}
-            />
-          </div>
-          
-          <div>
             <label htmlFor="paymentDelay" className="block text-sm font-medium text-gray-700 mb-1">
               Délai de paiement par défaut (jours)
             </label>
@@ -209,34 +420,31 @@ export default function Parametres() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Numérotation des factures
+            <label htmlFor="prefixeFacture" className="block text-sm font-medium text-gray-700 mb-1">
+              Préfixe des factures
             </label>
-            <div className="mt-2">
-              <div className="flex items-center">
-                <input
-                  id="facture-auto"
-                  name="facture-numerotation"
-                  type="radio"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  defaultChecked
-                />
-                <label htmlFor="facture-auto" className="ml-3 block text-sm text-gray-700">
-                  Automatique (F-ANNÉE-XXX)
-                </label>
-              </div>
-              <div className="flex items-center mt-2">
-                <input
-                  id="facture-custom"
-                  name="facture-numerotation"
-                  type="radio"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                />
-                <label htmlFor="facture-custom" className="ml-3 block text-sm text-gray-700">
-                  Personnalisée
-                </label>
-              </div>
-            </div>
+            <input
+              type="text"
+              id="prefixeFacture"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+              value={prefixeFacture}
+              onChange={(e) => setPrefixeFacture(e.target.value)}
+              placeholder="Préfixe des factures (ex: F-)"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="prefixeDevis" className="block text-sm font-medium text-gray-700 mb-1">
+              Préfixe des devis
+            </label>
+            <input
+              type="text"
+              id="prefixeDevis"
+              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
+              value={prefixeDevis}
+              onChange={(e) => setPrefixeDevis(e.target.value)}
+              placeholder="Préfixe des devis (ex: D-)"
+            />
           </div>
           
           <div>
@@ -246,7 +454,7 @@ export default function Parametres() {
             <textarea
               className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
               rows={3}
-              defaultValue="Paiement à réception de facture. Tout retard de paiement entraîne des pénalités calculées au taux d'intérêt légal en vigueur."
+              defaultValue={`Paiement à ${paymentDelay} jours. Tout retard de paiement entraîne des pénalités calculées au taux d'intérêt légal en vigueur.`}
             ></textarea>
           </div>
         </div>
@@ -254,9 +462,10 @@ export default function Parametres() {
         <div className="mt-6">
           <button
             onClick={() => handleSave('facturation')}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={isLoading}
+            className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
-            <FaSave className="mr-2" />
+            {isLoading ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
             Sauvegarder les paramètres
           </button>
         </div>

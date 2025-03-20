@@ -8,10 +8,11 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -26,18 +27,15 @@
       "@/*": [
         "./src/*"
       ]
-    },
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true
+    }
   },
   "include": [
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    ".next/types/**/*.ts"
+    "node_modules"
   ]
 }

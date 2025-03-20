@@ -1,145 +1,58 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useApi } from './useApi';
+import { useState, useEffect } from 'react';
 
+// Type pour les paramètres de l'entreprise
 export interface Parametres {
-  id: number;
-  nomEntreprise: string;
-  adresse: string;
-  codePostal: string;
-  ville: string;
-  pays: string;
-  telephone?: string;
+  id: string;
+  companyName: string;
+  address: string;
+  zipCode: string;
+  city: string;
+  phone: string;
   email: string;
-  siteWeb?: string;
   siret: string;
-  tvaIntracommunautaire?: string;
-  rcs?: string;
-  capital?: string;
-  logo?: string;
-  conditionsPaiement?: string;
-  piedPage?: string;
-  couleurPrincipale?: string;
-  couleurSecondaire?: string;
-  createdAt: string;
-  updatedAt: string;
+  paymentDelay: number;
+  logoUrl: string | null;
+  tvaPercent: number;
+  prefixeDevis: string;
+  prefixeFacture: string;
+  mentionsLegalesDevis: string | null;
+  mentionsLegalesFacture: string | null;
+  conditionsPaiement: string | null;
 }
 
-export interface ParametresFormData {
-  nomEntreprise: string;
-  adresse: string;
-  codePostal: string;
-  ville: string;
-  pays: string;
-  telephone?: string;
-  email: string;
-  siteWeb?: string;
-  siret: string;
-  tvaIntracommunautaire?: string;
-  rcs?: string;
-  capital?: string;
-  logo?: string;
-  conditionsPaiement?: string;
-  piedPage?: string;
-  couleurPrincipale?: string;
-  couleurSecondaire?: string;
-}
-
-export function useParametres() {
-  const api = useApi<Parametres>();
+export default function useParametres() {
   const [parametres, setParametres] = useState<Parametres | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Récupérer les paramètres
-  const fetchParametres = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await api.get('/api/parametres');
-      
-      if (response.error) {
-        setError(response.error);
-      } else {
-        setParametres(response.data as Parametres);
-      }
-    } catch (err) {
-      setError('Erreur lors de la récupération des paramètres');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
-
-  // Mettre à jour les paramètres
-  const updateParametres = async (parametresData: ParametresFormData) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await api.put('/api/parametres', parametresData);
-      
-      if (response.error) {
-        setError(response.error);
-        return null;
-      }
-      
-      setParametres(response.data);
-      return response.data;
-    } catch (err) {
-      setError('Erreur lors de la mise à jour des paramètres');
-      console.error(err);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Télécharger un logo
-  const uploadLogo = async (file: File) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const formData = new FormData();
-      formData.append('logo', file);
-      
-      const response = await fetch('/api/parametres/logo', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        setError(data.message || 'Erreur lors du téléchargement du logo');
-        return null;
-      }
-      
-      // Mettre à jour les paramètres avec le nouveau logo
-      await fetchParametres();
-      
-      return data;
-    } catch (err) {
-      setError('Erreur lors du téléchargement du logo');
-      console.error(err);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Charger les paramètres au montage du composant
   useEffect(() => {
-    fetchParametres();
-  }, [fetchParametres]);
+    const fetchParametres = async () => {
+      try {
+        console.log("[useParametres] Début du chargement des paramètres");
+        setLoading(true);
+        setError(null);
 
-  return {
-    parametres,
-    loading,
-    error,
-    fetchParametres,
-    updateParametres,
-    uploadLogo,
-  };
+        const response = await fetch('/api/parametres');
+        console.log("[useParametres] Réponse API reçue:", response.status);
+        
+        if (!response.ok) {
+          throw new Error(`Erreur lors du chargement des paramètres: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("[useParametres] Données reçues:", data);
+        
+        setParametres(data);
+        setLoading(false);
+      } catch (err) {
+        console.error("[useParametres] Erreur:", err);
+        setError(err instanceof Error ? err : new Error('Erreur inconnue'));
+        setLoading(false);
+      }
+    };
+
+    fetchParametres();
+  }, []);
+
+  return { parametres, loading, error };
 } 

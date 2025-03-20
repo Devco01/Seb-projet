@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import MainLayout from '@/app/components/MainLayout';
-import { FaDownload, FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaDownload, FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import EnteteDocument from '@/app/components/EnteteDocument';
 
 // Données fictives pour un devis
 const devisData = {
@@ -28,56 +28,58 @@ const devisData = {
       quantite: 45,
       unite: 'm²',
       prixUnitaire: 25,
-      tva: 20,
-      total: 1350
+      total: 1125
     },
     {
       description: 'Peinture plafond - Salon',
       quantite: 20,
       unite: 'm²',
       prixUnitaire: 30,
-      tva: 20,
-      total: 720
+      total: 600
     },
     {
       description: 'Préparation des surfaces',
       quantite: 1,
       unite: 'forfait',
       prixUnitaire: 350,
-      tva: 20,
-      total: 420
+      total: 350
     }
   ],
   conditions: 'Paiement à 30 jours à compter de la date de facturation.',
   notes: 'Devis valable pour une durée de 30 jours. Les travaux pourront commencer 2 semaines après acceptation du devis.'
 };
 
-export default function DevisDetailPage({ params }: { params: { id: string } }) {
-  // Utiliser l'ID dans un commentaire pour éviter l'erreur de linter
-  // L'ID sera utilisé pour récupérer les données du devis depuis l'API
-  const _id = parseInt(params.id);
-  const [devis, _setDevis] = useState(devisData);
-  // Le router sera utilisé pour la navigation après les actions
-  const _router = useRouter();
+export default function DetailDevis({ params }: { params: { id: string } }) {
+  const [devis, setDevis] = useState(devisData);
+  const router = useRouter();
 
-  // Calcul du total HT
-  const totalHT = devis.lignes.reduce((sum, ligne) => {
+  useEffect(() => {
+    const loadDevis = async () => {
+      const id = parseInt(params.id);
+      // Simulation d'un chargement de données
+      if (id) {
+        // Dans un cas réel, vous feriez un appel API ici
+        setDevis({
+          ...devisData,
+          id: id,
+          numero: `D-2023-${id.toString().padStart(3, '0')}`
+        });
+      }
+    };
+
+    loadDevis();
+  }, [params.id]);
+
+  // Calcul du total
+  const total = devis.lignes.reduce((sum, ligne) => {
     return sum + (ligne.quantite * ligne.prixUnitaire);
   }, 0);
-
-  // Calcul du total TVA
-  const totalTVA = devis.lignes.reduce((sum, ligne) => {
-    return sum + (ligne.quantite * ligne.prixUnitaire * ligne.tva / 100);
-  }, 0);
-
-  // Calcul du total TTC
-  const totalTTC = totalHT + totalTVA;
 
   // Fonction pour convertir le devis en facture
   const handleConvertToInvoice = () => {
     if (window.confirm('Êtes-vous sûr de vouloir convertir ce devis en facture ?')) {
       alert('Devis converti en facture avec succès !');
-      window.location.href = '/factures';
+      router.push('/factures');
     }
   };
 
@@ -91,16 +93,28 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
     alert('Envoi du devis par email...');
   };
 
+  // Fonction pour imprimer le devis
+  const handlePrint = () => {
+    window.print();
+  };
+
   // Fonction pour supprimer le devis
   const handleDelete = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
       alert('Devis supprimé avec succès !');
-      window.location.href = '/devis';
+      router.push('/devis');
     }
   };
 
   return (
-    <MainLayout>
+    <>
+      <div className="mb-6">
+        <Link href="/devis" className="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <FaArrowLeft className="mr-2" />
+          Retour aux devis
+        </Link>
+      </div>
+      
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/devis" className="mr-4 text-blue-600 hover:text-blue-800">
@@ -113,27 +127,33 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
         </div>
         <div className="flex space-x-2">
           <button 
-            onClick={handleDownload}
+            onClick={handlePrint}
             className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center"
+          >
+            <FaPrint className="mr-2" /> Imprimer
+          </button>
+          <button 
+            onClick={handleDownload}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaDownload className="mr-2" /> PDF
           </button>
           <button 
             onClick={handleSendEmail}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
+            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaEnvelope className="mr-2" /> Email
           </button>
           <Link 
             href={`/devis/${params.id}/modifier`}
-            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaEdit className="mr-2" /> Modifier
           </Link>
           {devis.statut === 'Accepté' && (
             <button 
               onClick={handleConvertToInvoice}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg flex items-center"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg flex items-center"
             >
               <FaExchangeAlt className="mr-2" /> Convertir
             </button>
@@ -147,7 +167,7 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6 print:hidden">
         <div className="flex justify-between mb-8">
           <div>
             <h2 className="text-lg font-bold mb-2">Client</h2>
@@ -184,9 +204,6 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
                     Prix unitaire (€)
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    TVA (%)
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total (€)
                   </th>
                 </tr>
@@ -206,9 +223,6 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
                     <td className="px-4 py-3 text-right">
                       {ligne.prixUnitaire.toFixed(2)}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      {ligne.tva}
-                    </td>
                     <td className="px-4 py-3 text-right font-medium">
                       {ligne.total.toFixed(2)}
                     </td>
@@ -217,19 +231,9 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={4} className="px-4 py-3"></td>
-                  <td className="px-4 py-3 text-right font-medium">Total HT:</td>
-                  <td className="px-4 py-3 text-right font-medium">{totalHT.toFixed(2)} €</td>
-                </tr>
-                <tr>
-                  <td colSpan={4} className="px-4 py-3"></td>
-                  <td className="px-4 py-3 text-right font-medium">Total TVA:</td>
-                  <td className="px-4 py-3 text-right font-medium">{totalTVA.toFixed(2)} €</td>
-                </tr>
-                <tr>
-                  <td colSpan={4} className="px-4 py-3"></td>
-                  <td className="px-4 py-3 text-right font-medium">Total TTC:</td>
-                  <td className="px-4 py-3 text-right font-bold">{totalTTC.toFixed(2)} €</td>
+                  <td colSpan={3} className="px-4 py-3"></td>
+                  <td className="px-4 py-3 text-right font-medium">Total:</td>
+                  <td className="px-4 py-3 text-right font-bold">{total.toFixed(2)} €</td>
                 </tr>
               </tfoot>
             </table>
@@ -247,6 +251,27 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
           </div>
         </div>
       </div>
-    </MainLayout>
+      
+      {/* Section visible uniquement à l'impression */}
+      <div className="hidden print:block print:mb-8">
+        <EnteteDocument title="Devis" subtitle={`Référence: ${devis.numero} - Créé le ${devis.date}`} />
+        
+        {/* Contenu d'impression du devis */}
+        <div className="mt-8">
+          <div className="flex justify-between mb-8">
+            <div>
+              <h2 className="text-lg font-bold mb-2">Client</h2>
+              <p className="font-medium">{devis.client.nom}</p>
+              <p>{devis.client.adresse}</p>
+              <p>{devis.client.codePostal} {devis.client.ville}</p>
+              <p>Email: {devis.client.email}</p>
+              <p>Tél: {devis.client.telephone}</p>
+            </div>
+          </div>
+          
+          {/* Reste du contenu pour l'impression */}
+        </div>
+      </div>
+    </>
   );
 } 

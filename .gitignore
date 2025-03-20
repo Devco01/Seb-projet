@@ -41,3 +41,60 @@ next-env.d.ts
 # uploads
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# SQLite database
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# Prisma
+.prisma/
+prisma/migrations/
+
+# Scripts de diagnostic
+prisma-check.js
+prisma-setup.js
+create-placeholder-img.js
+
+# Package locks
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE folders
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Build outputs
+/dist/
+/build/
+/out/
+/.next/
+/coverage/
+
+# ESLint
+.eslintcache

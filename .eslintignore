@@ -1,0 +1,19 @@
+# Scripts utilitaires
+prisma-check.js
+prisma-setup.js
+create-placeholder-img.js
+deploy-setup.js
+
+# Fichiers de build
+.next/
+out/
+build/
+dist/
+
+# Fichiers de dépendances
+node_modules/
+
+# Fichiers de configuration
+next.config.js
+postcss.config.js
+tailwind.config.js 

@@ -13,59 +13,17 @@ import {
 } from "react-icons/fa";
 
 export default function Devis() {
-  // Données de devis fictives pour la démo
-  const devisData = [
-    { 
-      id: "D-2024-001", 
-      client: "Dupont Immobilier", 
-      clientId: 1,
-      montant: "3 250,00 €", 
-      date: "15/03/2024", 
-      dateValidite: "15/04/2024",
-      statut: "En attente",
-      description: "Peinture des murs intérieurs - Résidence Les Lilas"
-    },
-    { 
-      id: "D-2024-002", 
-      client: "Martin Résidences", 
-      clientId: 2,
-      montant: "4 820,75 €", 
-      date: "10/03/2024", 
-      dateValidite: "10/04/2024",
-      statut: "Accepté",
-      description: "Rénovation façade extérieure - Immeuble Victor Hugo"
-    },
-    { 
-      id: "D-2024-003", 
-      client: "Dubois & Fils", 
-      clientId: 3,
-      montant: "2 150,50 €", 
-      date: "05/03/2024", 
-      dateValidite: "05/04/2024",
-      statut: "Refusé",
-      description: "Peinture bureaux - Étage 3"
-    },
-    { 
-      id: "D-2024-004", 
-      client: "Lepetit SCI", 
-      clientId: 4,
-      montant: "6 750,00 €", 
-      date: "18/03/2024", 
-      dateValidite: "18/04/2024",
-      statut: "En attente",
-      description: "Ravalement façade - Copropriété République"
-    },
-    { 
-      id: "D-2024-005", 
-      client: "Moreau Construction", 
-      clientId: 5,
-      montant: "12 480,25 €", 
-      date: "12/03/2024", 
-      dateValidite: "12/04/2024",
-      statut: "Accepté",
-      description: "Peinture logements neufs - Résidence Haussmann"
-    }
-  ];
+  // Tableau de devis vide par défaut
+  const devisData: Array<{
+    id: string;
+    client: string;
+    clientId: number;
+    montant: string;
+    date: string;
+    dateValidite: string;
+    statut: string;
+    description: string;
+  }> = [];
 
   // États pour la recherche et le filtrage
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,20 +31,20 @@ export default function Devis() {
   const [devis, setDevis] = useState(devisData);
 
   // Fonction de recherche
-  const handleSearch = (event) => {
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value.toLowerCase();
     setSearchTerm(value);
     filterDevis(value, statusFilter);
   };
 
   // Fonction de filtrage par statut
-  const handleStatusFilter = (status) => {
+  const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
     filterDevis(searchTerm, status);
   };
 
   // Fonction combinée de filtrage
-  const filterDevis = (search, status) => {
+  const filterDevis = (search: string, status: string) => {
     let filtered = devisData;
     
     // Filtre par recherche
@@ -107,7 +65,7 @@ export default function Devis() {
   };
 
   // Fonction pour obtenir la couleur du statut
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'Accepté':
         return 'bg-green-100 text-green-800';
@@ -235,7 +193,7 @@ export default function Devis() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Montant total</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-800">29 451,50 €</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-800">0,00 €</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
               <FaPaintBrush className="h-5 w-5 text-purple-600" />
@@ -244,148 +202,143 @@ export default function Devis() {
         </div>
       </div>
 
-      {/* Liste des devis - version desktop */}
-      <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                N° Devis
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Client
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Description
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Montant
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Dates
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Statut
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {devis.length > 0 ? (
-              devis.map((devis) => (
+      {/* Message quand aucun devis n'est présent */}
+      <div className="bg-white rounded-lg shadow p-6 text-center">
+        <FaFileAlt className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+        <p className="text-lg font-medium">Aucun devis</p>
+        <p className="mt-1">Commencez par créer votre premier devis en cliquant sur &apos;Nouveau devis&apos;.</p>
+      </div>
+
+      {/* Liste des devis - version desktop (visible seulement si des devis existent) */}
+      {devis.length > 0 && (
+        <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  N° Devis
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Client
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Montant
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Statut
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {devis.map((devis) => (
                 <tr key={devis.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Link href={`/devis/${devis.id}`} className="font-medium text-blue-600 hover:text-blue-800">
-                      {devis.id}
-                    </Link>
+                    <div className="font-medium text-blue-600">
+                      <Link href={`/devis/${devis.id}`}>{devis.id}</Link>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Link href={`/clients/${devis.clientId}`} className="text-gray-900 hover:text-blue-600">
-                      {devis.client}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-gray-900 truncate max-w-xs">{devis.description}</div>
+                    <div className="text-sm text-gray-900">
+                      <Link href={`/clients/${devis.clientId}`}>{devis.client}</Link>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">{devis.description}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{devis.montant}</div>
+                    <div className="text-sm font-medium text-gray-900">{devis.montant}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">Émis: {devis.date}</div>
-                    <div className="text-gray-500 text-sm">Validité: {devis.dateValidite}</div>
+                    <div className="text-sm text-gray-900">{devis.date}</div>
+                    <div className="text-xs text-gray-500 mt-1">Valid. {devis.dateValidite}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(devis.statut)}`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(devis.statut)}`}>
                       {devis.statut}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex space-x-3 justify-end">
-                      <Link href={`/devis/${devis.id}`} className="text-blue-600 hover:text-blue-900" title="Voir">
-                        <FaEye />
+                    <div className="flex items-center justify-end space-x-3">
+                      <Link href={`/devis/${devis.id}`} className="text-blue-600 hover:text-blue-900">
+                        <FaEye title="Voir le détail" />
                       </Link>
-                      {devis.statut === "Accepté" && (
-                        <Link href={`/factures/nouveau?devis=${devis.id}`} className="text-green-600 hover:text-green-900" title="Convertir en facture">
-                          <FaArrowRight />
-                        </Link>
-                      )}
-                      <button className="text-red-600 hover:text-red-900" title="Supprimer">
-                        <FaTrashAlt />
+                      <Link href={`/devis/${devis.id}/modifier`} className="text-amber-600 hover:text-amber-900">
+                        <FaPaintBrush title="Modifier" />
+                      </Link>
+                      <button
+                        className="text-red-600 hover:text-red-900"
+                        onClick={() => alert(`Supprimer le devis ${devis.id}`)}
+                      >
+                        <FaTrashAlt title="Supprimer" />
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
-                  <p className="text-lg font-medium">Aucun devis trouvé</p>
-                  <p className="mt-1">Essayez de modifier vos filtres ou créez votre premier devis.</p>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Cartes des devis - version mobile */}
-      <div className="sm:hidden space-y-4">
-        {devis.length > 0 ? (
-          devis.map((devis) => (
+      {/* Liste des devis - version mobile (visible seulement si des devis existent) */}
+      {devis.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:hidden">
+          {devis.map((devis) => (
             <div key={devis.id} className="bg-white rounded-lg shadow p-4">
-              <div className="flex justify-between items-start mb-3">
-                <Link href={`/devis/${devis.id}`} className="font-medium text-blue-600 text-lg">
+              <div className="flex justify-between items-center mb-2">
+                <Link href={`/devis/${devis.id}`} className="font-medium text-blue-600">
                   {devis.id}
                 </Link>
-                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusColor(devis.statut)}`}>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(devis.statut)}`}>
                   {devis.statut}
                 </span>
               </div>
-              
-              <div className="mb-3">
-                <p className="text-gray-700 font-semibold">{devis.client}</p>
-                <p className="text-sm text-gray-600 truncate">{devis.description}</p>
-              </div>
-              
-              <div className="flex justify-between mb-3">
-                <div>
-                  <p className="text-xs text-gray-500">Émis le</p>
-                  <p className="text-sm">{devis.date}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Valide jusqu&apos;au</p>
-                  <p className="text-sm">{devis.dateValidite}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Montant</p>
-                  <p className="text-sm font-bold">{devis.montant}</p>
-                </div>
-              </div>
-              
-              <div className="flex justify-between border-t pt-3">
-                <Link href={`/devis/${devis.id}`} className="text-blue-600 flex items-center text-sm">
-                  <FaEye className="mr-1" /> Voir
+              <div className="mb-2">
+                <Link href={`/clients/${devis.clientId}`} className="font-medium text-gray-800">
+                  {devis.client}
                 </Link>
-                {devis.statut === "Accepté" && (
-                  <Link href={`/factures/nouveau?devis=${devis.id}`} className="text-green-600 flex items-center text-sm">
-                    <FaArrowRight className="mr-1" /> Facturer
+                <p className="text-sm text-gray-600 mt-1">{devis.description}</p>
+              </div>
+              <div className="flex justify-between text-sm text-gray-500 mb-3">
+                <div>
+                  <p className="font-medium text-gray-900">{devis.montant}</p>
+                </div>
+                <div className="text-right">
+                  <p>Créé le {devis.date}</p>
+                  <p className="text-xs">Valide jusqu&apos;au {devis.dateValidite}</p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center border-t border-gray-200 pt-3">
+                <Link 
+                  href={`/devis/${devis.id}`} 
+                  className="flex items-center text-blue-600"
+                >
+                  Voir détails
+                  <FaArrowRight className="ml-1 h-3 w-3" />
+                </Link>
+                <div className="flex space-x-2">
+                  <Link 
+                    href={`/devis/${devis.id}/modifier`} 
+                    className="bg-amber-100 text-amber-600 p-2 rounded-full w-8 h-8 flex items-center justify-center"
+                  >
+                    <FaPaintBrush className="w-4 h-4" title="Modifier" />
                   </Link>
-                )}
-                <button className="text-red-600 flex items-center text-sm">
-                  <FaTrashAlt className="mr-1" /> Supprimer
-                </button>
+                  <button 
+                    className="bg-red-100 text-red-600 p-2 rounded-full w-8 h-8 flex items-center justify-center"
+                    onClick={() => alert(`Supprimer le devis ${devis.id}`)}
+                  >
+                    <FaTrashAlt className="w-4 h-4" title="Supprimer" />
+                  </button>
+                </div>
               </div>
             </div>
-          ))
-        ) : (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-            <p className="text-lg font-medium">Aucun devis trouvé</p>
-            <p className="mt-1">Essayez de modifier vos filtres ou créez votre premier devis.</p>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 

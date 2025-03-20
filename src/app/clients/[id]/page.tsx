@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import MainLayout from '@/app/components/MainLayout';
 import { FaEdit, FaTrash, FaFileInvoiceDollar, FaFileContract, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -120,23 +119,28 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
 
   if (!client) {
     return (
-      <MainLayout>
-        <div className="p-6">
-          <div className="flex items-center mb-6">
-            <Link href="/clients" className="flex items-center text-blue-600 hover:text-blue-800">
-              <FaArrowLeft className="mr-2" /> Retour à la liste des clients
-            </Link>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <p>Client non trouvé.</p>
-          </div>
+      <div className="p-6">
+        <div className="flex items-center mb-6">
+          <Link href="/clients" className="flex items-center text-blue-600 hover:text-blue-800">
+            <FaArrowLeft className="mr-2" /> Retour à la liste des clients
+          </Link>
         </div>
-      </MainLayout>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <p>Client non trouvé.</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
+    <>
+      <div className="mb-6">
+        <Link href="/clients" className="inline-flex items-center text-blue-600 hover:text-blue-800">
+          <FaArrowLeft className="mr-2" />
+          Retour à la liste des clients
+        </Link>
+      </div>
+      
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
@@ -311,6 +315,6 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
           )}
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 } 

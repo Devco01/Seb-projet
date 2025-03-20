@@ -2,6 +2,7 @@
 
 import { Toaster } from 'react-hot-toast';
 import { useState, useEffect } from 'react';
+import { SessionProvider } from 'next-auth/react';
 
 // Ajouter une déclaration de type pour la fenêtre
 declare global {
@@ -32,7 +33,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   // Une fois monté côté client, rendre normalement
   return (
-    <>
+    <SessionProvider>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -44,6 +45,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         }}
       />
       {children}
-    </>
+    </SessionProvider>
   );
 } 

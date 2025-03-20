@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
+import EnteteDocument from '@/app/components/EnteteDocument';
 
 // Données fictives pour une facture
 const factureData = {
@@ -27,24 +28,21 @@ const factureData = {
       quantite: 45,
       unite: 'm²',
       prixUnitaire: 25,
-      tva: 20,
-      total: 1350
+      total: 1125
     },
     {
       description: 'Peinture plafond - Salon',
       quantite: 20,
       unite: 'm²',
       prixUnitaire: 30,
-      tva: 20,
-      total: 720
+      total: 600
     },
     {
       description: 'Préparation des surfaces',
       quantite: 1,
       unite: 'forfait',
       prixUnitaire: 350,
-      tva: 20,
-      total: 420
+      total: 350
     }
   ],
   conditions: 'Paiement à 30 jours à compter de la date de facturation.',
@@ -54,18 +52,10 @@ const factureData = {
 export default function DetailFacture({ params }: { params: { id: string } }) {
   const [facture, setFacture] = useState(factureData);
 
-  // Calcul du total HT
-  const totalHT = facture.lignes.reduce((sum, ligne) => {
+  // Calcul du total
+  const total = facture.lignes.reduce((sum, ligne) => {
     return sum + (ligne.quantite * ligne.prixUnitaire);
   }, 0);
-
-  // Calcul du total TVA
-  const totalTVA = facture.lignes.reduce((sum, ligne) => {
-    return sum + (ligne.quantite * ligne.prixUnitaire * ligne.tva / 100);
-  }, 0);
-
-  // Calcul du total TTC
-  const totalTTC = totalHT + totalTVA;
 
   // Fonction pour marquer la facture comme payée
   const handleMarkAsPaid = () => {
@@ -89,6 +79,11 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
     alert('Envoi de la facture par email...');
   };
 
+  // Fonction pour imprimer la facture
+  const handlePrint = () => {
+    window.print();
+  };
+
   // Fonction pour supprimer la facture
   const handleDelete = () => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
@@ -98,7 +93,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div>
+    <>
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/factures" className="mr-4 text-blue-600 hover:text-blue-800">
@@ -111,27 +106,33 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
         </div>
         <div className="flex space-x-2">
           <button 
-            onClick={handleDownload}
+            onClick={handlePrint}
             className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center"
+          >
+            <FaPrint className="mr-2" /> Imprimer
+          </button>
+          <button 
+            onClick={handleDownload}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaFileDownload className="mr-2" /> PDF
           </button>
           <button 
             onClick={handleSendEmail}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
+            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaEnvelope className="mr-2" /> Email
           </button>
           <Link 
             href={`/factures/${params.id}/modifier`}
-            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaEdit className="mr-2" /> Modifier
           </Link>
           {facture.statut !== 'Payée' && (
             <button 
               onClick={handleMarkAsPaid}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg flex items-center"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg flex items-center"
             >
               <FaCheckCircle className="mr-2" /> Marquer payée
             </button>
@@ -145,7 +146,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6 print:hidden">
         <div className="flex justify-between mb-8">
           <div>
             <h2 className="text-lg font-bold mb-2">Client</h2>
@@ -190,9 +191,6 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
                     Prix unitaire (€)
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    TVA (%)
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total (€)
                   </th>
                 </tr>
@@ -212,9 +210,6 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
                     <td className="px-4 py-3 text-right">
                       {ligne.prixUnitaire.toFixed(2)}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      {ligne.tva}
-                    </td>
                     <td className="px-4 py-3 text-right font-medium">
                       {ligne.total.toFixed(2)}
                     </td>
@@ -223,19 +218,9 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={4} className="px-4 py-3"></td>
-                  <td className="px-4 py-3 text-right font-medium">Total HT:</td>
-                  <td className="px-4 py-3 text-right font-medium">{totalHT.toFixed(2)} €</td>
-                </tr>
-                <tr>
-                  <td colSpan={4} className="px-4 py-3"></td>
-                  <td className="px-4 py-3 text-right font-medium">Total TVA:</td>
-                  <td className="px-4 py-3 text-right font-medium">{totalTVA.toFixed(2)} €</td>
-                </tr>
-                <tr>
-                  <td colSpan={4} className="px-4 py-3"></td>
-                  <td className="px-4 py-3 text-right font-medium">Total TTC:</td>
-                  <td className="px-4 py-3 text-right font-bold">{totalTTC.toFixed(2)} €</td>
+                  <td colSpan={3} className="px-4 py-3"></td>
+                  <td className="px-4 py-3 text-right font-medium">Total:</td>
+                  <td className="px-4 py-3 text-right font-bold">{total.toFixed(2)} €</td>
                 </tr>
               </tfoot>
             </table>
@@ -253,6 +238,27 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           </div>
         </div>
       </div>
-    </div>
+      
+      {/* Section visible uniquement à l'impression */}
+      <div className="hidden print:block print:mb-8">
+        <EnteteDocument title="Facture" subtitle={`Référence: ${facture.numero} - Créée le ${facture.date}`} />
+        
+        {/* Contenu d'impression de la facture */}
+        <div className="mt-8">
+          <div className="flex justify-between mb-8">
+            <div>
+              <h2 className="text-lg font-bold mb-2">Client</h2>
+              <p className="font-medium">{facture.client.nom}</p>
+              <p>{facture.client.adresse}</p>
+              <p>{facture.client.codePostal} {facture.client.ville}</p>
+              <p>Email: {facture.client.email}</p>
+              <p>Tél: {facture.client.telephone}</p>
+            </div>
+          </div>
+          
+          {/* Reste du contenu pour l'impression */}
+        </div>
+      </div>
+    </>
   );
 } 

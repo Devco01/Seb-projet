@@ -20,18 +20,18 @@ export default function Dashboard() {
     console.log("Dashboard rendu");
   }, []);
 
-  // Données statiques pour éviter les problèmes d'hydratation
+  // Données vides pour le démarrage de l'application
   const stats = {
-    clients: 12,
-    clientsNouveaux: 4,
-    factures: 26,
-    facturesEnAttente: 8,
-    devis: 32,
-    devisAcceptes: 22,
-    tauxConversion: "69%",
-    totalFactures: "24 650 €",
-    totalPaiements: "16 325 €",
-    paiementsRecents: 3
+    clients: 0,
+    clientsNouveaux: 0,
+    factures: 0,
+    facturesEnAttente: 0,
+    devis: 0,
+    devisAcceptes: 0,
+    tauxConversion: "0%",
+    totalFactures: "0,00 €",
+    totalPaiements: "0,00 €",
+    paiementsRecents: 0
   };
 
   return (
@@ -60,7 +60,7 @@ export default function Dashboard() {
               <FaUsers className="h-6 w-6 text-blue-500" aria-hidden="true" />
             </div>
             <span className="text-sm font-medium bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
-              +{stats.clientsNouveaux} nouveaux
+              {stats.clientsNouveaux} nouveaux
             </span>
           </div>
           <p className="text-sm font-medium text-gray-500 uppercase">Clients</p>
