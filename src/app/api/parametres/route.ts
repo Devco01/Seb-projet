@@ -3,27 +3,14 @@ import { prisma } from '@/lib/prisma';
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
-import { Prisma } from '@prisma/client';
 
-// Désactiver les règles ESLint pour ce fichier spécifique
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-
-// Schéma de validation pour les paramètres
+// Schéma de validation simplifié pour les paramètres
 const ParametresSchema = z.object({
   companyName: z.string().min(1, "Le nom de l'entreprise est requis"),
-  address: z.string().min(1, "L'adresse est requise"),
-  zipCode: z.string().min(1, "Le code postal est requis"),
-  city: z.string().min(1, "La ville est requise"),
-  phone: z.string().optional().nullable(),
   email: z.string().email("Email invalide").min(1, "L'email est requis"),
-  siret: z.string().optional().nullable(),
   paymentDelay: z.number().default(30),
   prefixeDevis: z.string().default("D-"),
   prefixeFacture: z.string().default("F-"),
-  mentionsLegalesDevis: z.string().nullable().optional(),
-  mentionsLegalesFacture: z.string().nullable().optional(),
-  conditionsPaiement: z.string().nullable().optional(),
-  logoUrl: z.string().nullable().optional(),
 });
 
 // Répertoire pour stocker les logos
@@ -36,77 +23,6 @@ try {
   }
 } catch (error) {
   console.error("[API] Erreur lors de la création du répertoire uploads:", error);
-}
-
-// Type pour l'API
-type ParametresAPI = {
-  id?: number;
-  companyName: string;
-  address: string;
-  zipCode: string;
-  city: string;
-  phone: string | null;
-  email: string;
-  siret: string | null;
-  paymentDelay: number;
-  prefixeDevis: string;
-  prefixeFacture: string;
-  mentionsLegalesDevis: string | null;
-  mentionsLegalesFacture: string | null;
-  conditionsPaiement: string | null;
-  logoUrl?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-// Fonction pour adapter les données de Prisma à l'API
-function adaptPrismaToAPI(prismaData: any): ParametresAPI {
-  return {
-    id: prismaData.id,
-    companyName: prismaData.companyName || prismaData.nomEntreprise,
-    address: prismaData.address || prismaData.adresse,
-    zipCode: prismaData.zipCode || prismaData.codePostal,
-    city: prismaData.city || prismaData.ville,
-    phone: prismaData.phone || prismaData.telephone || null,
-    email: prismaData.email,
-    siret: prismaData.siret || null,
-    paymentDelay: prismaData.paymentDelay || prismaData.delaiPaiement || 30,
-    prefixeDevis: prismaData.prefixeDevis,
-    prefixeFacture: prismaData.prefixeFacture,
-    mentionsLegalesDevis: prismaData.mentionsLegalesDevis || null,
-    mentionsLegalesFacture: prismaData.mentionsLegalesFacture || null,
-    conditionsPaiement: prismaData.conditionsPaiement || null,
-    logoUrl: prismaData.logoUrl ? `/uploads/${prismaData.logoUrl}` : null,
-    createdAt: prismaData.createdAt,
-    updatedAt: prismaData.updatedAt
-  };
-}
-
-// Fonction pour adapter les données de l'API à Prisma
-function adaptAPIToPrisma(apiData: any): any {
-  return {
-    // Supporter à la fois les noms en anglais et en français
-    companyName: apiData.companyName,
-    nomEntreprise: apiData.companyName,
-    address: apiData.address,
-    adresse: apiData.address,
-    zipCode: apiData.zipCode,
-    codePostal: apiData.zipCode,
-    city: apiData.city,
-    ville: apiData.city,
-    phone: apiData.phone,
-    telephone: apiData.phone,
-    email: apiData.email,
-    siret: apiData.siret,
-    paymentDelay: apiData.paymentDelay,
-    delaiPaiement: apiData.paymentDelay,
-    prefixeDevis: apiData.prefixeDevis,
-    prefixeFacture: apiData.prefixeFacture,
-    mentionsLegalesDevis: apiData.mentionsLegalesDevis,
-    mentionsLegalesFacture: apiData.mentionsLegalesFacture,
-    conditionsPaiement: apiData.conditionsPaiement,
-    logoUrl: apiData.logoUrl ? apiData.logoUrl.replace('/uploads/', '') : null
-  };
 }
 
 // GET /api/parametres - Récupérer les paramètres de l'entreprise
@@ -122,11 +38,9 @@ export async function GET() {
       return NextResponse.json({ error: "Aucun paramètre trouvé" }, { status: 404 });
     }
 
-    // Convertir les données vers le format API
-    const responseData = adaptPrismaToAPI(parametres);
-
+    // Retourner les paramètres tels quels
     console.log("[API] Réponse envoyée avec succès");
-    return NextResponse.json(responseData);
+    return NextResponse.json(parametres);
   } catch (error) {
     console.error("[API] Erreur lors de la récupération des paramètres:", error);
     return NextResponse.json(
@@ -150,21 +64,13 @@ export async function POST(request: NextRequest) {
     // Conversion des types pour validation
     const validationData = {
       companyName: String(data.companyName || ""),
-      address: String(data.address || ""),
-      zipCode: String(data.zipCode || ""),
-      city: String(data.city || ""),
-      phone: data.phone ? String(data.phone) : null,
       email: String(data.email || ""),
-      siret: data.siret ? String(data.siret) : null,
       paymentDelay: parseInt(String(data.paymentDelay || "30")),
       prefixeDevis: String(data.prefixeDevis || "D-"),
       prefixeFacture: String(data.prefixeFacture || "F-"),
-      mentionsLegalesDevis: data.mentionsLegalesDevis ? String(data.mentionsLegalesDevis) : null,
-      mentionsLegalesFacture: data.mentionsLegalesFacture ? String(data.mentionsLegalesFacture) : null,
-      conditionsPaiement: data.conditionsPaiement ? String(data.conditionsPaiement) : null,
     };
 
-    // Valider les données
+    // Valider les données de base
     try {
       ParametresSchema.parse(validationData);
       console.log("[API] Données validées");
@@ -199,12 +105,19 @@ export async function POST(request: NextRequest) {
     const existingParametres = await prisma.parametres.findFirst();
     console.log("[API] Paramètres existants:", existingParametres ? "oui" : "non");
 
-    // Adapter les données pour Prisma
-    const apiData = { ...validationData };
+    // Créer un objet prismaData avec seulement les champs obligatoires
+    const prismaData = {
+      companyName: validationData.companyName,
+      email: validationData.email,
+      paymentDelay: validationData.paymentDelay,
+      prefixeDevis: validationData.prefixeDevis,
+      prefixeFacture: validationData.prefixeFacture,
+    };
+
+    // Ajouter le logo s'il est présent
     if (logoFileName) {
-      apiData.logoUrl = logoFileName;
+      prismaData.logoUrl = logoFileName;
     }
-    const prismaData = adaptAPIToPrisma(apiData);
 
     // Créer ou mettre à jour les paramètres
     let result;
@@ -223,14 +136,11 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       console.error("[API] Erreur prisma détaillée:", error);
-      throw error; // Re-lancer pour la gestion d'erreur globale
+      throw error;
     }
 
-    // Convertir les données retournées vers l'API
-    const responseData = adaptPrismaToAPI(result);
-
-    // Retourner les paramètres mis à jour
-    return NextResponse.json(responseData);
+    // Retourner les paramètres tels quels
+    return NextResponse.json(result);
   } catch (error) {
     console.error("[API] Erreur lors de la création/mise à jour des paramètres:", error);
     return NextResponse.json(
