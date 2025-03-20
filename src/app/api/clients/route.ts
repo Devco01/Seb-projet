@@ -1,61 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// Type pour l'API Client
-interface ClientAPI {
-  id?: number;
-  nom: string;
-  email: string;
-  telephone?: string | null;
-  adresse: string;
-  codePostal: string;
-  ville: string;
-  pays: string;
-  notes?: string | null;
-  contact?: string | null;
-  siret?: string | null;
-  tva?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
-// Adaptateur de Prisma vers l'API
-function adaptPrismaToAPI(prismaClient: any): ClientAPI {
-  return {
-    id: prismaClient.id,
-    nom: prismaClient.nom,
-    email: prismaClient.email,
-    telephone: prismaClient.telephone || null,
-    adresse: prismaClient.adresse,
-    codePostal: prismaClient.codePostal,
-    ville: prismaClient.ville,
-    pays: prismaClient.pays || 'France',
-    notes: prismaClient.notes || null,
-    contact: prismaClient.contact || null,
-    siret: prismaClient.siret || null,
-    tva: prismaClient.tva || null,
-    createdAt: prismaClient.createdAt,
-    updatedAt: prismaClient.updatedAt,
-  };
-}
-
-// Adaptateur de l'API vers Prisma
-function adaptAPIToPrisma(apiClient: any): any {
-  return {
-    nom: apiClient.nom,
-    email: apiClient.email,
-    telephone: apiClient.telephone || null,
-    adresse: apiClient.adresse,
-    codePostal: apiClient.codePostal,
-    ville: apiClient.ville,
-    pays: apiClient.pays || 'France',
-    notes: apiClient.notes || null,
-    contact: apiClient.contact || null,
-    siret: apiClient.siret || null,
-    tva: apiClient.tva || null,
-  };
-}
-
 // GET /api/clients - Récupérer tous les clients
 export async function GET() {
   try {
@@ -110,11 +55,8 @@ export async function GET() {
       },
     });
     
-    // Convertir les clients pour l'API
-    const clientsAPI = clients.map(client => adaptPrismaToAPI(client));
-    
-    console.log('Clients récupérés:', clientsAPI.length);
-    return NextResponse.json(clientsAPI);
+    console.log('Clients récupérés:', clients.length);
+    return NextResponse.json(clients);
   } catch (error) {
     console.error('Erreur lors de la récupération des clients:', error);
     return NextResponse.json(
@@ -130,16 +72,24 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     console.log('Données reçues pour la création du client:', data);
     
-    // Validation des données
-    if (!data.nom || !data.email || !data.adresse || !data.codePostal || !data.ville) {
+    // Validation des données minimales
+    if (!data.nom || !data.email) {
       return NextResponse.json(
-        { error: 'Les champs nom, email, adresse, code postal et ville sont obligatoires' },
+        { error: 'Les champs nom et email sont obligatoires' },
         { status: 400 }
       );
     }
     
-    // Convertir les données pour Prisma
-    const prismaData = adaptAPIToPrisma(data);
+    // Créer des données Prisma simplifiées
+    const prismaData = {
+      nom: data.nom,
+      email: data.email,
+      telephone: data.telephone || null,
+      adresse: data.adresse || '',
+      codePostal: data.codePostal || '',
+      ville: data.ville || '',
+      pays: data.pays || 'France',
+    };
     
     try {
       // Créer le client avec les champs du schéma Prisma
@@ -147,11 +97,8 @@ export async function POST(request: NextRequest) {
         data: prismaData
       });
       
-      // Convertir le résultat pour l'API
-      const clientAPI = adaptPrismaToAPI(client);
-      
-      console.log('Client créé avec succès:', clientAPI);
-      return NextResponse.json(clientAPI, { status: 201 });
+      console.log('Client créé avec succès:', client);
+      return NextResponse.json(client, { status: 201 });
     } catch (error) {
       console.error('Erreur prisma détaillée:', error);
       throw error;
