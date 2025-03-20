@@ -15,7 +15,6 @@ export default function Parametres() {
   const [email, setEmail] = useState("");
   const [siret, setSiret] = useState("");
   const [paymentDelay, setPaymentDelay] = useState("30");
-  const [tvaPercent, setTvaPercent] = useState("0");
   const [prefixeDevis, setPrefixeDevis] = useState("D-");
   const [prefixeFacture, setPrefixeFacture] = useState("F-");
   const [logoUrl, setLogoUrl] = useState("/img/logo-placeholder.png");
@@ -58,11 +57,6 @@ export default function Parametres() {
           setPaymentDelay(String(data.paymentDelay));
         }
         
-        // Extraction du taux de TVA
-        if (data.tvaPercent !== undefined) {
-          setTvaPercent(String(data.tvaPercent));
-        }
-        
         // Préfixes
         setPrefixeDevis(data.prefixeDevis || "D-");
         setPrefixeFacture(data.prefixeFacture || "F-");
@@ -98,7 +92,6 @@ export default function Parametres() {
       formData.append("email", email);
       formData.append("siret", siret);
       formData.append("paymentDelay", paymentDelay);
-      formData.append("tvaPercent", tvaPercent);
       formData.append("prefixeDevis", prefixeDevis);
       formData.append("prefixeFacture", prefixeFacture);
       formData.append("conditionsPaiement", `Paiement à ${paymentDelay} jours`);
@@ -152,7 +145,6 @@ export default function Parametres() {
       formData.append("email", email);
       formData.append("siret", siret);
       formData.append("paymentDelay", paymentDelay);
-      formData.append("tvaPercent", tvaPercent);
       formData.append("prefixeDevis", prefixeDevis);
       formData.append("prefixeFacture", prefixeFacture);
       formData.append("conditionsPaiement", `Paiement à ${paymentDelay} jours`);
@@ -324,20 +316,6 @@ export default function Parametres() {
               value={siret}
               onChange={(e) => setSiret(e.target.value)}
               placeholder="Numéro SIRET"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="tvaPercent" className="block text-sm font-medium text-gray-700 mb-1">
-              Taux de TVA (%)
-            </label>
-            <input
-              type="number"
-              id="tvaPercent"
-              className="w-full border border-gray-300 rounded-md shadow-sm px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-              value={tvaPercent}
-              onChange={(e) => setTvaPercent(e.target.value)}
-              placeholder="Taux de TVA"
             />
           </div>
         </div>
