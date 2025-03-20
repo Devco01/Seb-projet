@@ -186,12 +186,29 @@ export default function Factures() {
         </button>
       </div>
 
+      {/* Affichage pendant le chargement */}
+      {loading && (
+        <div className="flex justify-center items-center p-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {/* Message d'erreur */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <p className="font-bold">Erreur</p>
+          <p>{error}</p>
+        </div>
+      )}
+
       {/* Message quand aucune facture n'est présente */}
-      <div className="bg-white rounded-lg shadow p-6 text-center">
-        <FaFilePdf className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-        <p className="text-lg font-medium">Aucune facture</p>
-        <p className="mt-1">Commencez par créer votre première facture en cliquant sur &apos;Nouvelle facture&apos;.</p>
-      </div>
+      {!loading && !error && filteredFactures.length === 0 && (
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <FaFilePdf className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+          <p className="text-lg font-medium">Aucune facture</p>
+          <p className="mt-1">Commencez par créer votre première facture en cliquant sur &apos;Nouvelle facture&apos;.</p>
+        </div>
+      )}
 
       {/* Table des factures - version desktop */}
       {filteredFactures.length > 0 && (

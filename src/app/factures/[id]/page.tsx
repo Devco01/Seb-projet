@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaFileDownload, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import EnteteDocument from '@/app/components/EnteteDocument';
 
 // Interface pour les lignes de facture
@@ -37,6 +36,7 @@ interface Facture {
   statutColor: string;
   devisId?: number;
   devisNumero?: string;
+  devisAssocie?: string;
   lignes: FactureLigne[];
   conditions?: string;
   notes?: string;
@@ -48,7 +48,6 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
   const [facture, setFacture] = useState<Facture | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     const loadFacture = async () => {
