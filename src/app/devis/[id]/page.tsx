@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaDownload, FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft, FaPrint } from 'react-icons/fa';
+import { FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import EnteteDocument from '@/app/components/EnteteDocument';
@@ -131,14 +131,15 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
     }
   };
 
-  // Fonction pour télécharger le devis
-  const handleDownload = () => {
-    alert('Téléchargement du devis en PDF...');
-  };
-
   // Fonction pour envoyer le devis par email
   const handleSendEmail = () => {
-    alert('Envoi du devis par email...');
+    if (devis && devis.client && devis.client.email) {
+      const subject = encodeURIComponent(`Devis ${devis.numero}`);
+      const body = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint notre devis ${devis.numero}.\n\nCordialement,`);
+      window.location.href = `mailto:${devis.client.email}?subject=${subject}&body=${body}`;
+    } else {
+      alert('Adresse email du client non disponible');
+    }
   };
 
   // Fonction pour imprimer le devis
@@ -196,19 +197,13 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
             <FaPrint className="mr-2" /> Imprimer
           </button>
           <button 
-            onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
-          >
-            <FaDownload className="mr-2" /> PDF
-          </button>
-          <button 
             onClick={handleSendEmail}
             className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaEnvelope className="mr-2" /> Email
           </button>
           <Link 
-            href={`/devis/${params.id}/modifier`}
+            href={`/devis/nouveau?id=${params.id}`}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg flex items-center"
           >
             <FaEdit className="mr-2" /> Modifier
