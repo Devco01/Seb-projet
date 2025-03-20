@@ -17,7 +17,9 @@
     "postinstall": "npx prisma generate",
     "create-placeholder": "node create-placeholder-img.js",
     "vercel-build": "NODE_OPTIONS=\"--max-old-space-size=1536\" npx prisma generate && next build",
-    "init-db": "node scripts/init-db.js"
+    "init-db": "node --experimental-modules scripts/init-db.mjs",
+    "push-schema": "npx prisma db push",
+    "neon-init": "npx prisma db push && node --experimental-modules scripts/init-db.mjs"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
