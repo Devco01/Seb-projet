@@ -144,7 +144,7 @@ function ModifierFactureForm({ id }: { id: string }) {
     if (field === 'description' || field === 'unite') {
       newLignes[index][field] = value as string;
     } else {
-      newLignes[index][field] = Number(value);
+      newLignes[index][field] = Number(value) || 0;
     }
     
     // Recalcul du total de la ligne

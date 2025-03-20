@@ -89,17 +89,36 @@ export async function POST(request: NextRequest) {
 
     console.log(`Création d'un paiement avec référence: ${reference}`);
 
+    // Formatter correctement la date au format ISO
+    let formattedDate;
+    try {
+      // Si la date est au format YYYY-MM-DD, convertir en ISO DateTime
+      if (date && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        formattedDate = new Date(`${date}T12:00:00Z`).toISOString();
+      } else {
+        // Si déjà au format ISO ou autre format
+        formattedDate = new Date(date).toISOString();
+      }
+      console.log(`Date formatée: ${formattedDate}`);
+    } catch (error) {
+      console.error('Erreur lors du formatage de la date:', error);
+      return NextResponse.json(
+        { message: 'Format de date invalide', details: error.message },
+        { status: 400 }
+      );
+    }
+
     // Créer le paiement
     const nouveauPaiement = await prisma.paiement.create({
       data: {
         factureId,
         clientId,
-        date,
+        date: formattedDate,
         montant: parseFloat(montant.toString()),
         methode,
         reference,
-        referenceTransaction: data.reference,
-        notes: data.notes,
+        referenceTransaction: data.reference || null,
+        notes: data.notes || '',
       },
     });
 
