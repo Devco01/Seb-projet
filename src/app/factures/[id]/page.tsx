@@ -62,9 +62,34 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
         const data = await response.json();
         
         // Analyser les lignes qui sont stockées en JSON
-        if (data && data.lignes && typeof data.lignes === 'string') {
-          data.lignes = JSON.parse(data.lignes);
+        let lignesData = [];
+        if (data && data.lignes) {
+          if (typeof data.lignes === 'string') {
+            try {
+              lignesData = JSON.parse(data.lignes);
+            } catch (e) {
+              console.error('Erreur lors du parsing des lignes:', e);
+              lignesData = [];
+            }
+          } else if (Array.isArray(data.lignes)) {
+            lignesData = data.lignes;
+          }
         }
+        
+        // S'assurer que toutes les lignes ont des propriétés valides
+        const lignesValidees = lignesData.map((ligne: Partial<FactureLigne>) => {
+          const quantite = Number(ligne.quantite) || 0;
+          const prixUnitaire = Number(ligne.prixUnitaire) || 0;
+          const total = quantite * prixUnitaire;
+          
+          return {
+            description: ligne.description || '',
+            quantite: quantite,
+            unite: ligne.unite || 'm²',
+            prixUnitaire: prixUnitaire,
+            total: total
+          };
+        });
         
         // Déterminer la couleur du statut
         let statutColor = 'bg-yellow-100 text-yellow-800'; // Par défaut (En attente)
@@ -84,6 +109,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
         
         setFacture({
           ...data,
+          lignes: lignesValidees,
           statutColor,
           date: formatDate(data.date),
           echeance: formatDate(data.echeance)
@@ -123,7 +149,10 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
 
   // Calcul du total
   const total = facture.lignes.reduce((sum: number, ligne: FactureLigne) => {
-    return sum + (parseFloat(ligne.quantite.toString()) * parseFloat(ligne.prixUnitaire.toString()));
+    // Vérifier et convertir les valeurs en nombre pour éviter des erreurs
+    const quantite = Number(ligne.quantite) || 0;
+    const prixUnitaire = Number(ligne.prixUnitaire) || 0;
+    return sum + (quantite * prixUnitaire);
   }, 0);
 
   // Fonction pour marquer la facture comme payée
@@ -307,10 +336,10 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
                       {ligne.unite}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {ligne.prixUnitaire.toFixed(2)}
+                      {Number(ligne.prixUnitaire).toFixed(2)}
                     </td>
                     <td className="px-4 py-3 text-right font-medium">
-                      {ligne.total.toFixed(2)}
+                      {Number(ligne.total).toFixed(2)}
                     </td>
                   </tr>
                 ))}
