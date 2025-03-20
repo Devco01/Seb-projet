@@ -41,38 +41,74 @@ export default function Clients() {
 
   // Charger les clients depuis l'API
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/clients');
-        
-        if (!response.ok) {
-          throw new Error(`Erreur lors de la récupération des clients: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Clients récupérés:', data);
-        
-        // Formater les données
-        const formattedClients = Array.isArray(data) ? data.map((client: any) => ({
-          ...client,
-          nbDevis: 0, // Par défaut
-          nbFactures: 0, // Par défaut
-          createdAt: client.createdAt ? new Date(client.createdAt).toLocaleDateString('fr-FR') : 'N/A'
-        })) : [];
-        
-        setClientsData(formattedClients);
-        setClients(formattedClients);
-      } catch (err) {
-        console.error('Erreur:', err);
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchClients();
   }, []);
+
+  // Récupérer tous les clients
+  const fetchClients = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/clients');
+      
+      if (!response.ok) {
+        throw new Error(`Erreur lors de la récupération des clients: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Clients récupérés:', data);
+      
+      // Formater les données
+      const formattedClients = Array.isArray(data) ? data.map((client: any) => ({
+        ...client,
+        nbDevis: 0, // Par défaut
+        nbFactures: 0, // Par défaut
+        createdAt: client.createdAt ? new Date(client.createdAt).toLocaleDateString('fr-FR') : 'N/A'
+      })) : [];
+      
+      setClientsData(formattedClients);
+      setClients(formattedClients);
+    } catch (err) {
+      console.error('Erreur:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fonction pour supprimer un client
+  const handleDeleteClient = async (id: number, nom: string) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le client ${nom} ?`)) {
+      try {
+        const response = await fetch(`/api/clients/${id}`, {
+          method: 'DELETE',
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          // Si la suppression a échoué, afficher le message d'erreur
+          if (data.details && data.details.devis > 0) {
+            alert(`Impossible de supprimer ce client car il a ${data.details.devis} devis associé(s)`);
+          } else if (data.details && data.details.factures > 0) {
+            alert(`Impossible de supprimer ce client car il a ${data.details.factures} facture(s) associée(s)`);
+          } else if (data.details && data.details.paiements > 0) {
+            alert(`Impossible de supprimer ce client car il a ${data.details.paiements} paiement(s) associé(s)`);
+          } else {
+            alert(data.error || 'Erreur lors de la suppression du client');
+          }
+          return;
+        }
+        
+        // Actualiser la liste des clients
+        fetchClients();
+        
+        alert('Client supprimé avec succès !');
+      } catch (err) {
+        console.error('Erreur lors de la suppression:', err);
+        alert('Erreur lors de la suppression du client');
+      }
+    }
+  };
 
   // Fonction de recherche
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -264,7 +300,7 @@ export default function Clients() {
                   </Link>
                   <button 
                     className="bg-red-100 text-red-600 p-2 rounded-full w-8 h-8 flex items-center justify-center"
-                    onClick={() => alert(`Supprimer le client ${client.nom}`)}
+                    onClick={() => handleDeleteClient(client.id, client.nom)}
                   >
                     <FaTrashAlt className="w-4 h-4" title="Supprimer" />
                   </button>
@@ -333,7 +369,7 @@ export default function Clients() {
                         Voir
                       </Link>
                       <button
-                        onClick={() => alert(`Supprimer le client ${client.nom}`)}
+                        onClick={() => handleDeleteClient(client.id, client.nom)}
                         className="text-red-600 hover:text-red-900"
                       >
                         Supprimer
