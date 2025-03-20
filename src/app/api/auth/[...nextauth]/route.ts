@@ -30,9 +30,9 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Mot de passe", type: "password" }
       },
       async authorize(credentials) {
-        // Vérification des identifiants (à modifier selon vos besoins)
-        const validUsername = "admin"; 
-        const validPassword = "adminpass123";
+        // Identifiants corrects fournis par le client
+        const validUsername = "facturepro"; 
+        const validPassword = "FacturePro@2023!";
 
         if (credentials?.username === validUsername && credentials?.password === validPassword) {
           return {
@@ -50,26 +50,9 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 jours
   },
-  jwt: {
-    // Utilisation d'un algorithme plus simple pour les développements locaux
-    // et d'un secret plus court
-    secret: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET,
-    maxAge: 30 * 24 * 60 * 60, // 30 jours
-  },
   pages: {
     signIn: "/auth/login",
     error: "/auth/error",
-  },
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -85,8 +68,37 @@ export const authOptions: NextAuthOptions = {
       return session;
     }
   },
+  cookies: {
+    sessionToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    },
+    callbackUrl: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    },
+    csrfToken: {
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    }
+  },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true, // Activer le debug pour identifier plus facilement les problèmes
+  debug: process.env.NODE_ENV !== "production",
 };
 
 // Handler pour les routes d'authentification
