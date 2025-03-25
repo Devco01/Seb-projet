@@ -73,13 +73,23 @@ export default function PrintDocument({
     fetchParametres();
   }, []);
 
-  const formatDateFr = (dateStr: string) => {
+  const formatDateFr = (dateStr?: string) => {
+    if (!dateStr) return 'Non spécifiée';
+    
     try {
       const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return 'Date invalide';
+      }
       return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     } catch {
-      return dateStr;
+      return 'Format de date incorrect';
     }
+  };
+
+  const formatMontant = (montant?: number) => {
+    const valeur = Number(montant);
+    return isNaN(valeur) ? '0.00' : valeur.toFixed(2);
   };
 
   if (loading) {
@@ -296,7 +306,7 @@ export default function PrintDocument({
               <p style={{ fontSize: '16px', marginBottom: '10px' }}>
                 Nous accusons réception de votre paiement d&apos;un montant de
               </p>
-              <p className="payment-amount">{total.toFixed(2)} €</p>
+              <p className="payment-amount">{formatMontant(total)} €</p>
               <p style={{ fontSize: '16px' }}>
                 {lines[0]?.description}
               </p>
@@ -322,8 +332,8 @@ export default function PrintDocument({
                   <td>{line.description}</td>
                   <td className="text-center">{line.quantite}</td>
                   <td className="text-center">{line.unite || '-'}</td>
-                  <td className="text-right">{line.prixUnitaire.toFixed(2)} €</td>
-                  <td className="text-right">{line.total.toFixed(2)} €</td>
+                  <td className="text-right">{formatMontant(line.prixUnitaire)} €</td>
+                  <td className="text-right">{formatMontant(line.total)} €</td>
                 </tr>
               ))}
               {/* Lignes vides pour l'aspect visuel */}
@@ -341,7 +351,7 @@ export default function PrintDocument({
               <tr>
                 <td colSpan={3}></td>
                 <td className="total-row">TOTAL</td>
-                <td className="total-value">{total.toFixed(2)} €</td>
+                <td className="total-value">{formatMontant(total)} €</td>
               </tr>
             </tfoot>
           </table>

@@ -51,10 +51,10 @@ export async function GET(request: NextRequest) {
 
       formattedData = {
         type: 'devis',
-        reference: data.numero,
-        date: data.date.toISOString(),
-        echeance: data.validite.toISOString(),
-        clientName: data.client?.nom || '',
+        reference: data.numero || `#${data.id}`,
+        date: data.date ? data.date.toISOString() : new Date().toISOString(),
+        echeance: data.validite ? data.validite.toISOString() : undefined,
+        clientName: data.client?.nom || 'Client',
         clientAddress: data.client?.adresse || '',
         clientZipCity: `${data.client?.codePostal || ''} ${data.client?.ville || ''}`.trim(),
         clientEmail: data.client?.email || '',
@@ -79,27 +79,42 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      // Traiter les lignes si elles sont en format JSON string
+      // Traitement sécurisé des lignes de facture
       let lignes = [];
-      if (data.lignes) {
-        if (typeof data.lignes === 'string') {
-          try {
-            lignes = JSON.parse(data.lignes);
-          } catch (e) {
-            console.error('Erreur parsing lignes:', e);
-            lignes = [];
+      try {
+        if (data.lignes) {
+          if (typeof data.lignes === 'string') {
+            try {
+              lignes = JSON.parse(data.lignes);
+            } catch (e) {
+              console.error('Erreur parsing lignes de facture:', e);
+              lignes = [];
+            }
+          } else if (Array.isArray(data.lignes)) {
+            lignes = data.lignes;
           }
-        } else if (Array.isArray(data.lignes)) {
-          lignes = data.lignes;
         }
+      } catch (error) {
+        console.error('Erreur lors du traitement des lignes de facture:', error);
+        lignes = [];
       }
 
+      // S'assurer que les lignes ont le bon format
+      lignes = lignes.map(ligne => ({
+        description: ligne.description || 'Article',
+        quantite: Number(ligne.quantite) || 1,
+        unite: ligne.unite || 'unité',
+        prixUnitaire: Number(ligne.prixUnitaire) || 0,
+        total: Number(ligne.total) || 0
+      }));
+
+      // Créer un objet formaté avec des valeurs par défaut pour éviter les erreurs
       formattedData = {
         type: 'facture',
-        reference: data.numero,
-        date: data.date.toISOString(),
-        echeance: data.echeance.toISOString(),
-        clientName: data.client?.nom || '',
+        reference: data.numero || `#${data.id}`,
+        date: data.date ? data.date.toISOString() : new Date().toISOString(),
+        echeance: data.echeance ? data.echeance.toISOString() : undefined,
+        clientName: data.client?.nom || 'Client',
         clientAddress: data.client?.adresse || '',
         clientZipCity: `${data.client?.codePostal || ''} ${data.client?.ville || ''}`.trim(),
         clientEmail: data.client?.email || '',
@@ -125,24 +140,35 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      // Créer une ligne sécurisée pour le paiement
+      const paiementDescription = data.facture 
+        ? `Paiement pour facture ${data.facture.numero || `#${data.factureId}`}`
+        : 'Paiement';
+
       formattedData = {
         type: 'paiement',
-        reference: data.reference,
-        date: data.date.toISOString(),
-        clientName: data.client?.nom || `Client #${data.clientId}`,
+        reference: data.reference || `Paiement #${data.id}`,
+        date: data.date ? data.date.toISOString() : new Date().toISOString(),
+        clientName: data.client?.nom || `Client #${data.clientId || 'inconnu'}`,
         clientEmail: data.client?.email || '',
+        clientAddress: data.client?.adresse || '',
+        clientZipCity: `${data.client?.codePostal || ''} ${data.client?.ville || ''}`.trim(),
+        clientPhone: data.client?.telephone || '',
         lines: [{
-          description: `Paiement pour facture ${data.facture?.numero || `#${data.factureId}`}`,
+          description: paiementDescription,
           quantite: 1,
-          unite: data.methode,
-          prixUnitaire: data.montant,
-          total: data.montant
+          unite: data.methode || 'Non précisée',
+          prixUnitaire: Number(data.montant) || 0,
+          total: Number(data.montant) || 0
         }],
-        total: data.montant,
+        total: Number(data.montant) || 0,
         notes: data.notes || '',
-        conditionsPaiement: `Paiement reçu par ${data.methode}${data.referenceTransaction ? ` - Référence: ${data.referenceTransaction}` : ''}`,
+        conditionsPaiement: `Paiement reçu par ${data.methode || 'mode de paiement non précisé'}${data.referenceTransaction ? ` - Référence: ${data.referenceTransaction}` : ''}`,
       };
     }
+
+    // Journaliser les données pour débogage
+    console.log('Données formatées pour impression:', JSON.stringify(formattedData));
 
     return NextResponse.json(formattedData);
   } catch (error) {
