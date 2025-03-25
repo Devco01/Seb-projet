@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner, FaPrint } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import EnteteDocument from '@/app/components/EnteteDocument';
@@ -397,11 +397,6 @@ function FactureFormContent() {
     }
   };
 
-  // Fonction pour imprimer
-  const handlePrint = () => {
-    window.print();
-  };
-
   // Afficher un état de chargement
   if (isLoadingFacture) {
     return (
@@ -423,12 +418,6 @@ function FactureFormContent() {
           >
             <FaTimes className="mr-2" /> Annuler
           </Link>
-          <button
-            onClick={handlePrint}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center"
-          >
-            <FaPrint className="mr-2" /> Aperçu
-          </button>
         </div>
       </div>
 

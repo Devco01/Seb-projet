@@ -155,11 +155,8 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
 
   // Fonction pour imprimer le devis
   const handlePrint = () => {
-    if (typeof window !== 'undefined' && window.preparePrint) {
-      window.preparePrint();
-    } else {
-      window.print();
-    }
+    // Ouvrir la page d'impression dans une nouvelle fenêtre
+    window.open(`/print?type=devis&id=${params.id}`, '_blank');
   };
 
   // Fonction pour supprimer le devis

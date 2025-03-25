@@ -211,11 +211,8 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
 
   // Fonction pour imprimer la facture
   const handlePrint = () => {
-    if (typeof window !== 'undefined' && window.preparePrint) {
-      window.preparePrint();
-    } else {
-      window.print();
-    }
+    // Ouvrir la page d'impression dans une nouvelle fenêtre
+    window.open(`/print?type=facture&id=${params.id}`, '_blank');
   };
 
   // Fonction pour supprimer la facture
