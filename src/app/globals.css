@@ -211,60 +211,46 @@ main {
 
 /* Styles d'impression */
 @media print {
-  /* Cacher tous les éléments du site sauf le contenu à imprimer */
-  body > *:not(.print\:block) {
+  /* Cacher les éléments non imprimables */
+  .print\:hidden, 
+  header, 
+  nav, 
+  footer, 
+  .no-print {
     display: none !important;
   }
   
-  /* S'assurer que le contenu à imprimer est visible */
-  .print\:block {
+  /* Afficher le contenu imprimable */
+  .print\:block,
+  #printable-document {
     display: block !important;
+  }
+  
+  /* S'assurer que le contenu à l'intérieur est visible */
+  #printable-document * {
     visibility: visible !important;
-    width: 100%;
-    position: absolute;
-    left: 0;
-    top: 0;
-    background-color: white;
-    color: black;
   }
   
-  /* Forcer les couleurs de fond et texte pour une meilleure impression */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
-  }
-  
-  /* Configuration de la page */
+  /* Configurer la page */
   @page {
     size: A4;
-    margin: 10mm;
+    margin: 15mm;
   }
   
   /* Éviter les sauts de page indésirables */
-  .print-container {
+  #printable-document .printOnly {
     page-break-inside: avoid;
-  }
-  
-  /* Cacher les éléments qui ne doivent pas apparaître à l'impression */
-  header, footer, nav, .no-print, .print\:hidden {
-    display: none !important;
-  }
-  
-  /* Assurer la visibilité du texte */
-  p, h1, h2, h3, h4, h5, h6, span, div, table, tr, td, th {
-    color: black !important;
-  }
-  
-  /* Améliorer la visibilité des tableaux */
-  table {
-    border-collapse: collapse;
+    position: absolute;
+    left: 0;
+    top: 0;
     width: 100%;
   }
   
-  /* S'assurer que les liens s'affichent correctement */
-  a {
-    text-decoration: none !important;
-    color: black !important;
+  /* Réinitialiser les styles par défaut */
+  body {
+    background-color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
   }
 }

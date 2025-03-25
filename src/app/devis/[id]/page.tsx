@@ -44,6 +44,13 @@ interface Devis {
   validiteOriginale?: string;
 }
 
+// Ajouter cette déclaration en haut du fichier pour TypeScript
+declare global {
+  interface Window {
+    preparePrint?: () => void;
+  }
+}
+
 export default function DetailDevis({ params }: { params: { id: string } }) {
   const [devis, setDevis] = useState<Devis | null>(null);
   const [loading, setLoading] = useState(true);
@@ -148,7 +155,11 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
 
   // Fonction pour imprimer le devis
   const handlePrint = () => {
-    window.print();
+    if (typeof window !== 'undefined' && window.preparePrint) {
+      window.preparePrint();
+    } else {
+      window.print();
+    }
   };
 
   // Fonction pour supprimer le devis
