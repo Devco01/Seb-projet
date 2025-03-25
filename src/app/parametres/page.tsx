@@ -175,6 +175,26 @@ export default function Parametres() {
     }
   };
 
+  // Fonction pour supprimer le logo
+  const handleDeleteLogo = async () => {
+    try {
+      const response = await fetch('/api/parametres/logo', {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setLogoUrl("/img/logo-placeholder.png");
+        toast.success("Logo supprimé avec succès!");
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Erreur lors de la suppression du logo");
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error("Une erreur est survenue lors de la suppression du logo");
+    }
+  };
+
   // Afficher un état de chargement pendant le chargement des données
   if (isLoading) {
     return (
@@ -345,18 +365,29 @@ export default function Parametres() {
           </div>
           
           <div className="mt-2 sm:mt-6">
-            <label htmlFor="logo-upload" className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 inline-flex items-center">
-              <FaUpload className="mr-2" />
-              Choisir un fichier
-              <input
-                id="logo-upload"
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                disabled={isUploading}
-              />
-            </label>
+            <div className="flex gap-2">
+              <label htmlFor="logo-upload" className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 inline-flex items-center">
+                <FaUpload className="mr-2" />
+                Choisir un fichier
+                <input
+                  id="logo-upload"
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  disabled={isUploading}
+                />
+              </label>
+              {logoUrl !== "/img/logo-placeholder.png" && (
+                <button
+                  onClick={handleDeleteLogo}
+                  className="px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 inline-flex items-center"
+                >
+                  <FaImage className="mr-2" />
+                  Supprimer le logo
+                </button>
+              )}
+            </div>
             <p className="text-xs text-gray-500 mt-1">Format recommandé: PNG ou JPEG, max 2MB</p>
             <p className="text-xs text-gray-600 mt-2">
               Le logo apparaîtra sur vos devis et factures.
