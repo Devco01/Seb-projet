@@ -16,13 +16,25 @@ const nextConfig = {
   trailingSlash: true,
   distDir: '.next',
   images: {
-    domains: ['localhost'],
+    domains: [
+      'localhost', 
+      'uqrfexlvdhctmpfewzbj.blob.vercel-storage.com',
+      'res.cloudinary.com'
+    ],
     remotePatterns: [
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '3001',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.blob.vercel-storage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
       },
     ],
   },

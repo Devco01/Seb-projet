@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { writeFile, unlink } from 'fs/promises';
-import { join } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import cloudinary from '@/lib/cloudinary';
+import { Readable } from 'stream';
 
 // POST /api/parametres/logo - Télécharger un logo
 export async function POST(request: NextRequest) {
@@ -25,47 +24,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Lire le contenu du fichier
+    // Convertir le fichier en buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
-    // Générer un nom de fichier unique
-    const fileName = `logo-${uuidv4()}.${file.name.split('.').pop()}`;
-    const path = join(process.cwd(), 'public', 'uploads', fileName);
-
-    // Écrire le fichier sur le disque
-    await writeFile(path, buffer);
-
-    // Mettre à jour le champ logo dans les paramètres en utilisant un raw query ou en ignorant la vérification du type
-    const logoPath = `/uploads/${fileName}`;
     
+    // Uploader l'image sur Cloudinary
+    const uploadOptions = {
+      folder: 'facturepro/logos',
+      public_id: `logo_${Date.now()}`,
+      resource_type: 'image' as 'image' | 'video' | 'raw' | 'auto'
+    };
+
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        uploadOptions,
+        (error, result) => {
+          if (error) {
+            console.error('Erreur Cloudinary:', error);
+            reject(error);
+            return;
+          }
+          resolve(result);
+        }
+      );
+
+      // Créer un stream lisible à partir du buffer
+      const readableInstanceStream = new Readable({
+        read() {
+          this.push(buffer);
+          this.push(null);
+        }
+      });
+
+      readableInstanceStream.pipe(uploadStream);
+    });
+
+    // @ts-expect-error - Type incomplet pour le résultat de Cloudinary
+    const logoUrl = result?.secure_url;
+    
+    if (!logoUrl) {
+      return NextResponse.json(
+        { message: 'Erreur lors de l\'upload sur Cloudinary' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Logo uploadé avec succès:', logoUrl);
+    
+    // Mettre à jour le champ logo dans les paramètres
     try {
       const parametres = await prisma.parametres.findFirst();
       
-      // Utilisation d'une requête SQL brute pour mettre à jour le logo
       if (parametres) {
-        // Mettre à jour les paramètres existants avec executeRaw
-        await prisma.$executeRaw`UPDATE "Parametres" SET "logo" = ${logoPath} WHERE "id" = ${parametres.id}`;
+        await prisma.parametres.update({
+          where: { id: parametres.id },
+          data: { logoUrl: logoUrl }
+        });
       } else {
-        // Créer des paramètres par défaut avec executeRaw
-        await prisma.$executeRaw`
-          INSERT INTO "Parametres" (
-            "companyName", "address", "zipCode", "city", "email", 
-            "siret", "conditionsPaiement", "logo", "prefixeDevis", "prefixeFacture", 
-            "createdAt", "updatedAt"
-          ) 
-          VALUES (
-            'Mon Entreprise', '1 rue de l''exemple', '75000', 'Paris', 'contact@monentreprise.fr',
-            '00000000000000', 'Paiement à 30 jours', ${logoPath}, 'D-', 'F-',
-            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-          )
-        `;
-      }
-    } catch (dbError) {
-      console.error('Erreur base de données:', dbError);
-      // Fallback si executeRaw échoue - utiliser une requête qui ignore le champ logo
-      const parametres = await prisma.parametres.findFirst();
-      if (!parametres) {
         await prisma.parametres.create({
           data: {
             companyName: 'Mon Entreprise',
@@ -76,18 +91,22 @@ export async function POST(request: NextRequest) {
             siret: '00000000000000',
             conditionsPaiement: 'Paiement à 30 jours',
             prefixeDevis: 'D-',
-            prefixeFacture: 'F-'
+            prefixeFacture: 'F-',
+            logoUrl: logoUrl
           },
         });
       }
-      
-      // Stockage du chemin du logo dans une autre source (comme localStorage, fichier, etc.)
-      console.log('Chemin du logo:', logoPath);
+    } catch (dbError) {
+      console.error('Erreur base de données:', dbError);
+      return NextResponse.json(
+        { message: 'Erreur lors de la mise à jour des paramètres' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ 
       message: 'Logo téléchargé avec succès',
-      logo: logoPath,
+      logoUrl: logoUrl
     });
   } catch (error) {
     console.error('Erreur lors du téléchargement du logo:', error);
@@ -111,13 +130,19 @@ export async function DELETE() {
       );
     }
 
-    // Supprimer le fichier physique
-    const logoPath = join(process.cwd(), 'public', parametres.logoUrl);
-    try {
-      await unlink(logoPath);
-    } catch (error) {
-      console.error('Erreur lors de la suppression du fichier:', error);
-      // On continue même si le fichier n'existe pas
+    // Supprimer l'image sur Cloudinary
+    if (parametres.logoUrl.includes('cloudinary')) {
+      try {
+        // Extraire l'ID public
+        const parts = parametres.logoUrl.split('/');
+        const filename = parts[parts.length - 1];
+        const publicId = `facturepro/logos/${filename.split('.')[0]}`;
+        
+        await cloudinary.uploader.destroy(publicId);
+      } catch (deleteError) {
+        console.error('Erreur lors de la suppression sur Cloudinary:', deleteError);
+        // On continue même si la suppression échoue
+      }
     }
 
     // Mettre à jour la base de données
