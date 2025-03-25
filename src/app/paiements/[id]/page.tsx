@@ -101,11 +101,8 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
 
   // Fonction pour imprimer le paiement
   const handlePrint = () => {
-    if (typeof window !== 'undefined' && window.preparePrint) {
-      window.preparePrint();
-    } else {
-      window.print();
-    }
+    // Ouvrir la page d'impression dans une nouvelle fenêtre
+    window.open(`/print?type=paiement&id=${params.id}`, '_blank');
   };
 
   // Format d'affichage des montants

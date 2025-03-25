@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner, FaPrint } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import EnteteDocument from '@/app/components/EnteteDocument';
@@ -191,11 +191,6 @@ function DevisFormContent() {
     }
   };
 
-  // Fonction pour imprimer le devis
-  const handlePrint = () => {
-    window.print();
-  };
-
   // Modifier la fonction handleSubmit pour gérer à la fois la création et la modification
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -279,12 +274,6 @@ function DevisFormContent() {
           <p className="text-gray-600">{isModification ? 'Modifiez les détails du devis' : 'Créez un nouveau devis pour un client'}</p>
         </div>
         <div className="flex space-x-2 mt-4 sm:mt-0">
-          <button
-            onClick={handlePrint}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center"
-          >
-            <FaPrint className="mr-2" /> Imprimer
-          </button>
           <Link
             href="/devis"
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center"
