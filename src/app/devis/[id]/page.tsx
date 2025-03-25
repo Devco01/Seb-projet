@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import EnteteDocument from '@/app/components/EnteteDocument';
+import PrintDocument from '@/app/components/PrintDocument';
 
 // Interface pour les lignes de devis
 interface DevisLigne {
@@ -311,24 +311,22 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
       </div>
       
       {/* Section visible uniquement à l'impression */}
-      <div className="hidden print:block print:mb-8">
-        <EnteteDocument title="Devis" subtitle={`Référence: ${devis.numero} - Créé le ${devis.date}`} />
-        
-        {/* Contenu d'impression du devis */}
-        <div className="mt-8">
-          <div className="flex justify-between mb-8">
-            <div>
-              <h2 className="text-lg font-bold mb-2">Client</h2>
-              <p className="font-medium">{devis.client.nom}</p>
-              <p>{devis.client.adresse}</p>
-              <p>{devis.client.codePostal} {devis.client.ville}</p>
-              <p>Email: {devis.client.email}</p>
-              <p>Tél: {devis.client.telephone}</p>
-            </div>
-          </div>
-          
-          {/* Reste du contenu pour l'impression */}
-        </div>
+      <div className="hidden print:block">
+        <PrintDocument 
+          type="devis"
+          reference={devis.numero}
+          date={devis.date}
+          echeance={devis.validite}
+          clientName={devis.client.nom}
+          clientAddress={devis.client.adresse}
+          clientZipCity={`${devis.client.codePostal} ${devis.client.ville}`}
+          clientEmail={devis.client.email}
+          clientPhone={devis.client.telephone}
+          lines={devis.lignes}
+          total={total}
+          notes={devis.notes}
+          conditionsPaiement={devis.conditions}
+        />
       </div>
     </>
   );

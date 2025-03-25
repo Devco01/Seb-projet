@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaFileInvoiceDollar, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
-import EnteteDocument from '@/app/components/EnteteDocument';
 import { useRouter } from 'next/navigation';
+import PrintDocument from '@/app/components/PrintDocument';
 
 interface Paiement {
   id: number;
@@ -252,8 +252,6 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         {/* Entête avec logo */}
-        <EnteteDocument title="Reçu de paiement" subtitle={`Référence: ${paiement.reference}`} />
-        
         <div className="flex justify-between mb-8">
           <div className="flex items-center gap-2">
             <span className="font-medium">Statut:</span>
@@ -269,8 +267,24 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
       </div>
 
       {/* Section visible uniquement à l'impression */}
-      <div className="hidden print:block print:mb-8">
-        <EnteteDocument title="Reçu de paiement" subtitle={`Référence: ${paiement.reference}`} />
+      <div className="hidden print:block">
+        <PrintDocument 
+          type="paiement"
+          reference={paiement.reference}
+          date={paiement.date}
+          clientName={paiement.client?.nom || `Client #${paiement.clientId}`}
+          clientEmail={paiement.client?.email}
+          lines={[{
+            description: `Paiement pour facture ${paiement.facture?.numero || `#${paiement.factureId}`}`,
+            quantite: 1,
+            unite: paiement.methode,
+            prixUnitaire: paiement.montant,
+            total: paiement.montant
+          }]}
+          total={paiement.montant}
+          notes={paiement.notes}
+          conditionsPaiement={`Paiement reçu par ${paiement.methode}${paiement.referenceTransaction ? ` - Référence: ${paiement.referenceTransaction}` : ''}`}
+        />
       </div>
     </>
   );

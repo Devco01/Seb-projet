@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import EnteteDocument from '@/app/components/EnteteDocument';
+import PrintDocument from '@/app/components/PrintDocument';
 
 // Interface pour les lignes de facture
 interface FactureLigne {
@@ -368,24 +368,22 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
       </div>
       
       {/* Section visible uniquement à l'impression */}
-      <div className="hidden print:block print:mb-8">
-        <EnteteDocument title="Facture" subtitle={`Référence: ${facture.numero} - Créée le ${facture.date}`} />
-        
-        {/* Contenu d'impression de la facture */}
-        <div className="mt-8">
-          <div className="flex justify-between mb-8">
-            <div>
-              <h2 className="text-lg font-bold mb-2">Client</h2>
-              <p className="font-medium">{facture.client.nom}</p>
-              <p>{facture.client.adresse}</p>
-              <p>{facture.client.codePostal} {facture.client.ville}</p>
-              <p>Email: {facture.client.email}</p>
-              <p>Tél: {facture.client.telephone}</p>
-            </div>
-          </div>
-          
-          {/* Reste du contenu pour l'impression */}
-        </div>
+      <div className="hidden print:block">
+        <PrintDocument 
+          type="facture"
+          reference={facture.numero}
+          date={facture.date}
+          echeance={facture.echeance}
+          clientName={facture.client.nom}
+          clientAddress={facture.client.adresse}
+          clientZipCity={`${facture.client.codePostal} ${facture.client.ville}`}
+          clientEmail={facture.client.email}
+          clientPhone={facture.client.telephone}
+          lines={facture.lignes}
+          total={total}
+          notes={facture.notes}
+          conditionsPaiement={facture.conditions}
+        />
       </div>
     </>
   );
