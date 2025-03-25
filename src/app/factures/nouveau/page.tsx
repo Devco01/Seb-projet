@@ -96,11 +96,17 @@ function FactureFormContent() {
           throw new Error('Erreur lors de la récupération des devis');
         }
         const data = await response.json();
+        console.log('Tous les devis récupérés:', data);
+        
         if (Array.isArray(data)) {
-          // Filtrer les devis qui peuvent être convertis en factures (statut accepté)
-          const devisConvertibles = data.filter((devis: Devis) => 
-            devis.statut?.toLowerCase() === 'accepté' || devis.statut?.toLowerCase() === 'envoyé'
-          );
+          // Afficher tous les devis sauf ceux qui sont explicitement refusés ou annulés
+          const devisConvertibles = data.filter((devis: Devis) => {
+            const statut = devis.statut?.toLowerCase() || '';
+            console.log(`Devis ${devis.numero}, statut: ${statut}`);
+            return statut !== 'refusé' && statut !== 'annulé';
+          });
+          
+          console.log('Devis filtrés pour conversion:', devisConvertibles);
           setDevisList(devisConvertibles);
         } else {
           console.error('Les données devis reçues ne sont pas un tableau:', data);
@@ -495,20 +501,34 @@ function FactureFormContent() {
               <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="devis">
                 Basé sur un devis
               </label>
-              <select
-                id="devis"
-                className="w-full p-2 border border-gray-300 rounded-md"
-                value={devisId}
-                onChange={(e) => handleDevisChange(e.target.value)}
-                disabled={isLoadingDevis}
-              >
-                <option value="">Aucun</option>
-                {devisList.map((devis) => (
-                  <option key={devis.id} value={devis.id}>
-                    {devis.numero} - Total: {devis.totalTTC.toFixed(2)} €
-                  </option>
-                ))}
-              </select>
+              {isLoadingDevis ? (
+                <div className="flex items-center text-gray-500">
+                  <FaSpinner className="animate-spin mr-2" /> Chargement des devis...
+                </div>
+              ) : (
+                <>
+                  <select
+                    id="devis"
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    value={devisId}
+                    onChange={(e) => handleDevisChange(e.target.value)}
+                  >
+                    <option value="">Aucun</option>
+                    {devisList.length > 0 ? (
+                      devisList.map((devis) => (
+                        <option key={devis.id} value={devis.id}>
+                          {devis.numero} - {devis.statut} - {devis.totalTTC.toFixed(2)} €
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>Aucun devis disponible</option>
+                    )}
+                  </select>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {devisList.length} devis disponible(s) pour conversion
+                  </p>
+                </>
+              )}
             </div>
             
             <div className="mb-6">
