@@ -103,7 +103,29 @@ export default function PrintDocument({
   const documentTitle = type === 'devis' ? 'DEVIS N°' : type === 'facture' ? 'FACTURE N°' : 'REÇU N°';
 
   return (
-    <div className="hidden print:block">
+    <div className="hidden print:block print:p-8">
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print\\:block {
+            visibility: visible;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .print\\:block * {
+            visibility: visible;
+          }
+          @page {
+            size: A4;
+            margin: 15mm;
+          }
+        }
+      `}</style>
+
       <div className="mb-6 border-b-2 border-gray-300 pb-6">
         {/* En-tête avec logo et informations de l'entreprise */}
         <div className="flex justify-between items-start">

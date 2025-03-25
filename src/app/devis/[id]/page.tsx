@@ -40,6 +40,8 @@ interface Devis {
   notes?: string;
   totalHT: number;
   totalTTC: number;
+  dateOriginale?: string;
+  validiteOriginale?: string;
 }
 
 export default function DetailDevis({ params }: { params: { id: string } }) {
@@ -82,6 +84,8 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
         setDevis({
           ...data,
           statutColor,
+          dateOriginale: data.date,
+          validiteOriginale: data.validite,
           date: formatDate(data.date),
           validite: formatDate(data.validite)
         });
@@ -315,8 +319,8 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
         <PrintDocument 
           type="devis"
           reference={devis.numero}
-          date={devis.date}
-          echeance={devis.validite}
+          date={devis.dateOriginale || devis.date}
+          echeance={devis.validiteOriginale || devis.validite}
           clientName={devis.client.nom}
           clientAddress={devis.client.adresse}
           clientZipCity={`${devis.client.codePostal} ${devis.client.ville}`}

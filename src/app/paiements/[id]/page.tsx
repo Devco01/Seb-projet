@@ -23,6 +23,7 @@ interface Paiement {
   factureId: number;
   clientId: number;
   date: string;
+  dateOriginale?: string;
   montant: number;
   methode: string;
   referenceTransaction?: string;
@@ -49,7 +50,10 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
         
         const data = await response.json();
         console.log('Données du paiement chargées:', data);
-        setPaiement(data);
+        setPaiement({
+          ...data,
+          dateOriginale: data.date
+        });
       } catch (err) {
         console.error('Erreur:', err);
         setError('Erreur lors de la récupération des données du paiement');
@@ -271,7 +275,7 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
         <PrintDocument 
           type="paiement"
           reference={paiement.reference}
-          date={paiement.date}
+          date={paiement.dateOriginale || paiement.date}
           clientName={paiement.client?.nom || `Client #${paiement.clientId}`}
           clientEmail={paiement.client?.email}
           lines={[{
