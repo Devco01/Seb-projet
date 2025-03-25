@@ -208,3 +208,63 @@ main {
   letter-spacing: 0.05em;
   padding: 0.75rem 1.5rem;
 }
+
+/* Styles d'impression */
+@media print {
+  /* Cacher tous les éléments du site sauf le contenu à imprimer */
+  body > *:not(.print\:block) {
+    display: none !important;
+  }
+  
+  /* S'assurer que le contenu à imprimer est visible */
+  .print\:block {
+    display: block !important;
+    visibility: visible !important;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: white;
+    color: black;
+  }
+  
+  /* Forcer les couleurs de fond et texte pour une meilleure impression */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Configuration de la page */
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  
+  /* Éviter les sauts de page indésirables */
+  .print-container {
+    page-break-inside: avoid;
+  }
+  
+  /* Cacher les éléments qui ne doivent pas apparaître à l'impression */
+  header, footer, nav, .no-print, .print\:hidden {
+    display: none !important;
+  }
+  
+  /* Assurer la visibilité du texte */
+  p, h1, h2, h3, h4, h5, h6, span, div, table, tr, td, th {
+    color: black !important;
+  }
+  
+  /* Améliorer la visibilité des tableaux */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  /* S'assurer que les liens s'affichent correctement */
+  a {
+    text-decoration: none !important;
+    color: black !important;
+  }
+}
