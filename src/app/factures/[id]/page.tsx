@@ -204,37 +204,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
 
   // Fonction pour imprimer la facture
   const handlePrint = () => {
-    // Ajuster les styles d'impression
-    const style = document.createElement('style');
-    style.id = 'print-style';
-    style.innerHTML = `
-      @media print {
-        body > *:not(#print-content) {
-          display: none !important;
-        }
-        #print-content {
-          display: block !important;
-        }
-        @page {
-          size: A4;
-          margin: 10mm;
-        }
-      }
-    `;
-    
-    // Ajouter temporairement le style
-    document.head.appendChild(style);
-    
-    // Déclencher l'impression
     window.print();
-    
-    // Nettoyer après l'impression
-    setTimeout(() => {
-      const printStyle = document.getElementById('print-style');
-      if (printStyle) {
-        document.head.removeChild(printStyle);
-      }
-    }, 1000);
   };
 
   // Fonction pour supprimer la facture
@@ -402,7 +372,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
       </div>
       
       {/* Section visible uniquement à l'impression */}
-      <div id="print-content" className="hidden print:block">
+      <div id="print-content" className="hidden print:block print-container">
         <PrintDocument 
           type="facture"
           reference={facture.numero}

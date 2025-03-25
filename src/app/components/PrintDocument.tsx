@@ -71,32 +71,6 @@ export default function PrintDocument({
     };
 
     fetchParametres();
-    
-    // Ajouter un style global pour l'impression
-    const style = document.createElement('style');
-    style.textContent = `
-      @media print {
-        body > *:not(#print-content) {
-          display: none !important;
-        }
-        #print-content {
-          display: block !important;
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-        }
-        @page {
-          size: A4;
-          margin: 10mm;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
   }, []);
 
   const formatDateFr = (dateStr: string) => {
@@ -129,7 +103,7 @@ export default function PrintDocument({
   const documentTitle = type === 'devis' ? 'DEVIS N°' : type === 'facture' ? 'FACTURE N°' : 'REÇU N°';
 
   return (
-    <div className="print-document">
+    <div className="hidden print:block print:p-4">
       <div className="mb-6 border-b-2 border-gray-300 pb-6">
         {/* En-tête avec logo et informations de l'entreprise */}
         <div className="flex justify-between items-start">
