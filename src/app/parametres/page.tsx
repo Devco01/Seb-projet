@@ -64,6 +64,8 @@ export default function Parametres() {
         // Mettre à jour le logo s'il existe
         if (data.logoUrl) {
           setLogoUrl(data.logoUrl);
+        } else {
+          setLogoUrl("/img/logo-placeholder.png");
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
@@ -136,21 +138,8 @@ export default function Parametres() {
       const formData = new FormData();
       formData.append("logo", file);
       
-      // Ajouter les autres paramètres pour éviter de les perdre
-      formData.append("companyName", companyName);
-      formData.append("address", address);
-      formData.append("zipCode", zipCode);
-      formData.append("city", city);
-      formData.append("phone", phone);
-      formData.append("email", email);
-      formData.append("siret", siret);
-      formData.append("paymentDelay", paymentDelay);
-      formData.append("prefixeDevis", prefixeDevis);
-      formData.append("prefixeFacture", prefixeFacture);
-      formData.append("conditionsPaiement", `Paiement à ${paymentDelay} jours`);
-      
       // Envoyer l'image au serveur
-      const response = await fetch('/api/parametres', {
+      const response = await fetch('/api/parametres/logo', {
         method: 'POST',
         body: formData,
       });
@@ -158,7 +147,7 @@ export default function Parametres() {
       if (response.ok) {
         const data = await response.json();
         if (data.logoUrl) {
-          setLogoUrl(data.logoUrl.startsWith('/uploads/') ? data.logoUrl : `/uploads/${data.logoUrl}`);
+          setLogoUrl(data.logoUrl);
           toast.success("Logo mis à jour avec succès!");
         } else {
           toast.error("Erreur: le logo n'a pas été mis à jour");
