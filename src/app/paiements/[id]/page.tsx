@@ -94,7 +94,37 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
 
   // Fonction pour imprimer le paiement
   const handlePrint = () => {
+    // Ajuster les styles d'impression
+    const style = document.createElement('style');
+    style.id = 'print-style';
+    style.innerHTML = `
+      @media print {
+        body > *:not(#print-content) {
+          display: none !important;
+        }
+        #print-content {
+          display: block !important;
+        }
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+      }
+    `;
+    
+    // Ajouter temporairement le style
+    document.head.appendChild(style);
+    
+    // Déclencher l'impression
     window.print();
+    
+    // Nettoyer après l'impression
+    setTimeout(() => {
+      const printStyle = document.getElementById('print-style');
+      if (printStyle) {
+        document.head.removeChild(printStyle);
+      }
+    }, 1000);
   };
 
   // Format d'affichage des montants
@@ -271,7 +301,7 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
       </div>
 
       {/* Section visible uniquement à l'impression */}
-      <div className="hidden print:block">
+      <div id="print-content" className="hidden print:block">
         <PrintDocument 
           type="paiement"
           reference={paiement.reference}
