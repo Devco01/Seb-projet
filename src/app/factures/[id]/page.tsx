@@ -43,6 +43,8 @@ interface Facture {
   notes?: string;
   totalHT: number;
   totalTTC: number;
+  dateOriginale?: string;
+  echeanceOriginale?: string;
 }
 
 export default function DetailFacture({ params }: { params: { id: string } }) {
@@ -111,6 +113,8 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           ...data,
           lignes: lignesValidees,
           statutColor,
+          dateOriginale: data.date,
+          echeanceOriginale: data.echeance,
           date: formatDate(data.date),
           echeance: formatDate(data.echeance)
         });
@@ -372,8 +376,8 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
         <PrintDocument 
           type="facture"
           reference={facture.numero}
-          date={facture.date}
-          echeance={facture.echeance}
+          date={facture.dateOriginale || facture.date}
+          echeance={facture.echeanceOriginale || facture.echeance}
           clientName={facture.client.nom}
           clientAddress={facture.client.adresse}
           clientZipCity={`${facture.client.codePostal} ${facture.client.ville}`}
