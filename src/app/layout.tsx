@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Providers from './providers'
 import { Toaster } from 'react-hot-toast'
+import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -49,6 +50,38 @@ export default function RootLayout({
             },
           }}
         />
+        <Script id="print-handler" strategy="afterInteractive">
+          {`
+            window.preparePrint = function() {
+              const printStyle = document.createElement('style');
+              printStyle.id = 'print-style-fix';
+              printStyle.innerHTML = \`
+                @media print {
+                  body > *:not(#printable-document) {
+                    display: none !important;
+                  }
+                  #printable-document {
+                    display: block !important;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                  }
+                }
+              \`;
+              document.head.appendChild(printStyle);
+              
+              // Appliquer window.print
+              window.print();
+              
+              // Nettoyer après l'impression
+              setTimeout(function() {
+                const style = document.getElementById('print-style-fix');
+                if (style) style.remove();
+              }, 1000);
+            }
+          `}
+        </Script>
       </body>
     </html>
   )

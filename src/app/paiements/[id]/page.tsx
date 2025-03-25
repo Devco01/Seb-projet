@@ -31,6 +31,13 @@ interface Paiement {
   notes?: string;
 }
 
+// Ajouter cette déclaration en haut du fichier pour TypeScript
+declare global {
+  interface Window {
+    preparePrint?: () => void;
+  }
+}
+
 export default function DetailPaiement({ params }: { params: { id: string } }) {
   const [paiement, setPaiement] = useState<Paiement | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,7 +101,11 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
 
   // Fonction pour imprimer le paiement
   const handlePrint = () => {
-    window.print();
+    if (typeof window !== 'undefined' && window.preparePrint) {
+      window.preparePrint();
+    } else {
+      window.print();
+    }
   };
 
   // Format d'affichage des montants
