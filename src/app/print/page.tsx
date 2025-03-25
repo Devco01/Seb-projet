@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PrintDocument from '@/app/components/PrintDocument';
 
@@ -27,7 +27,20 @@ interface DocumentData {
   conditionsPaiement?: string;
 }
 
-export default function PrintPage() {
+// Composant de chargement pour le Suspense
+function PrintLoading() {
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="text-center">
+        <div className="inline-block animate-spin h-8 w-8 border-t-2 border-b-2 border-blue-500 rounded-full mb-4"></div>
+        <p className="text-gray-600">Préparation du document pour impression...</p>
+      </div>
+    </div>
+  );
+}
+
+// Composant qui utilise useSearchParams
+function PrintContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get('type');
   const id = searchParams.get('id');
@@ -106,5 +119,14 @@ export default function PrintPage() {
         conditionsPaiement={documentData.conditionsPaiement}
       />
     </div>
+  );
+}
+
+// Composant principal qui enveloppe le contenu dans un Suspense
+export default function PrintPage() {
+  return (
+    <Suspense fallback={<PrintLoading />}>
+      <PrintContent />
+    </Suspense>
   );
 } 
