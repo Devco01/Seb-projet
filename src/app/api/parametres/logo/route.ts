@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { writeFile } from 'fs/promises';
+import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         // Créer des paramètres par défaut avec executeRaw
         await prisma.$executeRaw`
           INSERT INTO "Parametres" (
-            "nomEntreprise", "adresse", "codePostal", "ville", "email", 
+            "companyName", "address", "zipCode", "city", "email", 
             "siret", "conditionsPaiement", "logo", "prefixeDevis", "prefixeFacture", 
             "createdAt", "updatedAt"
           ) 
@@ -68,13 +68,15 @@ export async function POST(request: NextRequest) {
       if (!parametres) {
         await prisma.parametres.create({
           data: {
-            nomEntreprise: 'Mon Entreprise',
-            adresse: '1 rue de l\'exemple',
-            codePostal: '75000',
-            ville: 'Paris',
+            companyName: 'Mon Entreprise',
+            address: '1 rue de l\'exemple',
+            zipCode: '75000',
+            city: 'Paris',
             email: 'contact@monentreprise.fr',
             siret: '00000000000000',
-            conditionsPaiement: 'Paiement à 30 jours'
+            conditionsPaiement: 'Paiement à 30 jours',
+            prefixeDevis: 'D-',
+            prefixeFacture: 'F-'
           },
         });
       }
@@ -91,6 +93,46 @@ export async function POST(request: NextRequest) {
     console.error('Erreur lors du téléchargement du logo:', error);
     return NextResponse.json(
       { message: 'Erreur lors du téléchargement du logo' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/parametres/logo - Supprimer le logo
+export async function DELETE() {
+  try {
+    // Récupérer les paramètres actuels
+    const parametres = await prisma.parametres.findFirst();
+    
+    if (!parametres || !parametres.logoUrl) {
+      return NextResponse.json(
+        { message: 'Aucun logo trouvé' },
+        { status: 404 }
+      );
+    }
+
+    // Supprimer le fichier physique
+    const logoPath = join(process.cwd(), 'public', parametres.logoUrl);
+    try {
+      await unlink(logoPath);
+    } catch (error) {
+      console.error('Erreur lors de la suppression du fichier:', error);
+      // On continue même si le fichier n'existe pas
+    }
+
+    // Mettre à jour la base de données
+    await prisma.parametres.update({
+      where: { id: parametres.id },
+      data: { logoUrl: null }
+    });
+
+    return NextResponse.json({ 
+      message: 'Logo supprimé avec succès'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression du logo:', error);
+    return NextResponse.json(
+      { message: 'Erreur lors de la suppression du logo' },
       { status: 500 }
     );
   }
