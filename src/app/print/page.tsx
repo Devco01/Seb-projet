@@ -55,7 +55,7 @@ function PrintContent() {
   const printStyles = `
     @page {
       size: A4;
-      margin: 15mm;
+      margin: 0mm;
     }
     @media print {
       html, body {
@@ -72,6 +72,7 @@ function PrintContent() {
       .print-container {
         width: 100% !important;
         overflow: visible !important;
+        padding: 15mm;
       }
     }
     .print-container {
@@ -84,6 +85,22 @@ function PrintContent() {
   `;
 
   useEffect(() => {
+    // Fonction pour supprimer l'URL et la date du navigateur
+    const hideUrlForPrinting = () => {
+      // Sauvegarder le titre original
+      const originalTitle = document.title;
+      // Remplacer le titre par un espace pour supprimer l'URL
+      document.title = ' ';
+      
+      // Après l'impression, restaurer le titre
+      const afterPrint = () => {
+        document.title = originalTitle;
+        window.removeEventListener('afterprint', afterPrint);
+      };
+      
+      window.addEventListener('afterprint', afterPrint);
+    };
+    
     if (!type || !id) {
       setError('Type ou ID manquant dans l\'URL');
       setLoading(false);
@@ -128,6 +145,10 @@ function PrintContent() {
             if (!printTriggered) {
               console.log('Lancement de l\'impression');
               setPrintTriggered(true);
+              
+              // Appliquer la suppression de l'URL avant d'imprimer
+              hideUrlForPrinting();
+              
               window.print();
             }
           }, 2000); // Délai augmenté à 2 secondes pour s'assurer que tout est bien chargé

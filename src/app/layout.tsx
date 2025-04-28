@@ -67,15 +67,27 @@ export default function RootLayout({
                     left: 0;
                     width: 100%;
                   }
+                  @page {
+                    size: A4;
+                    margin: 0mm;
+                  }
+                  #printable-document .printOnly {
+                    padding: 15mm;
+                  }
                 }
               \`;
               document.head.appendChild(printStyle);
+              
+              // Suppression de l'entête et du pied de page du navigateur
+              const originalTitle = document.title;
+              document.title = ' ';
               
               // Appliquer window.print
               window.print();
               
               // Nettoyer après l'impression
               setTimeout(function() {
+                document.title = originalTitle;
                 const style = document.getElementById('print-style-fix');
                 if (style) style.remove();
               }, 1000);

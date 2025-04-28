@@ -115,7 +115,7 @@ export default function PrintDocument({
   const printStyles = `
     @page {
       size: A4;
-      margin: 15mm;
+      margin: 0mm;
     }
     @media print {
       html, body {
@@ -141,9 +141,9 @@ export default function PrintDocument({
       display: block !important;
       width: 100%;
       background-color: white;
+      padding: 15mm;
     }
     .container {
-      padding: 20px;
       max-width: 100%;
       overflow: visible !important;
     }
