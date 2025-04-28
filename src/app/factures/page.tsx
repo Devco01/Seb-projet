@@ -37,17 +37,32 @@ export default function Factures() {
       try {
         setLoading(true);
         const response = await fetch('/api/factures');
+        
         if (!response.ok) {
-          throw new Error('Erreur lors du chargement des factures');
+          const errorData = await response.text();
+          console.error('Erreur API:', errorData);
+          throw new Error(`Erreur serveur: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
         console.log('Factures chargées:', data);
+        
+        if (!Array.isArray(data)) {
+          console.error('Format invalide de données:', data);
+          throw new Error('Format de données invalide');
+        }
+        
         setFactures(data);
         setFilteredFactures(data);
       } catch (err) {
         console.error('Erreur:', err);
-        setError('Impossible de charger les factures. Veuillez réessayer plus tard.');
+        
+        // Message d'erreur plus explicite
+        if (err instanceof Error) {
+          setError(`Impossible de charger les factures: ${err.message}. Vérifiez que la base de données est configurée correctement dans le fichier .env.local.`);
+        } else {
+          setError('Impossible de charger les factures. Veuillez réessayer plus tard.');
+        }
       } finally {
         setLoading(false);
       }
