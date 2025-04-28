@@ -204,6 +204,13 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
         
         if (response.ok) {
           toast.success('Facture d\'acompte créée avec succès');
+          
+          // Si la facture a une URL d'impression, ouvrir dans un nouvel onglet
+          if (data.printUrl) {
+            window.open(data.printUrl, '_blank');
+          }
+          
+          // Rediriger vers la page de facture
           router.push(`/factures/${data.id}`);
         } else {
           toast.error(data.message || 'Erreur lors de la création de la facture d\'acompte');

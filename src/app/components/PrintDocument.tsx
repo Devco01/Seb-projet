@@ -117,6 +117,19 @@ export default function PrintDocument({
       size: A4;
       margin: 15mm;
     }
+    @media print {
+      html, body {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      * {
+        box-sizing: border-box;
+      }
+    }
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -131,6 +144,8 @@ export default function PrintDocument({
     }
     .container {
       padding: 20px;
+      max-width: 100%;
+      overflow: visible !important;
     }
     .header {
       display: flex;

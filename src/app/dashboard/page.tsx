@@ -89,22 +89,31 @@ export default function Dashboard() {
       try {
         setLoading(true);
         
-        // Récupérer les données des clients
-        const clientsResponse = await fetch('/api/clients');
-        const facturessResponse = await fetch('/api/factures');
-        const devisResponse = await fetch('/api/devis');
-        const paiementsResponse = await fetch('/api/paiements');
+        // Utiliser Promise.all pour récupérer toutes les données en parallèle
+        const apiResponses = await Promise.allSettled([
+          fetch('/api/clients'),
+          fetch('/api/factures'),
+          fetch('/api/devis'),
+          fetch('/api/paiements')
+        ]);
         
-        if (!clientsResponse.ok || !facturessResponse.ok || !devisResponse.ok || !paiementsResponse.ok) {
-          throw new Error('Erreur lors de la récupération des données');
+        // Analyser les réponses et gérer les erreurs individuellement
+        const clients = await processApiResponse(apiResponses[0], 'clients', []);
+        const factures = await processApiResponse(apiResponses[1], 'factures', []);
+        const devis = await processApiResponse(apiResponses[2], 'devis', []);
+        const paiements = await processApiResponse(apiResponses[3], 'paiements', []);
+        
+        // Vérifier si au moins certaines données sont disponibles
+        if (!clients.length && !factures.length && !devis.length && !paiements.length) {
+          throw new Error('Toutes les API ont échoué, aucune donnée disponible');
         }
         
-        const clients: Client[] = await clientsResponse.json();
-        const factures: Facture[] = await facturessResponse.json();
-        const devis: Devis[] = await devisResponse.json();
-        const paiements: Paiement[] = await paiementsResponse.json();
-        
-        console.log('Données dashboard chargées', { clients, factures, devis, paiements });
+        console.log('Données dashboard chargées', { 
+          clients: clients.length, 
+          factures: factures.length, 
+          devis: devis.length,
+          paiements: paiements.length 
+        });
         
         // Calculer le nombre de nouveaux clients (créés dans les 30 derniers jours)
         const dateIlYA30Jours = new Date();
@@ -171,6 +180,23 @@ export default function Dashboard() {
     
     fetchDashboardData();
   }, []);
+
+  // Fonction utilitaire pour traiter les réponses d'API
+  async function processApiResponse<T>(response: PromiseSettledResult<Response>, apiName: string, defaultValue: T): Promise<T> {
+    if (response.status === 'fulfilled' && response.value.ok) {
+      try {
+        return await response.value.json();
+      } catch (err) {
+        console.error(`Erreur lors du parsing JSON pour ${apiName}:`, err);
+      }
+    } else {
+      console.error(`Erreur API ${apiName}:`, 
+        response.status === 'rejected' 
+          ? response.reason 
+          : `Status ${(response as PromiseFulfilledResult<Response>).value.status}`);
+    }
+    return defaultValue;
+  }
 
   return (
     <div className="space-y-6 pb-16">
