@@ -49,6 +49,39 @@ function PrintContent() {
   const [error, setError] = useState<string | null>(null);
   const [documentData, setDocumentData] = useState<DocumentData | null>(null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const [printTriggered, setPrintTriggered] = useState(false);
+
+  // Styles CSS pour optimiser l'impression
+  const printStyles = `
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+    @media print {
+      html, body {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      .print-container {
+        width: 100% !important;
+        overflow: visible !important;
+      }
+    }
+    .print-container {
+      width: 100%;
+      max-width: 210mm;
+      margin: 0 auto;
+      background: white;
+      min-height: 297mm;
+    }
+  `;
 
   useEffect(() => {
     if (!type || !id) {
@@ -92,9 +125,12 @@ function PrintContent() {
           
           // Démarrer l'impression automatiquement après le chargement
           setTimeout(() => {
-            console.log('Lancement de l\'impression');
-            window.print();
-          }, 1000);
+            if (!printTriggered) {
+              console.log('Lancement de l\'impression');
+              setPrintTriggered(true);
+              window.print();
+            }
+          }, 2000); // Délai augmenté à 2 secondes pour s'assurer que tout est bien chargé
         } catch (parseError) {
           console.error('Erreur de parsing JSON:', parseError);
           setDebugInfo(`Erreur de parsing JSON: ${responseText}`);
@@ -109,7 +145,7 @@ function PrintContent() {
     };
 
     fetchData();
-  }, [type, id]);
+  }, [type, id, printTriggered]);
 
   if (loading) {
     return (
@@ -186,23 +222,32 @@ function PrintContent() {
   }
 
   return (
-    <div className="print-container w-full">
-      <PrintDocument 
-        type={documentData.type}
-        reference={documentData.reference}
-        date={documentData.date}
-        echeance={documentData.echeance}
-        clientName={documentData.clientName}
-        clientAddress={documentData.clientAddress}
-        clientZipCity={documentData.clientZipCity}
-        clientEmail={documentData.clientEmail}
-        clientPhone={documentData.clientPhone}
-        lines={documentData.lines}
-        total={documentData.total}
-        notes={documentData.notes}
-        conditionsPaiement={documentData.conditionsPaiement}
-      />
-    </div>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: printStyles }} />
+      <div className="print-container">
+        <button 
+          onClick={() => window.print()}
+          className="fixed top-4 right-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 print:hidden"
+        >
+          Imprimer
+        </button>
+        <PrintDocument 
+          type={documentData.type}
+          reference={documentData.reference}
+          date={documentData.date}
+          echeance={documentData.echeance}
+          clientName={documentData.clientName}
+          clientAddress={documentData.clientAddress}
+          clientZipCity={documentData.clientZipCity}
+          clientEmail={documentData.clientEmail}
+          clientPhone={documentData.clientPhone}
+          lines={documentData.lines}
+          total={documentData.total}
+          notes={documentData.notes}
+          conditionsPaiement={documentData.conditionsPaiement}
+        />
+      </div>
+    </>
   );
 }
 

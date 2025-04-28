@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { generateNumeroFacture } from '@/utils/numeroGenerator';
 
 export async function POST(request: NextRequest) {
   try {
     const { devisId, pourcentage = 30 } = await request.json();
+    console.log(`Création facture d'acompte pour devis ${devisId} avec pourcentage ${pourcentage}%`);
 
     if (!devisId) {
       return NextResponse.json(
@@ -26,13 +26,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Générer le numéro de facture
-    const numeroFacture = await generateNumeroFacture();
+    console.log(`Devis trouvé: ${devis.id} - ${devis.numero}`);
 
     // Calculer le montant de l'acompte
     const tauxAcompte = pourcentage / 100;
     const montantHT = devis.totalHT * tauxAcompte;
     const montantTTC = devis.totalTTC * tauxAcompte;
+
+    // Générer un numéro de facture unique (format: FACT-ANNÉE-MOIS-NUMÉRO)
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    
+    const lastFacture = await prisma.facture.findFirst({
+      where: {
+        numero: {
+          startsWith: `A-${year}${month}`,
+        },
+      },
+      orderBy: {
+        numero: 'desc',
+      },
+    });
+
+    let numeroSuffix = 1;
+    if (lastFacture && lastFacture.numero) {
+      const parts = lastFacture.numero.split('-');
+      if (parts.length === 3) {
+        numeroSuffix = parseInt(parts[2], 10) + 1;
+      }
+    }
+
+    const numeroFacture = `A-${year}${month}-${numeroSuffix.toString().padStart(3, '0')}`;
+
+    console.log(`Numéro de facture généré: ${numeroFacture}`);
 
     // Créer une ligne unique pour l'acompte
     const ligneAcompte = {
@@ -60,11 +87,23 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(facture);
+    console.log(`Facture d'acompte créée avec succès: ${facture.id} - ${facture.numero}`);
+    
+    // Retourner la réponse avec l'ID et les données d'impression
+    return NextResponse.json({
+      ...facture,
+      success: true,
+      message: "Facture d'acompte créée avec succès",
+      printUrl: `/print?type=facture&id=${facture.id}`
+    });
   } catch (error) {
     console.error('Erreur lors de la création de la facture d\'acompte:', error);
+    // Renvoyer les détails de l'erreur pour faciliter le débogage
     return NextResponse.json(
-      { message: 'Erreur lors de la création de la facture d\'acompte' },
+      { 
+        message: 'Erreur lors de la création de la facture d\'acompte',
+        details: error instanceof Error ? error.message : String(error) 
+      },
       { status: 500 }
     );
   }
