@@ -189,20 +189,39 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
     if (confirm('Voulez-vous créer une facture d\'acompte de 30% pour ce devis ?')) {
       setIsLoading(true);
       try {
+        console.log('Envoi de la requête de création d\'acompte pour le devis:', params.id);
+        
+        // Préparation des données à envoyer
+        const requestData = {
+          devisId: parseInt(params.id, 10),
+          pourcentage: 30 // 30% d'acompte
+        };
+        
+        console.log('Données de la requête:', requestData);
+        
         const response = await fetch('/api/factures/acompte', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            devisId: params.id,
-            pourcentage: 30, // 30% d'acompte
-          }),
+          body: JSON.stringify(requestData),
         });
 
-        const data = await response.json();
+        // Récupérer le texte de la réponse pour le débogage
+        const responseText = await response.text();
+        console.log('Réponse brute:', responseText);
+        
+        // Tenter de parser la réponse JSON
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Erreur de parsing JSON:', parseError);
+          throw new Error(`Réponse invalide du serveur: ${responseText}`);
+        }
         
         if (response.ok) {
+          console.log('Facture d\'acompte créée avec succès:', data);
           toast.success('Facture d\'acompte créée avec succès');
           
           // Si la facture a une URL d'impression, ouvrir dans un nouvel onglet
@@ -210,14 +229,26 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
             window.open(data.printUrl, '_blank');
           }
           
-          // Rediriger vers la page de facture
-          router.push(`/factures/${data.id}`);
+          // Rediriger vers la page de facture si un ID est présent
+          if (data.id) {
+            router.push(`/factures/${data.id}`);
+          } else {
+            console.error('ID de facture manquant dans la réponse');
+            toast.error('Erreur: ID de facture manquant dans la réponse');
+          }
         } else {
-          toast.error(data.message || 'Erreur lors de la création de la facture d\'acompte');
+          console.error('Erreur lors de la création de la facture d\'acompte:', data);
+          toast.error(data.message || `Erreur ${response.status}: ${response.statusText}`);
+          
+          // Afficher les détails de l'erreur si disponibles
+          if (data.details) {
+            console.error('Détails de l\'erreur:', data.details);
+            toast.error(`Détails: ${data.details}`);
+          }
         }
       } catch (error) {
-        console.error('Erreur:', error);
-        toast.error('Une erreur est survenue lors de la création de la facture d\'acompte');
+        console.error('Exception lors de la création de la facture d\'acompte:', error);
+        toast.error(`Erreur: ${error instanceof Error ? error.message : 'Une erreur inconnue est survenue'}`);
       } finally {
         setIsLoading(false);
       }

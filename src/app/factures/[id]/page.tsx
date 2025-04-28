@@ -68,37 +68,70 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
     const loadFacture = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/factures/${params.id}`);
-        if (!response.ok) {
-          throw new Error(`Erreur lors du chargement de la facture: ${response.status}`);
+        console.log(`Chargement de la facture avec ID: ${params.id}`);
+        
+        // Validation de l'ID
+        const factureId = parseInt(params.id, 10);
+        if (isNaN(factureId)) {
+          throw new Error(`ID de facture invalide: ${params.id}`);
         }
-        const data = await response.json();
+        
+        const response = await fetch(`/api/factures/${factureId}`);
+        console.log(`Statut de la réponse: ${response.status}`);
+        
+        if (!response.ok) {
+          throw new Error(`Erreur lors du chargement de la facture: ${response.status} ${response.statusText}`);
+        }
+        
+        // Récupérer le texte brut pour le débogage
+        const responseText = await response.text();
+        console.log(`Réponse brute: ${responseText.substring(0, 100)}...`);
+        
+        // Tenter de parser la réponse JSON
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Erreur de parsing JSON:', parseError);
+          throw new Error(`Réponse invalide du serveur: ${responseText.substring(0, 100)}...`);
+        }
+        
+        console.log('Données de la facture chargées:', data);
+        
+        // Vérifier que les données sont bien présentes
+        if (!data || !data.id || !data.numero) {
+          throw new Error('Données de facture incomplètes ou invalides');
+        }
         
         // Analyser les lignes qui sont stockées en JSON
         let lignesData = [];
-        if (data && data.lignes) {
+        if (data.lignes) {
           if (typeof data.lignes === 'string') {
             try {
               lignesData = JSON.parse(data.lignes);
+              console.log('Lignes de facture parsées:', lignesData);
             } catch (e) {
               console.error('Erreur lors du parsing des lignes:', e);
               lignesData = [];
             }
           } else if (Array.isArray(data.lignes)) {
             lignesData = data.lignes;
+            console.log('Lignes de facture (déjà en array):', lignesData);
           }
         }
         
         // S'assurer que toutes les lignes ont des propriétés valides
-        const lignesValidees = lignesData.map((ligne: Partial<FactureLigne>) => {
+        const lignesValidees = lignesData.map((ligne: Partial<FactureLigne>, index: number) => {
+          console.log(`Traitement ligne ${index}:`, ligne);
+          
           const quantite = Number(ligne.quantite) || 0;
           const prixUnitaire = Number(ligne.prixUnitaire) || 0;
           const total = quantite * prixUnitaire;
           
           return {
-            description: ligne.description || '',
+            description: ligne.description || 'Article sans description',
             quantite: quantite,
-            unite: ligne.unite || 'm²',
+            unite: ligne.unite || 'unité',
             prixUnitaire: prixUnitaire,
             total: total
           };
@@ -116,11 +149,33 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
         
         // Formater les dates pour l'affichage
         const formatDate = (dateString: string) => {
-          const date = new Date(dateString);
-          return date.toLocaleDateString('fr-FR');
+          try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+              console.error(`Date invalide: ${dateString}`);
+              return 'Date invalide';
+            }
+            return date.toLocaleDateString('fr-FR');
+          } catch (dateError) {
+            console.error(`Erreur de formatage de date:`, dateError);
+            return 'Date invalide';
+          }
         };
         
-        setFacture({
+        // S'assurer que client existe
+        if (!data.client) {
+          data.client = {
+            id: 0,
+            nom: 'Client inconnu',
+            email: '',
+            adresse: '',
+            codePostal: '',
+            ville: ''
+          };
+          console.warn('Données client manquantes dans la facture');
+        }
+        
+        const factureProcessed = {
           ...data,
           lignes: lignesValidees,
           statutColor,
@@ -128,10 +183,13 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           echeanceOriginale: data.echeance,
           date: formatDate(data.date),
           echeance: formatDate(data.echeance)
-        });
+        };
+        
+        console.log('Facture traitée:', factureProcessed);
+        setFacture(factureProcessed);
       } catch (err) {
         console.error('Erreur lors du chargement de la facture:', err);
-        setError('Impossible de charger les données de la facture. Veuillez réessayer plus tard.');
+        setError(`Impossible de charger les données de la facture: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
       } finally {
         setLoading(false);
       }
@@ -163,12 +221,14 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
   }
 
   // Calcul du total
-  const total = facture.lignes.reduce((sum: number, ligne: FactureLigne) => {
-    // Vérifier et convertir les valeurs en nombre pour éviter des erreurs
-    const quantite = Number(ligne.quantite) || 0;
-    const prixUnitaire = Number(ligne.prixUnitaire) || 0;
-    return sum + (quantite * prixUnitaire);
-  }, 0);
+  const total = facture.lignes && Array.isArray(facture.lignes) 
+    ? facture.lignes.reduce((sum: number, ligne: FactureLigne) => {
+        // Vérifier et convertir les valeurs en nombre pour éviter des erreurs
+        const quantite = Number(ligne.quantite) || 0;
+        const prixUnitaire = Number(ligne.prixUnitaire) || 0;
+        return sum + (quantite * prixUnitaire);
+      }, 0)
+    : (facture.totalTTC || 0); // Fallback vers totalTTC si les lignes ne sont pas disponibles
 
   // Fonction pour marquer la facture comme payée
   const handleMarkAsPaid = async () => {
@@ -352,25 +412,33 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {facture.lignes.map((ligne, index) => (
-                  <tr key={index}>
-                    <td className="px-4 py-3 whitespace-normal">
-                      {ligne.description}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {ligne.quantite}
-                    </td>
-                    <td className="px-4 py-3">
-                      {ligne.unite}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {Number(ligne.prixUnitaire).toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium">
-                      {Number(ligne.total).toFixed(2)}
+                {Array.isArray(facture.lignes) && facture.lignes.length > 0 ? (
+                  facture.lignes.map((ligne, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-3 whitespace-normal">
+                        {ligne.description || 'Article sans description'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {ligne.quantite}
+                      </td>
+                      <td className="px-4 py-3">
+                        {ligne.unite || 'unité'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {Number(ligne.prixUnitaire).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium">
+                        {Number(ligne.total).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-3 text-center text-gray-500">
+                      Aucune ligne de facturation disponible
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
