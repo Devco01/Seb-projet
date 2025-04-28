@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft, FaPrint } from 'react-icons/fa';
+import { FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft, FaPrint, FaFileInvoiceDollar } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PrintDocument from '@/app/components/PrintDocument';
+import { toast } from 'react-hot-toast';
 
 // Interface pour les lignes de devis
 interface DevisLigne {
@@ -56,6 +57,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const loadDevis = async () => {
@@ -182,6 +184,39 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
     }
   };
 
+  // Ajouter une fonction pour créer la facture d'acompte
+  const handleCreateAcompte = async () => {
+    if (confirm('Voulez-vous créer une facture d\'acompte de 30% pour ce devis ?')) {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/factures/acompte', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            devisId: params.id,
+            pourcentage: 30, // 30% d'acompte
+          }),
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          toast.success('Facture d\'acompte créée avec succès');
+          router.push(`/factures/${data.id}`);
+        } else {
+          toast.error(data.message || 'Erreur lors de la création de la facture d\'acompte');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        toast.error('Une erreur est survenue lors de la création de la facture d\'acompte');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   return (
     <>
       <div className="mb-6">
@@ -201,7 +236,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
             <p className="text-gray-600">Créé le {devis.date} - Valide jusqu&apos;au {devis.validite}</p>
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <button 
             onClick={handlePrint}
             className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center"
@@ -228,6 +263,13 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
               <FaExchangeAlt className="mr-2" /> Convertir
             </button>
           )}
+          <button 
+            onClick={handleCreateAcompte}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center"
+            disabled={isLoading}
+          >
+            <FaFileInvoiceDollar className="mr-2" /> Facture d&apos;acompte 30%
+          </button>
           <button 
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg flex items-center"

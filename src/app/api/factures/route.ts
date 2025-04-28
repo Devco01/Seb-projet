@@ -95,6 +95,58 @@ export async function POST(request: NextRequest) {
       totalTTC = totalHT;
     }
 
+    // Chercher les factures d'acompte liées à ce devis
+    if (data.devisId) {
+      // Vérifier s'il existe des factures d'acompte pour ce devis
+      const acomptes = await prisma.facture.findMany({
+        where: {
+          devisId: parseInt(data.devisId),
+          notes: {
+            contains: 'FACTURE D\'ACOMPTE'
+          }
+        }
+      });
+
+      // Si des acomptes existent, les prendre en compte dans la facture finale
+      if (acomptes.length > 0) {
+        // Calculer le total des acomptes
+        const totalAcomptesHT = acomptes.reduce((sum, acompte) => sum + acompte.totalHT, 0);
+        const totalAcomptesTTC = acomptes.reduce((sum, acompte) => sum + acompte.totalTTC, 0);
+        
+        // Ajuster le total de la facture en tenant compte des acomptes
+        data.totalHT = Math.max(0, data.totalHT - totalAcomptesHT);
+        data.totalTTC = Math.max(0, data.totalTTC - totalAcomptesTTC);
+        
+        // Préparer les lignes de la facture
+        let lignesFacture = [];
+        if (data.lignes) {
+          try {
+            lignesFacture = JSON.parse(data.lignes);
+          } catch (e) {
+            console.error('Erreur parsing lignes:', e);
+            lignesFacture = [];
+          }
+        }
+        
+        // Ajouter une ligne pour chaque acompte déjà versé
+        for (const acompte of acomptes) {
+          lignesFacture.push({
+            description: `Déduction acompte facture n°${acompte.numero}`,
+            quantite: 1,
+            unite: 'déduction',
+            prixUnitaire: -acompte.totalHT,
+            total: -acompte.totalHT
+          });
+        }
+        
+        // Mettre à jour les lignes
+        data.lignes = JSON.stringify(lignesFacture);
+        
+        // Ajouter une note sur les acomptes
+        data.notes = `${data.notes || ''}\n\nCette facture prend en compte les acomptes déjà versés d'un montant total de ${totalAcomptesTTC.toFixed(2)} €.`;
+      }
+    }
+
     // Avec PostgreSQL, pas besoin de convertir en string
     // Créer la facture
     const facture = await prisma.facture.create({
