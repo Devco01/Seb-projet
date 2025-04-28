@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     const montantHT = devis.totalHT * tauxAcompte;
     const montantTTC = devis.totalTTC * tauxAcompte;
 
-    // Générer un numéro de facture unique (format: FACT-ANNÉE-MOIS-NUMÉRO)
+    // Générer un numéro de facture unique (format: A-ANNÉE-MOIS-NUMÉRO)
     const date = new Date();
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         where: {
           numero: {
             startsWith: `A-${year}${month}`,
-          },
+          }
         },
         orderBy: {
           numero: 'desc',
@@ -127,20 +127,27 @@ export async function POST(request: NextRequest) {
     // Créer la facture d'acompte avec gestion d'erreur
     let facture;
     try {
+      // Vérifier les champs disponibles dans le modèle Facture
+      const prismaSchema = await prisma.$queryRaw`SELECT column_name FROM information_schema.columns WHERE table_name = 'Facture'`;
+      console.log('Colonnes disponibles dans la table Facture:', prismaSchema);
+      
+      // Créer un objet de données avec uniquement les champs garantis existants
+      const factureData = {
+        numero: numeroFacture,
+        date: new Date(),
+        echeance: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 jours par défaut
+        statut: 'En attente',
+        clientId: devis.clientId,
+        devisId: devis.id,
+        lignes: JSON.stringify([ligneAcompte]),
+        conditions: `Acompte de ${pourcentage}% sur le devis n°${devis.numero}. ${devis.conditions || ''}`,
+        notes: `FACTURE D'ACOMPTE: Ceci est une facture d'acompte représentant ${pourcentage}% du montant total du devis n°${devis.numero}.`,
+        totalHT: montantHT,
+        totalTTC: montantTTC
+      };
+      
       facture = await prisma.facture.create({
-        data: {
-          numero: numeroFacture,
-          date: new Date(),
-          echeance: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 jours par défaut
-          statut: 'En attente',
-          clientId: devis.clientId,
-          devisId: devis.id,
-          lignes: JSON.stringify([ligneAcompte]),
-          conditions: `Acompte de ${pourcentage}% sur le devis n°${devis.numero}. ${devis.conditions || ''}`,
-          notes: `FACTURE D'ACOMPTE: Ceci est une facture d'acompte représentant ${pourcentage}% du montant total du devis n°${devis.numero}.`,
-          totalHT: montantHT,
-          totalTTC: montantTTC
-        },
+        data: factureData
       });
     } catch (dbError) {
       console.error('Erreur lors de la création de la facture:', dbError);

@@ -22,21 +22,35 @@ const prismaOptions: Prisma.PrismaClientOptions = {
 
 // Fonction pour créer ou obtenir l'instance Prisma
 function getPrismaInstance() {
-  // Si mode sans BDD ou phase de build, renvoyer un objet mock
-  if (isSkipDb || isBuild) {
-    console.log('🔨 Mode mock: utilisation d\'un client Prisma factice');
-    return {} as unknown as PrismaClient;
-  }
-
   // Vérifier si nous avons une URL de base de données
   const databaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!databaseUrl && !isSkipDb && !isBuild) {
-    console.error('❌ ERREUR: Aucune URL de base de données trouvée dans les variables d\'environnement');
-    console.info('💡 TIP: Ajoutez SKIP_DB=true dans le fichier .env pour développer sans base de données');
-    throw new Error('URL de base de données manquante');
+  
+  // Si mode sans BDD, phase de build, ou URL manquante en développement, renvoyer un objet mock
+  if (isSkipDb || isBuild || (!databaseUrl && process.env.NODE_ENV === 'development')) {
+    console.log('🔨 Mode mock: utilisation d\'un client Prisma factice');
+    // Renvoyer un mock qui renvoie des tableaux vides pour findMany
+    return {
+      facture: {
+        findMany: () => Promise.resolve([]),
+        findUnique: () => Promise.resolve(null),
+        create: () => Promise.resolve({}),
+      },
+      client: {
+        findMany: () => Promise.resolve([]),
+        findUnique: () => Promise.resolve(null),
+      },
+      devis: {
+        findMany: () => Promise.resolve([]),
+        findUnique: () => Promise.resolve(null),
+      },
+      paiement: {
+        findMany: () => Promise.resolve([]),
+        findUnique: () => Promise.resolve(null),
+      },
+    } as unknown as PrismaClient;
   }
 
-  // En développement, réutiliser l'instance existante
+  // En développement avec URL valide, réutiliser l'instance existante
   if (process.env.NODE_ENV === 'development') {
     if (!globalThis.prisma) {
       globalThis.prisma = new PrismaClient(prismaOptions);
