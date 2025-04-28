@@ -1,73 +1,0 @@
-[1mdiff --git a/src/app/parametres/page.tsx b/src/app/parametres/page.tsx[m
-[1mindex adfecd9..c29a482 100644[m
-[1m--- a/src/app/parametres/page.tsx[m
-[1m+++ b/src/app/parametres/page.tsx[m
-[36m@@ -175,6 +175,26 @@[m [mexport default function Parametres() {[m
-     }[m
-   };[m
- [m
-[32m+[m[32m  // Fonction pour supprimer le logo[m[41m[m
-[32m+[m[32m  const handleDeleteLogo = async () => {[m[41m[m
-[32m+[m[32m    try {[m[41m[m
-[32m+[m[32m      const response = await fetch('/api/parametres/logo', {[m[41m[m
-[32m+[m[32m        method: 'DELETE',[m[41m[m
-[32m+[m[32m      });[m[41m[m
-[32m+[m[41m      [m
-[32m+[m[32m      if (response.ok) {[m[41m[m
-[32m+[m[32m        setLogoUrl("/img/logo-placeholder.png");[m[41m[m
-[32m+[m[32m        toast.success("Logo supprimé avec succès!");[m[41m[m
-[32m+[m[32m      } else {[m[41m[m
-[32m+[m[32m        const errorData = await response.json();[m[41m[m
-[32m+[m[32m        toast.error(errorData.error || "Erreur lors de la suppression du logo");[m[41m[m
-[32m+[m[32m      }[m[41m[m
-[32m+[m[32m    } catch (error) {[m[41m[m
-[32m+[m[32m      console.error('Erreur:', error);[m[41m[m
-[32m+[m[32m      toast.error("Une erreur est survenue lors de la suppression du logo");[m[41m[m
-[32m+[m[32m    }[m[41m[m
-[32m+[m[32m  };[m[41m[m
-[32m+[m[41m[m
-   // Afficher un état de chargement pendant le chargement des données[m
-   if (isLoading) {[m
-     return ([m
-[36m@@ -345,18 +365,29 @@[m [mexport default function Parametres() {[m
-           </div>[m
-           [m
-           <div className="mt-2 sm:mt-6">[m
-[31m-            <label htmlFor="logo-upload" className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 inline-flex items-center">[m
-[31m-              <FaUpload className="mr-2" />[m
-[31m-              Choisir un fichier[m
-[31m-              <input[m
-[31m-                id="logo-upload"[m
-[31m-                type="file"[m
-[31m-                className="hidden"[m
-[31m-                accept="image/*"[m
-[31m-                onChange={handleLogoUpload}[m
-[31m-                disabled={isUploading}[m
-[31m-              />[m
-[31m-            </label>[m
-[32m+[m[32m            <div className="flex gap-2">[m[41m[m
-[32m+[m[32m              <label htmlFor="logo-upload" className="cursor-pointer px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 inline-flex items-center">[m[41m[m
-[32m+[m[32m                <FaUpload className="mr-2" />[m[41m[m
-[32m+[m[32m                Choisir un fichier[m[41m[m
-[32m+[m[32m                <input[m[41m[m
-[32m+[m[32m                  id="logo-upload"[m[41m[m
-[32m+[m[32m                  type="file"[m[41m[m
-[32m+[m[32m                  className="hidden"[m[41m[m
-[32m+[m[32m                  accept="image/*"[m[41m[m
-[32m+[m[32m                  onChange={handleLogoUpload}[m[41m[m
-[32m+[m[32m                  disabled={isUploading}[m[41m[m
-[32m+[m[32m                />[m[41m[m
-[32m+[m[32m              </label>[m[41m[m
-[32m+[m[32m              {logoUrl !== "/img/logo-placeholder.png" && ([m[41m[m
-[32m+[m[32m                <button[m[41m[m
-[32m+[m[32m                  onClick={handleDeleteLogo}[m[41m[m
-[32m+[m[32m                  className="px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 inline-flex items-center"[m[41m[m
-[32m+[m[32m                >[m[41m[m
-[32m+[m[32m                  <FaImage className="mr-2" />[m[41m[m
-[32m+[m[32m                  Supprimer le logo[m[41m[m
-[32m+[m[32m                </button>[m[41m[m
-[32m+[m[32m              )}[m[41m[m
-[32m+[m[32m            </div>[m[41m[m
-             <p className="text-xs text-gray-500 mt-1">Format recommandé: PNG ou JPEG, max 2MB</p>[m
-             <p className="text-xs text-gray-600 mt-2">[m
-               Le logo apparaîtra sur vos devis et factures.[m

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint, FaInfoCircle } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PrintDocument from '@/app/components/PrintDocument';
@@ -45,6 +45,10 @@ interface Facture {
   totalTTC: number;
   dateOriginale?: string;
   echeanceOriginale?: string;
+  estAcompte?: boolean;
+  pourcentageAcompte?: number;
+  devis?: { numero: string };
+  factureFinaleId?: number;
 }
 
 // Ajouter cette déclaration en haut du fichier pour TypeScript
@@ -238,6 +242,18 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
     }
   };
 
+  // Fonction pour vérifier si une facture est un acompte
+  const isAcompteFacture = (facture: Facture) => {
+    return facture.notes?.includes('FACTURE D\'ACOMPTE');
+  };
+
+  // Extraire le pourcentage d'acompte à partir des notes
+  const getAcomptePercentage = (facture: Facture) => {
+    if (!facture.notes) return null;
+    const match = facture.notes.match(/acompte représentant (\d+)%/i);
+    return match ? parseInt(match[1]) : null;
+  };
+
   return (
     <>
       <div className="mb-6 flex justify-between items-center">
@@ -397,6 +413,23 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           conditionsPaiement={facture.conditions}
         />
       </div>
+
+      {/* Modifier la section d'information pour les factures d'acompte */}
+      {isAcompteFacture(facture) && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 print:hidden">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <FaInfoCircle className="h-5 w-5 text-blue-500" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">Facture d&apos;acompte</h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>Cette facture représente un acompte de {getAcomptePercentage(facture)}% sur le devis n°{facture.devis?.numero}.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 } 
