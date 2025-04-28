@@ -231,10 +231,14 @@ main {
     visibility: visible !important;
   }
   
-  /* Configurer la page */
+  /* Configurer la page et supprimer l'URL du navigateur */
   @page {
     size: A4;
-    margin: 15mm;
+    margin: 0mm; /* Marges à 0 pour supprimer l'URL du navigateur */
+  }
+  
+  html {
+    height: 100%;
   }
   
   /* Éviter les sauts de page indésirables */
@@ -244,6 +248,7 @@ main {
     left: 0;
     top: 0;
     width: 100%;
+    padding: 15mm; /* Ajout de padding pour compenser les marges à 0 */
   }
   
   /* Réinitialiser les styles par défaut */
@@ -252,5 +257,7 @@ main {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     color-adjust: exact;
+    margin: 0;
+    padding: 0;
   }
 }
