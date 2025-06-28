@@ -73,15 +73,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Vérifier les acomptes existants
+    const acomptesExistants = await prisma.facture.findMany({
+      where: {
+        devisId: devisIdNumber,
+        notes: {
+          contains: 'FACTURE D\'ACOMPTE'
+        }
+      }
+    });
+
+    // Vérifier le nombre maximum d'acomptes (3)
+    if (acomptesExistants.length >= 3) {
+      return NextResponse.json(
+        { message: 'Nombre maximum d\'acomptes atteint (3)' },
+        { status: 400 }
+      );
+    }
+
+    // Calculer le total des pourcentages existants
+    let totalPourcentageExistant = 0;
+    for (const acompte of acomptesExistants) {
+      const pourcentageMatch = acompte.notes?.match(/représentant (\d+)%/);
+      if (pourcentageMatch) {
+        totalPourcentageExistant += parseInt(pourcentageMatch[1], 10);
+      }
+    }
+
+    // Vérifier que le nouveau pourcentage ne dépasse pas 100%
+    if (totalPourcentageExistant + pourcentage > 100) {
+      return NextResponse.json(
+        { message: `Pourcentage trop élevé. Maximum autorisé: ${100 - totalPourcentageExistant}%` },
+        { status: 400 }
+      );
+    }
+
     // Calculer le montant de l'acompte
     const tauxAcompte = pourcentage / 100;
     const montantHT = devis.totalHT * tauxAcompte;
     const montantTTC = devis.totalTTC * tauxAcompte;
 
-    // Générer un numéro de facture unique (format: A-ANNÉE-MOIS-NUMÉRO)
+    // Générer un numéro de facture unique pour l'acompte
+    // Format: A{numéro_acompte}-DEVIS_NUMERO-ANNÉE-MOIS-NUMÉRO
     const date = new Date();
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const numeroAcompte = acomptesExistants.length + 1;
     
     // Récupération du dernier numéro avec gestion d'erreur
     let lastFacture;
@@ -89,7 +126,7 @@ export async function POST(request: NextRequest) {
       lastFacture = await prisma.facture.findFirst({
         where: {
           numero: {
-            startsWith: `A-${year}${month}`,
+            startsWith: `A${numeroAcompte}-${devis.numero}`,
           }
         },
         orderBy: {
@@ -107,12 +144,12 @@ export async function POST(request: NextRequest) {
     let numeroSuffix = 1;
     if (lastFacture && lastFacture.numero) {
       const parts = lastFacture.numero.split('-');
-      if (parts.length === 3) {
-        numeroSuffix = parseInt(parts[2], 10) + 1;
+      if (parts.length >= 4) {
+        numeroSuffix = parseInt(parts[parts.length - 1], 10) + 1;
       }
     }
 
-    const numeroFacture = `A-${year}${month}-${numeroSuffix.toString().padStart(3, '0')}`;
+    const numeroFacture = `A${numeroAcompte}-${devis.numero}-${year}${month}-${numeroSuffix.toString().padStart(3, '0')}`;
     console.log(`Numéro de facture généré: ${numeroFacture}`);
 
     // Créer une ligne unique pour l'acompte
