@@ -68,7 +68,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [acomptesExistants, setAcomptesExistants] = useState<AcompteExistant[]>([]);
   const [showAcompteForm, setShowAcompteForm] = useState(false);
-  const [acomptePourcentage, setAcomptePourcentage] = useState<number>(30);
+  const [acompteMontant, setAcompteMontant] = useState<number>(0);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -166,9 +166,9 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
   }, 0);
 
   // Calcul du total des acomptes déjà créés
-  const totalAcomptesExistants = acomptesExistants.reduce((sum, acompte) => sum + acompte.pourcentage, 0);
-  const pourcentageRestant = Math.max(0, 100 - totalAcomptesExistants);
-  const nombreAcomptesRestants = Math.max(0, 3 - acomptesExistants.length);
+  const totalMontantAcomptesExistants = acomptesExistants.reduce((sum, acompte) => sum + acompte.montant, 0);
+  const montantRestant = Math.max(0, devis ? devis.totalTTC - totalMontantAcomptesExistants : 0);
+  const nombreAcomptesRestants = Math.max(0, 4 - acomptesExistants.length);
 
   // Fonction pour convertir le devis en facture
   const handleConvertToInvoice = () => {
@@ -218,14 +218,14 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
     }
   };
 
-  // Fonction pour créer un acompte avec pourcentage personnalisé
+  // Fonction pour créer un acompte avec montant personnalisé
   const handleCreateAcompte = async () => {
-    if (acomptePourcentage <= 0 || acomptePourcentage > pourcentageRestant) {
-      toast.error(`Le pourcentage doit être entre 1 et ${pourcentageRestant}%`);
+    if (acompteMontant <= 0 || acompteMontant > montantRestant) {
+      toast.error(`Le montant doit être entre 1€ et ${montantRestant.toFixed(2)}€`);
       return;
     }
 
-    if (confirm(`Voulez-vous créer une facture d'acompte de ${acomptePourcentage}% pour ce devis ?`)) {
+    if (confirm(`Voulez-vous créer une facture d'acompte de ${acompteMontant.toFixed(2)}€ pour ce devis ?`)) {
       setIsLoading(true);
       try {
         console.log('Envoi de la requête de création d\'acompte pour le devis:', params.id);
@@ -233,7 +233,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
         // Préparation des données à envoyer
         const requestData = {
           devisId: parseInt(params.id, 10),
-          pourcentage: acomptePourcentage
+          montant: acompteMontant
         };
         
         console.log('Données de la requête:', requestData);
@@ -254,8 +254,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
         let data;
         try {
           data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Erreur de parsing JSON:', parseError);
+        } catch {
           throw new Error(`Réponse invalide du serveur: ${responseText}`);
         }
         
@@ -268,7 +267,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
           
           // Fermer le formulaire d'acompte
           setShowAcompteForm(false);
-          setAcomptePourcentage(30);
+          setAcompteMontant(0);
           
           // Si la facture a une URL d'impression, ouvrir dans un nouvel onglet
           if (data.printUrl) {
@@ -301,14 +300,14 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
     }
   };
 
-  // Fonction pour créer des boutons d'acompte prédéfinis
-  const handleCreateAcomptePredefini = async (pourcentage: number) => {
-    if (confirm(`Voulez-vous créer une facture d'acompte de ${pourcentage}% pour ce devis ?`)) {
+    // Fonction pour créer des boutons d'acompte prédéfinis (montants suggérés)
+  const handleCreateAcomptePredefini = async (montant: number) => {
+    if (confirm(`Voulez-vous créer une facture d'acompte de ${montant.toFixed(2)}€ pour ce devis ?`)) {
       setIsLoading(true);
       try {
         const requestData = {
           devisId: parseInt(params.id, 10),
-          pourcentage: pourcentage
+          montant: montant
         };
         
         const response = await fetch('/api/factures/acompte', {
@@ -320,12 +319,12 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
         });
 
         const responseText = await response.text();
-                 let data;
-         try {
-           data = JSON.parse(responseText);
-         } catch {
-           throw new Error(`Réponse invalide du serveur: ${responseText}`);
-         }
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          throw new Error(`Réponse invalide du serveur: ${responseText}`);
+        }
         
         if (response.ok) {
           toast.success('Facture d\'acompte créée avec succès');
@@ -394,9 +393,9 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
                   </div>
                 </div>
               ))}
-              <div className="mt-3 text-sm text-gray-600">
-                Total des acomptes: {totalAcomptesExistants}% ({(devis.totalTTC * totalAcomptesExistants / 100).toFixed(2)} €)
-              </div>
+                             <div className="mt-3 text-sm text-gray-600">
+                 Total des acomptes: {totalMontantAcomptesExistants.toFixed(2)} € / {devis.totalTTC.toFixed(2)} €
+               </div>
             </div>
           </div>
         )}
@@ -436,35 +435,39 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
             </button>
           </div>
 
-          {/* Section des acomptes */}
-          {nombreAcomptesRestants > 0 && pourcentageRestant > 0 && (
+                    {/* Section des acomptes */}
+          {nombreAcomptesRestants > 0 && montantRestant > 0 && (
             <div className="border-t pt-4">
               <h3 className="text-lg font-semibold mb-3">Créer des acomptes</h3>
               <div className="mb-3 text-sm text-gray-600">
-                                 Vous pouvez créer jusqu&apos;à {nombreAcomptesRestants} acompte(s) supplémentaire(s) 
-                pour un total de {pourcentageRestant}% restant.
+                Vous pouvez créer jusqu&apos;à {nombreAcomptesRestants} acompte(s) supplémentaire(s) 
+                pour un montant restant de {montantRestant.toFixed(2)}€.
               </div>
               
-              {/* Boutons d'acompte prédéfinis */}
+              {/* Boutons d'acompte prédéfinis basés sur des montants suggérés */}
               <div className="flex flex-wrap gap-2 mb-4">
-                {[20, 30, 50].map((pourcentage) => (
-                  pourcentage <= pourcentageRestant && (
-                    <button
-                      key={pourcentage}
-                      onClick={() => handleCreateAcomptePredefini(pourcentage)}
-                      disabled={isLoading}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center disabled:opacity-50"
-                    >
-                      {isLoading ? <FaSpinner className="animate-spin mr-2" /> : <FaFileInvoiceDollar className="mr-2" />}
-                      Acompte {pourcentage}%
-                    </button>
-                  )
+                {/* Suggestions basées sur des fractions du montant restant */}
+                {devis && [
+                  { label: "1/4", montant: Math.round(montantRestant * 0.25 * 100) / 100 },
+                  { label: "1/3", montant: Math.round(montantRestant * 0.33 * 100) / 100 },
+                  { label: "1/2", montant: Math.round(montantRestant * 0.5 * 100) / 100 },
+                  { label: "2/3", montant: Math.round(montantRestant * 0.67 * 100) / 100 }
+                ].filter(suggestion => suggestion.montant <= montantRestant && suggestion.montant > 0).slice(0, 3).map((suggestion) => (
+                  <button
+                    key={suggestion.label}
+                    onClick={() => handleCreateAcomptePredefini(suggestion.montant)}
+                    disabled={isLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg flex items-center disabled:opacity-50"
+                  >
+                    {isLoading ? <FaSpinner className="animate-spin mr-2" /> : <FaFileInvoiceDollar className="mr-2" />}
+                    {suggestion.montant.toFixed(2)}€ ({suggestion.label})
+                  </button>
                 ))}
                 <button
                   onClick={() => setShowAcompteForm(!showAcompteForm)}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg flex items-center"
                 >
-                  <FaPlus className="mr-2" /> Autre pourcentage
+                  <FaPlus className="mr-2" /> Montant personnalisé
                 </button>
               </div>
 
@@ -472,22 +475,23 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
               {showAcompteForm && (
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <label htmlFor="acompte-pourcentage" className="text-sm font-medium">
-                      Pourcentage d&apos;acompte:
+                    <label htmlFor="acompte-montant" className="text-sm font-medium">
+                      Montant d&apos;acompte:
                     </label>
                     <input
-                      id="acompte-pourcentage"
+                      id="acompte-montant"
                       type="number"
-                      min="1"
-                      max={pourcentageRestant}
-                      value={acomptePourcentage}
-                      onChange={(e) => setAcomptePourcentage(parseInt(e.target.value) || 0)}
-                      className="w-20 px-2 py-1 border border-gray-300 rounded"
+                      min="0.01"
+                      max={montantRestant}
+                      step="0.01"
+                      value={acompteMontant}
+                      onChange={(e) => setAcompteMontant(parseFloat(e.target.value) || 0)}
+                      className="w-32 px-2 py-1 border border-gray-300 rounded"
                     />
-                    <span className="text-sm text-gray-600">% (max: {pourcentageRestant}%)</span>
+                    <span className="text-sm text-gray-600">€ (max: {montantRestant.toFixed(2)}€)</span>
                     <button
                       onClick={handleCreateAcompte}
-                      disabled={isLoading || acomptePourcentage <= 0 || acomptePourcentage > pourcentageRestant}
+                      disabled={isLoading || acompteMontant <= 0 || acompteMontant > montantRestant}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded disabled:opacity-50"
                     >
                       {isLoading ? <FaSpinner className="animate-spin" /> : 'Créer'}
@@ -500,7 +504,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
                     </button>
                   </div>
                   <div className="mt-2 text-sm text-gray-600">
-                                         Montant de l&apos;acompte: {((devis.totalTTC * acomptePourcentage) / 100).toFixed(2)} €
+                    Pourcentage équivalent: {devis ? ((acompteMontant / devis.totalTTC) * 100).toFixed(1) : 0}%
                   </div>
                 </div>
               )}
@@ -508,13 +512,13 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
           )}
 
           {/* Message si plus d'acomptes possibles */}
-          {(nombreAcomptesRestants === 0 || pourcentageRestant <= 0) && acomptesExistants.length > 0 && (
+          {(nombreAcomptesRestants === 0 || montantRestant <= 0) && acomptesExistants.length > 0 && (
             <div className="border-t pt-4">
               <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
                 <p className="text-yellow-800">
-                  {pourcentageRestant <= 0 
-                    ? "Le total des acomptes atteint 100%. Aucun acompte supplémentaire ne peut être créé."
-                    : "Nombre maximum d'acomptes atteint (3). Aucun acompte supplémentaire ne peut être créé."
+                  {montantRestant <= 0 
+                    ? "Le total des acomptes atteint le montant du devis. Aucun acompte supplémentaire ne peut être créé."
+                    : "Nombre maximum d'acomptes atteint (4). Aucun acompte supplémentaire ne peut être créé."
                   }
                 </p>
               </div>

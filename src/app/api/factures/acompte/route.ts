@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { devisId, pourcentage = 30 } = requestData;
-    console.log(`Création facture d'acompte pour devis ${devisId} avec pourcentage ${pourcentage}%`);
+    const { devisId, pourcentage, montant } = requestData;
+    console.log(`Création facture d'acompte pour devis ${devisId}`, pourcentage ? `avec pourcentage ${pourcentage}%` : `avec montant ${montant}€`);
 
     // Validation des paramètres
     if (!devisId) {
@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Vérifier le nombre maximum d'acomptes (3)
-    if (acomptesExistants.length >= 3) {
+    // Vérifier le nombre maximum d'acomptes (4)
+    if (acomptesExistants.length >= 4) {
       return NextResponse.json(
-        { message: 'Nombre maximum d\'acomptes atteint (3)' },
+        { message: 'Nombre maximum d\'acomptes atteint (4)' },
         { status: 400 }
       );
     }
@@ -100,18 +100,44 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Vérifier que le nouveau pourcentage ne dépasse pas 100%
-    if (totalPourcentageExistant + pourcentage > 100) {
-      return NextResponse.json(
-        { message: `Pourcentage trop élevé. Maximum autorisé: ${100 - totalPourcentageExistant}%` },
-        { status: 400 }
-      );
-    }
+    // Calculer le montant de l'acompte selon les paramètres reçus
+    let montantHT: number;
+    let montantTTC: number;
+    let pourcentageCalcule: number;
 
-    // Calculer le montant de l'acompte
-    const tauxAcompte = pourcentage / 100;
-    const montantHT = devis.totalHT * tauxAcompte;
-    const montantTTC = devis.totalTTC * tauxAcompte;
+    if (montant) {
+      // Si un montant est fourni, l'utiliser directement
+      montantTTC = montant;
+      montantHT = montant; // Pour simplifier, on garde le même montant HT et TTC
+      pourcentageCalcule = (montant / devis.totalTTC) * 100;
+      
+      // Vérifier que le montant ne dépasse pas le restant du devis
+      const totalMontantExistant = acomptesExistants.reduce((sum, acompte) => sum + acompte.totalTTC, 0);
+      const montantRestant = devis.totalTTC - totalMontantExistant;
+      
+      if (montant > montantRestant) {
+        return NextResponse.json(
+          { message: `Montant trop élevé. Maximum autorisé: ${montantRestant.toFixed(2)}€` },
+          { status: 400 }
+        );
+      }
+    } else {
+      // Si un pourcentage est fourni (rétrocompatibilité)
+      const pourcentageUtilise = pourcentage || 30;
+      
+      // Vérifier que le nouveau pourcentage ne dépasse pas 100%
+      if (totalPourcentageExistant + pourcentageUtilise > 100) {
+        return NextResponse.json(
+          { message: `Pourcentage trop élevé. Maximum autorisé: ${100 - totalPourcentageExistant}%` },
+          { status: 400 }
+        );
+      }
+      
+      const tauxAcompte = pourcentageUtilise / 100;
+      montantHT = devis.totalHT * tauxAcompte;
+      montantTTC = devis.totalTTC * tauxAcompte;
+      pourcentageCalcule = pourcentageUtilise;
+    }
 
     // Générer un numéro de facture unique pour l'acompte
     // Format: A{numéro_acompte}-DEVIS_NUMERO-ANNÉE-MOIS-NUMÉRO
@@ -154,7 +180,7 @@ export async function POST(request: NextRequest) {
 
     // Créer une ligne unique pour l'acompte
     const ligneAcompte = {
-      description: `Acompte ${pourcentage}% sur devis n°${devis.numero}`,
+      description: `Acompte ${pourcentageCalcule.toFixed(1)}% sur devis n°${devis.numero}`,
       quantite: 1,
       unite: 'forfait',
       prixUnitaire: montantHT,
@@ -177,8 +203,8 @@ export async function POST(request: NextRequest) {
         clientId: devis.clientId,
         devisId: devis.id,
         lignes: JSON.stringify([ligneAcompte]),
-        conditions: `Acompte de ${pourcentage}% sur le devis n°${devis.numero}. ${devis.conditions || ''}`,
-        notes: `FACTURE D'ACOMPTE: Ceci est une facture d'acompte représentant ${pourcentage}% du montant total du devis n°${devis.numero}.`,
+        conditions: `Acompte de ${pourcentageCalcule.toFixed(1)}% sur le devis n°${devis.numero}. ${devis.conditions || ''}`,
+        notes: `FACTURE D'ACOMPTE: Ceci est une facture d'acompte représentant ${pourcentageCalcule.toFixed(1)}% du montant total du devis n°${devis.numero}.`,
         totalHT: montantHT,
         totalTTC: montantTTC
       };
