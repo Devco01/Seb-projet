@@ -21,8 +21,6 @@ export interface PrintDocumentProps {
     total: number;
   }[];
   total: number;
-  notes?: string;
-  conditionsPaiement?: string;
 }
 
 interface ParametresEntreprise {
@@ -47,9 +45,7 @@ export default function PrintDocument({
   clientEmail,
   clientPhone,
   lines,
-  total,
-  notes,
-  conditionsPaiement
+  total
 }: PrintDocumentProps) {
   const [parametres, setParametres] = useState<ParametresEntreprise | null>(null);
   const [loading, setLoading] = useState(true);
@@ -246,19 +242,8 @@ export default function PrintDocument({
       font-weight: bold;
       margin: 10px 0;
     }
-    .footer {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      font-size: 11px;
-    }
-    .footer-title {
-      font-weight: bold;
-      margin-bottom: 5px;
-      border-bottom: 1px solid #ddd;
-      display: inline-block;
-      padding-bottom: 2px;
-    }
+
+    
     .legal-notice {
       margin-top: 20px;
       text-align: center;
@@ -370,135 +355,18 @@ export default function PrintDocument({
               ))}
             </tbody>
             <tfoot>
-              {/* Affichage spécial pour les factures d'acompte */}
-              {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('RÉCAPITULATIF DES MONTANTS:') ? (
-                <>
-                  <tr>
-                    <td colSpan={3}></td>
-                    <td className="total-row">MONTANT DE CET ACOMPTE</td>
-                    <td className="total-value">{formatMontant(total)} €</td>
-                  </tr>
-                  {/* Extraire le montant total du devis et le montant restant depuis les notes */}
-                  {(() => {
-                    const montantTotalMatch = notes.match(/- Montant total du devis: ([\d,]+\.?\d*) €/);
-                    const montantRestantMatch = notes.match(/- Montant restant à payer: ([\d,]+\.?\d*) €/);
-                    const montantTotalDevis = montantTotalMatch ? parseFloat(montantTotalMatch[1].replace(',', '')) : null;
-                    const montantRestant = montantRestantMatch ? parseFloat(montantRestantMatch[1].replace(',', '')) : null;
-                    
-                    return (
-                      <>
-                        {montantTotalDevis && (
-                          <tr style={{ backgroundColor: '#f8fafc' }}>
-                            <td colSpan={3}></td>
-                            <td style={{ 
-                              fontWeight: 'bold', 
-                              backgroundColor: '#e2e8f0',
-                              fontSize: '14px',
-                              padding: '8px'
-                            }}>
-                              MONTANT TOTAL DU DEVIS
-                            </td>
-                            <td style={{ 
-                              fontWeight: 'bold',
-                              backgroundColor: '#e2e8f0',
-                              fontSize: '14px',
-                              padding: '8px',
-                              textAlign: 'right'
-                            }}>
-                              {formatMontant(montantTotalDevis)} €
-                            </td>
-                          </tr>
-                        )}
-                        {montantRestant && (
-                          <tr style={{ backgroundColor: '#dbeafe' }}>
-                            <td colSpan={3}></td>
-                            <td style={{ 
-                              fontWeight: 'bold', 
-                              backgroundColor: '#3b82f6',
-                              color: '#ffffff',
-                              fontSize: '16px',
-                              padding: '10px'
-                            }}>
-                              RESTE À PAYER
-                            </td>
-                            <td style={{ 
-                              fontWeight: 'bold',
-                              backgroundColor: '#3b82f6',
-                              color: '#ffffff',
-                              fontSize: '16px',
-                              padding: '10px',
-                              textAlign: 'right'
-                            }}>
-                              {formatMontant(montantRestant)} €
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    );
-                  })()}
-                </>
-              ) : (
-                <tr>
-                  <td colSpan={3}></td>
-                  <td className="total-row">TOTAL</td>
-                  <td className="total-value">{formatMontant(total)} €</td>
-                </tr>
-              )}
+              <tr>
+                <td colSpan={3}></td>
+                <td className="total-row">TOTAL</td>
+                <td className="total-value">{formatMontant(total)} €</td>
+              </tr>
             </tfoot>
           </table>
         )}
 
 
 
-        <div className="footer">
-          <div>
-            {conditionsPaiement && (
-              <>
-                <div className="footer-title">
-                  {type === 'paiement' ? 'DÉTAILS DU PAIEMENT :' : 'CONDITIONS DE PAIEMENT :'}
-                </div>
-                <div>{conditionsPaiement}</div>
-              </>
-            )}
-          </div>
-          <div>
-            {notes && (
-              <>
-                <div className="footer-title">NOTES :</div>
-                {/* Traitement spécial pour les factures d'acompte */}
-                {notes.includes('FACTURE D\'ACOMPTE') ? (
-                  <div>
-                    {notes.split('\n').map((line, index) => {
-                      if (line.includes('RÉCAPITULATIF DES MONTANTS:')) {
-                        return <div key={index} style={{ fontWeight: 'bold', marginTop: '10px', marginBottom: '5px' }}>{line}</div>;
-                      } else if (line.includes('- Montant')) {
-                        const isRestant = line.includes('restant');
-                        return (
-                          <div key={index} style={{ 
-                            marginLeft: '10px', 
-                            fontWeight: isRestant ? 'bold' : 'normal',
-                            fontSize: isRestant ? '14px' : '12px',
-                            backgroundColor: isRestant ? '#f0f9ff' : 'transparent',
-                            padding: isRestant ? '3px 6px' : '1px 0',
-                            border: isRestant ? '1px solid #0ea5e9' : 'none',
-                            borderRadius: isRestant ? '3px' : '0'
-                          }}>
-                            {line.trim()}
-                          </div>
-                        );
-                      } else if (line.trim()) {
-                        return <div key={index} style={{ marginBottom: '3px' }}>{line}</div>;
-                      }
-                      return null;
-                    })}
-                  </div>
-                ) : (
-                  <div>{notes}</div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
+
 
         <div className="legal-notice">
           {type === 'devis' && (
