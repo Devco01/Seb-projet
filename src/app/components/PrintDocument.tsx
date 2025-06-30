@@ -317,6 +317,80 @@ export default function PrintDocument({
           </div>
         </div>
 
+        {/* Encadré informatif pour les factures d'acompte */}
+        {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('RÉCAPITULATIF DES MONTANTS:') && (
+          <div style={{ 
+            backgroundColor: '#f0f9ff', 
+            border: '3px solid #3b82f6', 
+            padding: '20px', 
+            marginBottom: '25px',
+            borderRadius: '10px',
+            textAlign: 'center'
+          }}>
+            <h2 style={{ 
+              fontWeight: 'bold', 
+              fontSize: '18px', 
+              marginBottom: '15px',
+              color: '#1e40af',
+              textTransform: 'uppercase'
+            }}>
+                             ⚠️ FACTURE D&apos;ACOMPTE ⚠️
+            </h2>
+            {(() => {
+              const montantTotalMatch = notes.match(/- Montant total du devis: ([\d,]+\.?\d*) €/);
+              const montantAcompteMatch = notes.match(/- Montant de cet acompte: ([\d,]+\.?\d*) €/);
+              const montantRestantMatch = notes.match(/- Montant restant à payer: ([\d,]+\.?\d*) €/);
+              
+              const montantTotalDevis = montantTotalMatch ? parseFloat(montantTotalMatch[1].replace(',', '')) : null;
+              const montantAcompte = montantAcompteMatch ? parseFloat(montantAcompteMatch[1].replace(',', '')) : total;
+              const montantRestant = montantRestantMatch ? parseFloat(montantRestantMatch[1].replace(',', '')) : null;
+              
+              return (
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr 1fr', 
+                  gap: '15px',
+                  fontSize: '14px'
+                }}>
+                  <div style={{ 
+                    backgroundColor: '#e5e7eb', 
+                    padding: '10px', 
+                    borderRadius: '5px',
+                    border: '1px solid #9ca3af'
+                  }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>MONTANT TOTAL DU DEVIS</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                      {montantTotalDevis ? formatMontant(montantTotalDevis) : 'N/A'} €
+                    </div>
+                  </div>
+                  <div style={{ 
+                    backgroundColor: '#ddd6fe', 
+                    padding: '10px', 
+                    borderRadius: '5px',
+                    border: '1px solid #8b5cf6'
+                  }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>MONTANT DE CET ACOMPTE</div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                      {formatMontant(montantAcompte)} €
+                    </div>
+                  </div>
+                  <div style={{ 
+                    backgroundColor: '#fee2e2', 
+                    padding: '10px', 
+                    borderRadius: '5px',
+                    border: '2px solid #dc2626'
+                  }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#dc2626' }}>RESTE À PAYER</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc2626' }}>
+                      {montantRestant ? formatMontant(montantRestant) : 'N/A'} €
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
         {type === 'paiement' ? (
           <div className="payment-receipt">
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '15px' }}>REÇU DE PAIEMENT</h2>
@@ -366,11 +440,80 @@ export default function PrintDocument({
               ))}
             </tbody>
             <tfoot>
-              <tr>
-                <td colSpan={3}></td>
-                <td className="total-row">TOTAL</td>
-                <td className="total-value">{formatMontant(total)} €</td>
-              </tr>
+              {/* Affichage spécial pour les factures d'acompte */}
+              {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('RÉCAPITULATIF DES MONTANTS:') ? (
+                <>
+                  <tr>
+                    <td colSpan={3}></td>
+                    <td className="total-row">MONTANT DE CET ACOMPTE</td>
+                    <td className="total-value">{formatMontant(total)} €</td>
+                  </tr>
+                  {/* Extraire le montant total du devis et le montant restant depuis les notes */}
+                  {(() => {
+                    const montantTotalMatch = notes.match(/- Montant total du devis: ([\d,]+\.?\d*) €/);
+                    const montantRestantMatch = notes.match(/- Montant restant à payer: ([\d,]+\.?\d*) €/);
+                    const montantTotalDevis = montantTotalMatch ? parseFloat(montantTotalMatch[1].replace(',', '')) : null;
+                    const montantRestant = montantRestantMatch ? parseFloat(montantRestantMatch[1].replace(',', '')) : null;
+                    
+                    return (
+                      <>
+                        {montantTotalDevis && (
+                          <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <td colSpan={3}></td>
+                            <td style={{ 
+                              fontWeight: 'bold', 
+                              backgroundColor: '#e2e8f0',
+                              fontSize: '14px',
+                              padding: '8px'
+                            }}>
+                              MONTANT TOTAL DU DEVIS
+                            </td>
+                            <td style={{ 
+                              fontWeight: 'bold',
+                              backgroundColor: '#e2e8f0',
+                              fontSize: '14px',
+                              padding: '8px',
+                              textAlign: 'right'
+                            }}>
+                              {formatMontant(montantTotalDevis)} €
+                            </td>
+                          </tr>
+                        )}
+                        {montantRestant && (
+                          <tr style={{ backgroundColor: '#dbeafe' }}>
+                            <td colSpan={3}></td>
+                            <td style={{ 
+                              fontWeight: 'bold', 
+                              backgroundColor: '#3b82f6',
+                              color: '#ffffff',
+                              fontSize: '16px',
+                              padding: '10px'
+                            }}>
+                              RESTE À PAYER
+                            </td>
+                            <td style={{ 
+                              fontWeight: 'bold',
+                              backgroundColor: '#3b82f6',
+                              color: '#ffffff',
+                              fontSize: '16px',
+                              padding: '10px',
+                              textAlign: 'right'
+                            }}>
+                              {formatMontant(montantRestant)} €
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    );
+                  })()}
+                </>
+              ) : (
+                <tr>
+                  <td colSpan={3}></td>
+                  <td className="total-row">TOTAL</td>
+                  <td className="total-value">{formatMontant(total)} €</td>
+                </tr>
+              )}
             </tfoot>
           </table>
         )}
