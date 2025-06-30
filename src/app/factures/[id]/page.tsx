@@ -493,6 +493,19 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
               <h3 className="text-sm font-medium text-blue-800">Facture d&apos;acompte</h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>Cette facture représente un acompte de {getAcomptePercentage(facture)}% sur le devis n°{facture.devis?.numero}.</p>
+                {/* Afficher le récapitulatif des montants si disponible dans les notes */}
+                {facture.notes?.includes('RÉCAPITULATIF DES MONTANTS:') && (
+                  <div className="mt-3 p-3 bg-white rounded border">
+                    <h4 className="font-medium text-blue-800 mb-2">Récapitulatif des montants:</h4>
+                    <div className="text-sm space-y-1">
+                      {facture.notes.split('\n').filter(line => line.includes('- Montant')).map((line, index) => (
+                        <div key={index} className={line.includes('restant') ? 'font-semibold text-blue-900' : ''}>
+                          {line.trim()}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

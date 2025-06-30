@@ -178,6 +178,10 @@ export async function POST(request: NextRequest) {
     const numeroFacture = `A${numeroAcompte}-${devis.numero}-${year}${month}-${numeroSuffix.toString().padStart(3, '0')}`;
     console.log(`Numéro de facture généré: ${numeroFacture}`);
 
+    // Calculer le montant restant après cet acompte
+    const totalMontantExistant = acomptesExistants.reduce((sum, acompte) => sum + acompte.totalTTC, 0);
+    const montantRestantApresAcompte = devis.totalTTC - totalMontantExistant - montantTTC;
+
     // Créer une ligne unique pour l'acompte
     const ligneAcompte = {
       description: `Acompte ${pourcentageCalcule.toFixed(1)}% sur devis n°${devis.numero}`,
@@ -204,7 +208,12 @@ export async function POST(request: NextRequest) {
         devisId: devis.id,
         lignes: JSON.stringify([ligneAcompte]),
         conditions: `Acompte de ${pourcentageCalcule.toFixed(1)}% sur le devis n°${devis.numero}. ${devis.conditions || ''}`,
-        notes: `FACTURE D'ACOMPTE: Ceci est une facture d'acompte représentant ${pourcentageCalcule.toFixed(1)}% du montant total du devis n°${devis.numero}.`,
+        notes: `FACTURE D'ACOMPTE: Ceci est une facture d'acompte représentant ${pourcentageCalcule.toFixed(1)}% du montant total du devis n°${devis.numero}.
+
+RÉCAPITULATIF DES MONTANTS:
+- Montant total du devis: ${devis.totalTTC.toFixed(2)} €
+- Montant de cet acompte: ${montantTTC.toFixed(2)} €
+- Montant restant à payer: ${montantRestantApresAcompte.toFixed(2)} €`,
         totalHT: montantHT,
         totalTTC: montantTTC
       };
