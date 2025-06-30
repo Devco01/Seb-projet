@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export interface PrintDocumentProps {
   type: 'devis' | 'facture' | 'paiement';
@@ -272,9 +273,11 @@ export default function PrintDocument({
         <div className="header">
           <div className="company-logo">
             {entreprise.logoUrl ? (
-              <img
+              <Image
                 src={entreprise.logoUrl}
                 alt={`Logo ${entreprise.companyName}`}
+                width={200}
+                height={80}
                 style={{ maxHeight: '80px', objectFit: 'contain' }}
               />
             ) : (
