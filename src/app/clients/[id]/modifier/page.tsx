@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation';
 type Client = {
   id: number;
   nom: string;
-  contact?: string;
   email?: string;
   telephone?: string;
   adresse?: string;
@@ -26,7 +25,6 @@ export default function ModifierClient({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     nom: '',
-    contact: '',
     email: '',
     telephone: '',
     adresse: '',
@@ -56,7 +54,6 @@ export default function ModifierClient({ params }: { params: { id: string } }) {
         
         setFormData({
           nom: client.nom || '',
-          contact: client.contact || '',
           email: client.email || '',
           telephone: client.telephone || '',
           adresse: client.adresse || '',
@@ -185,19 +182,7 @@ export default function ModifierClient({ params }: { params: { id: string } }) {
               />
             </div>
 
-            <div>
-              <label className="block text-gray-700 font-medium mb-2" htmlFor="contact">
-                Personne à contacter
-              </label>
-              <input
-                type="text"
-                id="contact"
-                name="contact"
-                value={formData.contact}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+
 
             <div>
               <label className="block text-gray-700 font-medium mb-2" htmlFor="email">
