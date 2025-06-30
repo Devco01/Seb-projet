@@ -372,6 +372,45 @@ export default function PrintDocument({
           </table>
         )}
 
+        {/* Section spéciale pour le récapitulatif des acomptes */}
+        {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('RÉCAPITULATIF DES MONTANTS:') && (
+          <div style={{ 
+            backgroundColor: '#f8fafc', 
+            border: '2px solid #e2e8f0', 
+            padding: '15px', 
+            marginBottom: '20px',
+            borderRadius: '8px'
+          }}>
+            <h3 style={{ 
+              fontWeight: 'bold', 
+              fontSize: '16px', 
+              marginBottom: '10px',
+              borderBottom: '1px solid #cbd5e1',
+              paddingBottom: '5px'
+            }}>
+              RÉCAPITULATIF DES MONTANTS
+            </h3>
+            <div style={{ display: 'grid', gap: '5px' }}>
+              {notes.split('\n').filter(line => line.includes('- Montant')).map((line, index) => {
+                const isRestant = line.includes('restant');
+                return (
+                  <div key={index} style={{
+                    fontSize: isRestant ? '15px' : '13px',
+                    fontWeight: isRestant ? 'bold' : 'normal',
+                    backgroundColor: isRestant ? '#dbeafe' : 'transparent',
+                    padding: isRestant ? '8px 12px' : '4px 0',
+                    border: isRestant ? '2px solid #3b82f6' : 'none',
+                    borderRadius: isRestant ? '5px' : '0',
+                    color: isRestant ? '#1e40af' : '#374151'
+                  }}>
+                    {line.trim()}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="footer">
           <div>
             {conditionsPaiement && (
@@ -387,7 +426,36 @@ export default function PrintDocument({
             {notes && (
               <>
                 <div className="footer-title">NOTES :</div>
-                <div>{notes}</div>
+                {/* Traitement spécial pour les factures d'acompte */}
+                {notes.includes('FACTURE D\'ACOMPTE') ? (
+                  <div>
+                    {notes.split('\n').map((line, index) => {
+                      if (line.includes('RÉCAPITULATIF DES MONTANTS:')) {
+                        return <div key={index} style={{ fontWeight: 'bold', marginTop: '10px', marginBottom: '5px' }}>{line}</div>;
+                      } else if (line.includes('- Montant')) {
+                        const isRestant = line.includes('restant');
+                        return (
+                          <div key={index} style={{ 
+                            marginLeft: '10px', 
+                            fontWeight: isRestant ? 'bold' : 'normal',
+                            fontSize: isRestant ? '14px' : '12px',
+                            backgroundColor: isRestant ? '#f0f9ff' : 'transparent',
+                            padding: isRestant ? '3px 6px' : '1px 0',
+                            border: isRestant ? '1px solid #0ea5e9' : 'none',
+                            borderRadius: isRestant ? '3px' : '0'
+                          }}>
+                            {line.trim()}
+                          </div>
+                        );
+                      } else if (line.trim()) {
+                        return <div key={index} style={{ marginBottom: '3px' }}>{line}</div>;
+                      }
+                      return null;
+                    })}
+                  </div>
+                ) : (
+                  <div>{notes}</div>
+                )}
               </>
             )}
           </div>
