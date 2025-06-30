@@ -19,7 +19,6 @@ import {
 interface Client {
   id: number;
   nom: string;
-  contact: string | null;
   email: string;
   telephone: string | null;
   adresse: string;
@@ -120,7 +119,6 @@ export default function Clients() {
     } else {
       const filteredClients = clientsData.filter(client => 
         client.nom.toLowerCase().includes(value) || 
-        (client.contact && client.contact.toLowerCase().includes(value)) || 
         client.email.toLowerCase().includes(value) ||
         client.adresse.toLowerCase().includes(value)
       );
@@ -270,7 +268,6 @@ export default function Clients() {
             <div key={client.id} className="bg-white rounded-lg shadow p-4">
               <div>
                 <h3 className={`text-lg font-bold ${getClientStatus(client)}`}>{client.nom}</h3>
-                <p className="text-gray-700 font-medium">{client.contact || 'N/A'}</p>
                 <div className="mt-1 space-y-1 text-sm">
                   <div className="flex items-center text-gray-500">
                     <FaEnvelope className="mr-2 h-3 w-3" />
@@ -321,9 +318,6 @@ export default function Clients() {
                   Client
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email / Téléphone
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -340,9 +334,6 @@ export default function Clients() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-gray-900">{client.nom}</div>
                     <div className="text-xs text-gray-500">{client.adresse}, {client.codePostal} {client.ville}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{client.contact || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-blue-600">

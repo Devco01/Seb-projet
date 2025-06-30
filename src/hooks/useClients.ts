@@ -4,7 +4,6 @@ import { useApi } from './useApi';
 export interface Client {
   id: number;
   nom: string;
-  contact?: string;
   email: string;
   telephone?: string;
   adresse: string;

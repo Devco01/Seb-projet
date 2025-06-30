@@ -24,7 +24,6 @@ interface Facture {
 interface ClientData {
   id: number;
   nom: string;
-  contact: string | null;
   email: string;
   telephone: string | null;
   adresse: string;
@@ -203,10 +202,6 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4">Informations générales</h2>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-gray-600">Contact</p>
-                <p className="font-medium">{client.contact || 'N/A'}</p>
-              </div>
               <div>
                 <p className="text-gray-600">Email</p>
                 <p className="font-medium">{client.email}</p>
