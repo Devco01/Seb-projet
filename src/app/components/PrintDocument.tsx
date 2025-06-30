@@ -142,7 +142,7 @@ export default function PrintDocument({
       display: block !important;
       width: 100%;
       background-color: white;
-      padding: 15mm;
+      padding: 10mm;
     }
     .container {
       max-width: 100%;
@@ -151,9 +151,9 @@ export default function PrintDocument({
     .header {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 30px;
+      margin-bottom: 15px;
       border-bottom: 2px solid #ddd;
-      padding-bottom: 20px;
+      padding-bottom: 15px;
     }
     .company-logo {
       flex: 1;
@@ -161,18 +161,18 @@ export default function PrintDocument({
     .document-title {
       flex: 1;
       text-align: center;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
     }
     .company-info {
       flex: 1;
       text-align: right;
-      font-size: 12px;
+      font-size: 11px;
     }
     .document-info {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 30px;
+      margin-bottom: 15px;
     }
     .document-ref {
       border: 1px solid #ddd;
@@ -194,14 +194,15 @@ export default function PrintDocument({
     .table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin-bottom: 15px;
     }
     .table th {
       background-color: #f5f5f5;
       border-top: 2px solid #444;
       border-bottom: 2px solid #444;
-      padding: 8px;
+      padding: 6px;
       text-align: left;
+      font-size: 12px;
     }
     .table th.text-right {
       text-align: right;
@@ -210,8 +211,9 @@ export default function PrintDocument({
       text-align: center;
     }
     .table td {
-      padding: 8px;
+      padding: 6px;
       border-bottom: 1px solid #ddd;
+      font-size: 12px;
     }
     .table td.text-right {
       text-align: right;
@@ -236,19 +238,19 @@ export default function PrintDocument({
       text-align: center;
       border-top: 2px solid #ddd;
       border-bottom: 2px solid #ddd;
-      padding: 20px 0;
-      margin-bottom: 30px;
+      padding: 15px 0;
+      margin-bottom: 15px;
     }
     .payment-amount {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: bold;
-      margin: 15px 0;
+      margin: 10px 0;
     }
     .footer {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      font-size: 12px;
+      gap: 15px;
+      font-size: 11px;
     }
     .footer-title {
       font-weight: bold;
@@ -258,9 +260,9 @@ export default function PrintDocument({
       padding-bottom: 2px;
     }
     .legal-notice {
-      margin-top: 40px;
+      margin-top: 20px;
       text-align: center;
-      font-size: 10px;
+      font-size: 9px;
       color: #777;
     }
   `;
@@ -317,79 +319,7 @@ export default function PrintDocument({
           </div>
         </div>
 
-        {/* Encadré informatif pour les factures d'acompte */}
-        {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('RÉCAPITULATIF DES MONTANTS:') && (
-          <div style={{ 
-            backgroundColor: '#f0f9ff', 
-            border: '3px solid #3b82f6', 
-            padding: '20px', 
-            marginBottom: '25px',
-            borderRadius: '10px',
-            textAlign: 'center'
-          }}>
-            <h2 style={{ 
-              fontWeight: 'bold', 
-              fontSize: '18px', 
-              marginBottom: '15px',
-              color: '#1e40af',
-              textTransform: 'uppercase'
-            }}>
-                             ⚠️ FACTURE D&apos;ACOMPTE ⚠️
-            </h2>
-            {(() => {
-              const montantTotalMatch = notes.match(/- Montant total du devis: ([\d,]+\.?\d*) €/);
-              const montantAcompteMatch = notes.match(/- Montant de cet acompte: ([\d,]+\.?\d*) €/);
-              const montantRestantMatch = notes.match(/- Montant restant à payer: ([\d,]+\.?\d*) €/);
-              
-              const montantTotalDevis = montantTotalMatch ? parseFloat(montantTotalMatch[1].replace(',', '')) : null;
-              const montantAcompte = montantAcompteMatch ? parseFloat(montantAcompteMatch[1].replace(',', '')) : total;
-              const montantRestant = montantRestantMatch ? parseFloat(montantRestantMatch[1].replace(',', '')) : null;
-              
-              return (
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: '1fr 1fr 1fr', 
-                  gap: '15px',
-                  fontSize: '14px'
-                }}>
-                  <div style={{ 
-                    backgroundColor: '#e5e7eb', 
-                    padding: '10px', 
-                    borderRadius: '5px',
-                    border: '1px solid #9ca3af'
-                  }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>MONTANT TOTAL DU DEVIS</div>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
-                      {montantTotalDevis ? formatMontant(montantTotalDevis) : 'N/A'} €
-                    </div>
-                  </div>
-                  <div style={{ 
-                    backgroundColor: '#ddd6fe', 
-                    padding: '10px', 
-                    borderRadius: '5px',
-                    border: '1px solid #8b5cf6'
-                  }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>MONTANT DE CET ACOMPTE</div>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
-                      {formatMontant(montantAcompte)} €
-                    </div>
-                  </div>
-                  <div style={{ 
-                    backgroundColor: '#fee2e2', 
-                    padding: '10px', 
-                    borderRadius: '5px',
-                    border: '2px solid #dc2626'
-                  }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '5px', color: '#dc2626' }}>RESTE À PAYER</div>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc2626' }}>
-                      {montantRestant ? formatMontant(montantRestant) : 'N/A'} €
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-        )}
+        
 
         {type === 'paiement' ? (
           <div className="payment-receipt">
@@ -429,7 +359,7 @@ export default function PrintDocument({
                 </tr>
               ))}
               {/* Lignes vides pour l'aspect visuel */}
-              {lines.length < 10 && Array(10 - lines.length).fill(0).map((_, index) => (
+              {lines.length < 5 && Array(5 - lines.length).fill(0).map((_, index) => (
                 <tr key={`empty-${index}`}>
                   <td>&nbsp;</td>
                   <td>&nbsp;</td>
@@ -518,44 +448,7 @@ export default function PrintDocument({
           </table>
         )}
 
-        {/* Section spéciale pour le récapitulatif des acomptes */}
-        {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('RÉCAPITULATIF DES MONTANTS:') && (
-          <div style={{ 
-            backgroundColor: '#f8fafc', 
-            border: '2px solid #e2e8f0', 
-            padding: '15px', 
-            marginBottom: '20px',
-            borderRadius: '8px'
-          }}>
-            <h3 style={{ 
-              fontWeight: 'bold', 
-              fontSize: '16px', 
-              marginBottom: '10px',
-              borderBottom: '1px solid #cbd5e1',
-              paddingBottom: '5px'
-            }}>
-              RÉCAPITULATIF DES MONTANTS
-            </h3>
-            <div style={{ display: 'grid', gap: '5px' }}>
-              {notes.split('\n').filter(line => line.includes('- Montant')).map((line, index) => {
-                const isRestant = line.includes('restant');
-                return (
-                  <div key={index} style={{
-                    fontSize: isRestant ? '15px' : '13px',
-                    fontWeight: isRestant ? 'bold' : 'normal',
-                    backgroundColor: isRestant ? '#dbeafe' : 'transparent',
-                    padding: isRestant ? '8px 12px' : '4px 0',
-                    border: isRestant ? '2px solid #3b82f6' : 'none',
-                    borderRadius: isRestant ? '5px' : '0',
-                    color: isRestant ? '#1e40af' : '#374151'
-                  }}>
-                    {line.trim()}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
 
         <div className="footer">
           <div>
