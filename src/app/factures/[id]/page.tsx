@@ -230,6 +230,67 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
       }, 0)
     : (facture.totalTTC || 0); // Fallback vers totalTTC si les lignes ne sont pas disponibles
 
+  // Fonction pour recharger les données de la facture
+  const reloadFacture = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/factures/${params.id}`);
+      
+      if (!response.ok) {
+        throw new Error(`Erreur lors du rechargement: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Analyser les lignes
+      let lignesData = [];
+      if (data.lignes) {
+        if (typeof data.lignes === 'string') {
+          try {
+            lignesData = JSON.parse(data.lignes);
+          } catch (e) {
+            console.error('Erreur lors du parsing des lignes:', e);
+            lignesData = [];
+          }
+        } else if (Array.isArray(data.lignes)) {
+          lignesData = data.lignes;
+        }
+      }
+      
+      // Déterminer la couleur du statut
+      let statutColor = 'bg-yellow-100 text-yellow-800';
+      if (data.statut === 'Payée') {
+        statutColor = 'bg-green-100 text-green-800';
+      } else if (data.statut === 'En retard') {
+        statutColor = 'bg-red-100 text-red-800';
+      } else if (data.statut === 'Annulée') {
+        statutColor = 'bg-gray-100 text-gray-800';
+      }
+      
+      // Formater les dates
+      const formatDate = (dateString: string) => {
+        try {
+          const date = new Date(dateString);
+          return isNaN(date.getTime()) ? 'Date invalide' : date.toLocaleDateString('fr-FR');
+        } catch {
+          return 'Date invalide';
+        }
+      };
+      
+      setFacture({
+        ...data,
+        lignes: lignesData,
+        statutColor,
+        dateOriginale: data.date,
+        echeanceOriginale: data.echeance,
+        date: formatDate(data.date),
+        echeance: formatDate(data.echeance)
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fonction pour marquer la facture comme payée
   const handleMarkAsPaid = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir marquer cette facture comme payée ?')) {
@@ -247,12 +308,8 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           throw new Error(data.message || 'Erreur lors de la mise à jour du statut de la facture');
         }
         
-        // Mettre à jour l'interface utilisateur
-        setFacture({
-          ...facture,
-          statut: 'Payée',
-          statutColor: 'bg-green-100 text-green-800'
-        });
+        // Recharger les données depuis le serveur pour garantir la synchronisation
+        await reloadFacture();
         
         alert('Facture marquée comme payée avec succès !');
       } catch (err) {
