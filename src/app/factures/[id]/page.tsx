@@ -552,6 +552,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           clientPhone={facture.client.telephone}
           lines={facture.lignes}
           total={total}
+          notes={facture.notes}
         />
       </div>
 

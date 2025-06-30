@@ -312,6 +312,7 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
             total: paiement.montant
           }]}
           total={paiement.montant}
+          notes={paiement.notes}
         />
       </div>
     </>
