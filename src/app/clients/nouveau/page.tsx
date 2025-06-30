@@ -12,7 +12,6 @@ export default function NouveauClient() {
   const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState({
     nom: '',
-    contact: '',
     email: '',
     telephone: '',
     adresse: '',
@@ -143,18 +142,7 @@ export default function NouveauClient() {
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Contact
-              </label>
-              <input
-                type="text"
-                name="contact"
-                value={formData.contact}
-                onChange={handleChange}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
-            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email<span className="text-red-500">*</span>

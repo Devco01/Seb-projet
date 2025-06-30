@@ -20,7 +20,6 @@ export interface Client {
 
 export interface ClientFormData {
   nom: string;
-  contact?: string;
   email: string;
   telephone?: string;
   adresse: string;
