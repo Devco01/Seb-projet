@@ -23,6 +23,7 @@ interface DocumentData {
     total: number;
   }>;
   total: number;
+  notes?: string;
 }
 
 // Composant de chargement pour le Suspense
@@ -262,6 +263,7 @@ function PrintContent() {
           clientPhone={documentData.clientPhone}
           lines={documentData.lines}
           total={documentData.total}
+          notes={documentData.notes}
         />
       </div>
     </>

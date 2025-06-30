@@ -21,6 +21,7 @@ export interface PrintDocumentProps {
     total: number;
   }[];
   total: number;
+  notes?: string;
 }
 
 interface ParametresEntreprise {
@@ -45,7 +46,8 @@ export default function PrintDocument({
   clientEmail,
   clientPhone,
   lines,
-  total
+  total,
+  notes
 }: PrintDocumentProps) {
   const [parametres, setParametres] = useState<ParametresEntreprise | null>(null);
   const [loading, setLoading] = useState(true);
@@ -357,9 +359,41 @@ export default function PrintDocument({
             <tfoot>
               <tr>
                 <td colSpan={3}></td>
-                <td className="total-row">TOTAL</td>
+                <td className="total-row">{notes && notes.includes('FACTURE D\'ACOMPTE') ? 'MONTANT DE CET ACOMPTE' : 'TOTAL'}</td>
                 <td className="total-value">{formatMontant(total)} €</td>
               </tr>
+              {/* Afficher le reste à payer pour les factures d'acompte */}
+              {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('- Montant restant à payer:') && (
+                (() => {
+                  const montantRestantMatch = notes.match(/- Montant restant à payer: ([\d,]+\.?\d*) €/);
+                  const montantRestant = montantRestantMatch ? parseFloat(montantRestantMatch[1].replace(',', '')) : null;
+                  
+                  return montantRestant ? (
+                    <tr style={{ backgroundColor: '#dbeafe' }}>
+                      <td colSpan={3}></td>
+                      <td style={{ 
+                        fontWeight: 'bold', 
+                        backgroundColor: '#3b82f6',
+                        color: '#ffffff',
+                        fontSize: '16px',
+                        padding: '10px'
+                      }}>
+                        RESTE À PAYER
+                      </td>
+                      <td style={{ 
+                        fontWeight: 'bold',
+                        backgroundColor: '#3b82f6',
+                        color: '#ffffff',
+                        fontSize: '16px',
+                        padding: '10px',
+                        textAlign: 'right'
+                      }}>
+                        {formatMontant(montantRestant)} €
+                      </td>
+                    </tr>
+                  ) : null;
+                })()
+              )}
             </tfoot>
           </table>
         )}

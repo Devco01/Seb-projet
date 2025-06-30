@@ -643,6 +643,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
           clientPhone={devis.client.telephone}
           lines={devis.lignes}
           total={total}
+          notes={devis.notes}
         />
       </div>
     </>
