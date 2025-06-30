@@ -49,24 +49,11 @@ export async function PUT(
       nbPaiements: facture.paiements?.length || 0
     });
 
-    // Calculer le total payé
-    const totalPaye = facture.paiements ? facture.paiements.reduce(
-      (sum: number, paiement: { montant: number }) => sum + paiement.montant, 0
-    ) : 0;
+    // Cette route est appelée pour marquer explicitement la facture comme payée
+    // Nous forçons donc le statut à "Payée" indépendamment des paiements enregistrés
+    const statut = 'Payée';
     
-    console.log(`Facture ID ${id}: Total TTC = ${facture.totalTTC}, Total payé = ${totalPaye}`);
-    
-    // Déterminer le statut en fonction du montant payé
-    let statut = 'En attente';
-    if (totalPaye >= facture.totalTTC) {
-      statut = 'Payée';
-    } else if (totalPaye > 0) {
-      statut = 'Partiellement payée';
-    } else if (new Date(facture.echeance) < new Date()) {
-      statut = 'En retard';
-    }
-    
-    console.log(`Mise à jour du statut de la facture ID ${id} vers: ${statut}`);
+    console.log(`Marquage explicite de la facture ID ${id} comme payée`);
 
     // Mettre à jour uniquement le statut de la facture
     let factureModifiee;
