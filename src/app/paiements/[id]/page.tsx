@@ -258,7 +258,25 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
       {paiement.notes && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-lg font-bold mb-2">Notes</h2>
-          <p className="text-gray-700">{paiement.notes}</p>
+          {/* Filtrer le récapitulatif au cas où il serait présent dans les notes */}
+          {paiement.notes.includes('RÉCAPITULATIF DES MONTANTS:') ? (
+            <div className="text-gray-700">
+              {paiement.notes.split('\n').map((line, index) => {
+                // On ignore les lignes du récapitulatif
+                if (line.includes('RÉCAPITULATIF DES MONTANTS:') || 
+                    line.includes('- Montant total du devis:') || 
+                    line.includes('- Montant de cet acompte:') || 
+                    line.includes('- Montant restant à payer:')) {
+                  return null;
+                } else if (line.trim()) {
+                  return <div key={index}>{line}</div>;
+                }
+                return null;
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-700">{paiement.notes}</p>
+          )}
         </div>
       )}
 
@@ -294,8 +312,6 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
             total: paiement.montant
           }]}
           total={paiement.montant}
-          notes={paiement.notes}
-          conditionsPaiement={`Paiement reçu par ${paiement.methode}${paiement.referenceTransaction ? ` - Référence: ${paiement.referenceTransaction}` : ''}`}
         />
       </div>
     </>

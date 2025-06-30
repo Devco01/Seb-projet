@@ -515,7 +515,25 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           </div>
           <div>
             <h2 className="text-lg font-bold mb-2">Notes</h2>
-            <p className="text-gray-700">{facture.notes}</p>
+            {/* Pour les factures d'acompte, on filtre le récapitulatif qui sera affiché séparément */}
+            {facture.notes?.includes('FACTURE D\'ACOMPTE') ? (
+              <div className="text-gray-700">
+                {facture.notes.split('\n').map((line, index) => {
+                  // On ignore les lignes du récapitulatif
+                  if (line.includes('RÉCAPITULATIF DES MONTANTS:') || 
+                      line.includes('- Montant total du devis:') || 
+                      line.includes('- Montant de cet acompte:') || 
+                      line.includes('- Montant restant à payer:')) {
+                    return null;
+                  } else if (line.trim()) {
+                    return <div key={index}>{line}</div>;
+                  }
+                  return null;
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-700">{facture.notes}</p>
+            )}
           </div>
         </div>
       </div>
@@ -534,12 +552,10 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
           clientPhone={facture.client.telephone}
           lines={facture.lignes}
           total={total}
-          notes={facture.notes}
-          conditionsPaiement={facture.conditions}
         />
       </div>
 
-      {/* Modifier la section d'information pour les factures d'acompte */}
+      {/* Information simplifiée pour les factures d'acompte */}
       {isAcompteFacture(facture) && (
         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 print:hidden">
           <div className="flex items-start">
@@ -550,19 +566,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
               <h3 className="text-sm font-medium text-blue-800">Facture d&apos;acompte</h3>
               <div className="mt-2 text-sm text-blue-700">
                 <p>Cette facture représente un acompte de {getAcomptePercentage(facture)}% sur le devis n°{facture.devis?.numero}.</p>
-                {/* Afficher le récapitulatif des montants si disponible dans les notes */}
-                {facture.notes?.includes('RÉCAPITULATIF DES MONTANTS:') && (
-                  <div className="mt-3 p-3 bg-white rounded border">
-                    <h4 className="font-medium text-blue-800 mb-2">Récapitulatif des montants:</h4>
-                    <div className="text-sm space-y-1">
-                      {facture.notes.split('\n').filter(line => line.includes('- Montant')).map((line, index) => (
-                        <div key={index} className={line.includes('restant') ? 'font-semibold text-blue-900' : ''}>
-                          {line.trim()}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <p className="mt-1 font-medium">Le récapitulatif détaillé des montants est visible sur la version imprimée.</p>
               </div>
             </div>
           </div>

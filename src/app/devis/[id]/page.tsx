@@ -604,7 +604,25 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
               </div>
               <div>
                 <h2 className="text-lg font-bold mb-2">Notes</h2>
-                <p className="text-gray-700">{devis.notes}</p>
+                {/* Filtrer le récapitulatif au cas où il serait présent dans les notes */}
+                {devis.notes?.includes('RÉCAPITULATIF DES MONTANTS:') ? (
+                  <div className="text-gray-700">
+                    {devis.notes.split('\n').map((line, index) => {
+                      // On ignore les lignes du récapitulatif
+                      if (line.includes('RÉCAPITULATIF DES MONTANTS:') || 
+                          line.includes('- Montant total du devis:') || 
+                          line.includes('- Montant de cet acompte:') || 
+                          line.includes('- Montant restant à payer:')) {
+                        return null;
+                      } else if (line.trim()) {
+                        return <div key={index}>{line}</div>;
+                      }
+                      return null;
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-gray-700">{devis.notes}</p>
+                )}
               </div>
             </div>
           </div>
@@ -625,8 +643,6 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
           clientPhone={devis.client.telephone}
           lines={devis.lignes}
           total={total}
-          notes={devis.notes}
-          conditionsPaiement={devis.conditions}
         />
       </div>
     </>
