@@ -5,7 +5,7 @@ import https from 'https';
 // Configuration
 const CONFIG = {
   // Remplacez par votre URL de production Vercel
-  PRODUCTION_URL: process.env.VERCEL_URL || 'VOTRE_URL_PRODUCTION.vercel.app',
+  PRODUCTION_URL: process.env.VERCEL_URL || 'facturepro.vercel.app',
   LOCAL_ENV_FILE: '.env'
 };
 
