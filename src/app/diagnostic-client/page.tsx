@@ -59,7 +59,7 @@ export default function DiagnosticClientPage() {
         },
         body: new URLSearchParams({
           username: 'facturepro',
-          password: 'FacturePro@2023!',
+          password: 'Facturepro2025!',
           csrfToken: await getCsrfToken()
         })
       });
