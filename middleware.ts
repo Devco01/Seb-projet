@@ -12,6 +12,7 @@ export async function middleware(request: NextRequest) {
     '/api/auth',
     '/api/debug',
     '/api/logs',
+    '/api/diagnostic-auto',
     '/test-auth',
     '/debug',
     '/diagnostic-client',

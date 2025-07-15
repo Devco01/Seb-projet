@@ -134,7 +134,7 @@ export default function TestAuthPage() {
                 <h2 className="text-xl font-semibold mb-4">🔑 Tests d&apos;authentification</h2>
                 <div className="space-y-3">
                   <button
-                    onClick={() => testAuthentication('facturepro', 'FacturePro@2023!')}
+                    onClick={() => testAuthentication('facturepro', 'Facturepro2025!')}
                     disabled={isRunning}
                     className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 disabled:opacity-50"
                   >
@@ -150,7 +150,7 @@ export default function TestAuthPage() {
                   </button>
                   
                   <button
-                    onClick={() => testAuthentication('mauvais-user', 'FacturePro@2023!')}
+                    onClick={() => testAuthentication('mauvais-user', 'Facturepro2025!')}
                     disabled={isRunning}
                     className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 disabled:opacity-50"
                   >

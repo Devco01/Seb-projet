@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
 
         // Identifiants corrects fournis par le client
         const validUsername = "facturepro"; 
-        const validPassword = "FacturePro@2023!";
+        const validPassword = "Facturepro2025!";
 
         if (credentials?.username === validUsername && credentials?.password === validPassword) {
           console.log(`[AUTH-SUCCESS] ${timestamp} - Connexion réussie pour:`, credentials.username);
