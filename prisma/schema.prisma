@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -52,28 +52,23 @@ model Devis {
 
 // Modèle pour les factures
 model Facture {
-  id                Int       @id @default(autoincrement())
-  numero            String    @unique
-  clientId          Int
-  client            Client    @relation(fields: [clientId], references: [id])
-  devisId           Int?
-  devis             Devis?    @relation(fields: [devisId], references: [id])
-  date              DateTime
-  echeance          DateTime
-  statut            String    @default("En attente") // En attente, Payée, Retard, Annulée
-  lignes            String    // Stocké comme JSON sous forme de texte
-  conditions        String?
-  notes             String?
-  totalHT           Float
-  totalTTC          Float
-  estAcompte        Boolean   @default(false) // Indique si c'est une facture d'acompte
-  pourcentageAcompte Float?   // Pourcentage de l'acompte (ex: 30 pour 30%)
-  factureFinaleId   Int?      // Référence à la facture finale si c'est un acompte
-  factureFinale     Facture?  @relation("AcompteFacture", fields: [factureFinaleId], references: [id])
-  acomptes          Facture[] @relation("AcompteFacture") // Acomptes liés à cette facture
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  paiements         Paiement[]
+  id          Int       @id @default(autoincrement())
+  numero      String    @unique
+  clientId    Int
+  client      Client    @relation(fields: [clientId], references: [id])
+  devisId     Int?
+  devis       Devis?    @relation(fields: [devisId], references: [id])
+  date        DateTime
+  echeance    DateTime
+  statut      String    @default("En attente") // En attente, Payée, Retard, Annulée
+  lignes      String    // Stocké comme JSON sous forme de texte
+  conditions  String?
+  notes       String?
+  totalHT     Float
+  totalTTC    Float
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  paiements   Paiement[]
 }
 
 // Modèle pour les paiements
@@ -96,21 +91,30 @@ model Paiement {
 
 // Modèle pour les paramètres de l'entreprise
 model Parametres {
-  id                    Int       @id @default(autoincrement())
-  companyName           String
-  address               String
-  zipCode               String
-  city                  String
-  phone                 String?
-  email                 String
-  siret                 String?
-  paymentDelay          Int       @default(30)
-  logoUrl               String?   // Chemin vers le logo stocké
-  prefixeDevis          String    @default("D-")
-  prefixeFacture        String    @default("F-")
-  mentionsLegalesDevis  String?
-  mentionsLegalesFacture String?
-  conditionsPaiement    String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                Int       @id @default(autoincrement())
+  nomEntreprise     String
+  adresse           String
+  codePostal        String
+  ville             String
+  telephone         String?
+  email             String
+  siret             String?
+  tva               String?
+  logo              String?   // Chemin vers le logo stocké
+  prefixeDevis      String    @default("D-")
+  prefixeFacture    String    @default("F-")
+  conditionsPaiement String?
+  mentionsTVA       String?
+  textePiedPage     String?
+  emailExpediteur   String?
+  objetDevis        String?
+  objetFacture      String?
+  messageDevis      String?
+  messageFacture    String?
+  iban              String?
+  bic               String?
+  nomBanque         String?
+  titulaire         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
