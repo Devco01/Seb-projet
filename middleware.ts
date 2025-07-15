@@ -10,6 +10,7 @@ export async function middleware(request: NextRequest) {
     '/auth/login',
     '/auth/error',
     '/api/auth',
+    '/api/debug',
   ];
 
   const isPublicPath = publicPaths.some(path => 

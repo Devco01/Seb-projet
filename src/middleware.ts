@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   '/api/auth/session',
   '/api/auth/csrf',
   '/api/auth/providers',
+  '/api/debug',
   '/auth/login',
   '/auth/connexion',
   '/auth/error'
