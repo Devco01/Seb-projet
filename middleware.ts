@@ -14,6 +14,7 @@ export async function middleware(request: NextRequest) {
     '/api/logs',
     '/test-auth',
     '/debug',
+    '/diagnostic-client',
   ];
 
   const isPublicPath = publicPaths.some(path => 

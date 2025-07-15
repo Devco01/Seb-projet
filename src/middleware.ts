@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   '/api/logs',
   '/test-auth',
   '/debug',
+  '/diagnostic-client',
   '/auth/login',
   '/auth/connexion',
   '/auth/error'
