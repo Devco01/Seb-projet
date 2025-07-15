@@ -30,17 +30,38 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Mot de passe", type: "password" }
       },
       async authorize(credentials) {
+        // Log des tentatives de connexion pour monitoring
+        const timestamp = new Date().toISOString();
+        const clientIP = process.env.VERCEL_IP || 'unknown';
+        
+        console.log(`[AUTH-LOG] ${timestamp} - Tentative de connexion:`, {
+          username: credentials?.username || 'vide',
+          hasPassword: !!credentials?.password,
+          passwordLength: credentials?.password?.length || 0,
+          clientIP: clientIP,
+          environment: process.env.NODE_ENV,
+          nextAuthUrl: process.env.NEXTAUTH_URL
+        });
+
         // Identifiants corrects fournis par le client
         const validUsername = "facturepro"; 
         const validPassword = "FacturePro@2023!";
 
         if (credentials?.username === validUsername && credentials?.password === validPassword) {
+          console.log(`[AUTH-SUCCESS] ${timestamp} - Connexion réussie pour:`, credentials.username);
           return {
             id: "1",
             name: "Administrateur",
             email: "admin@exemple.fr",
           };
         }
+        
+        console.log(`[AUTH-FAILED] ${timestamp} - Échec de connexion pour:`, {
+          attemptedUsername: credentials?.username,
+          reason: !credentials?.username ? 'username manquant' : 
+                  !credentials?.password ? 'password manquant' :
+                  credentials.username !== validUsername ? 'username incorrect' : 'password incorrect'
+        });
         
         return null;
       }
@@ -68,6 +89,13 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
+      // Log des redirections pour debugging
+      console.log(`[REDIRECT-LOG] ${new Date().toISOString()} - Redirection:`, {
+        from: url,
+        to: baseUrl,
+        environment: process.env.NODE_ENV
+      });
+
       // Force la redirection vers le dashboard après connexion réussie
       if (url === baseUrl || url === `${baseUrl}/` || url.startsWith(`${baseUrl}/api/auth`)) {
         return `${baseUrl}/dashboard`;
