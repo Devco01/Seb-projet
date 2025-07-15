@@ -11,6 +11,9 @@ export async function middleware(request: NextRequest) {
     '/auth/error',
     '/api/auth',
     '/api/debug',
+    '/api/logs',
+    '/test-auth',
+    '/debug',
   ];
 
   const isPublicPath = publicPaths.some(path => 
