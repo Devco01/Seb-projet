@@ -153,6 +153,34 @@ main {
 .table-responsive {
   overflow-x: auto;
   width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+}
+
+/* Améliorations pour les descriptions longues dans les tableaux */
+.table-description-cell {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 0;
+  min-width: 200px;
+}
+
+.table-fixed-cell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Responsive table improvements */
+@media (max-width: 640px) {
+  .table-responsive table {
+    font-size: 0.875rem;
+  }
+  
+  .table-responsive th,
+  .table-responsive td {
+    padding: 0.5rem 0.25rem;
+  }
 }
 
 .mobile-full-width {
