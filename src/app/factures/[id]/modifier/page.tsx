@@ -167,9 +167,9 @@ function ModifierFactureForm({ id }: { id: string }) {
     if (newLignes[index].prixUnitaire === undefined) newLignes[index].prixUnitaire = 0;
     if (newLignes[index].total === undefined) newLignes[index].total = 0;
     
-    if (field === 'description' || field === 'unite') {
+    if (field === 'description') {
       newLignes[index][field] = value as string;
-    } else {
+    } else if (field === 'quantite' || field === 'prixUnitaire' || field === 'total') {
       newLignes[index][field] = Number(value) || 0;
     }
     
@@ -188,8 +188,7 @@ function ModifierFactureForm({ id }: { id: string }) {
       description: '', 
       quantite: 1, 
       prixUnitaire: 0, 
-      total: 0, 
-      unite: 'm²' 
+      total: 0
     }]);
   };
 
@@ -373,9 +372,6 @@ function ModifierFactureForm({ id }: { id: string }) {
                   <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Quantité
                   </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Unité
-                  </th>
                   <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Prix unitaire (€)
                   </th>
@@ -408,15 +404,6 @@ function ModifierFactureForm({ id }: { id: string }) {
                         onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
                         className="w-20 border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         required
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="text"
-                        value={ligne.unite}
-                        onChange={(e) => handleLigneChange(index, 'unite', e.target.value)}
-                        className="w-16 border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="m²"
                       />
                     </td>
                     <td className="px-4 py-2">
@@ -454,7 +441,7 @@ function ModifierFactureForm({ id }: { id: string }) {
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={3} className="px-4 py-2"></td>
+                  <td colSpan={2} className="px-4 py-2"></td>
                   <td className="px-4 py-2 text-right font-medium">Total:</td>
                   <td className="px-4 py-2 font-bold">{total.toFixed(2)} €</td>
                   <td></td>

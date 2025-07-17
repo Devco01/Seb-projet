@@ -10,7 +10,7 @@ import PrintDocument from '@/app/components/PrintDocument';
 interface FactureLigne {
   description: string;
   quantite: number;
-  unite: string;
+  unite?: string;
   prixUnitaire: number;
   total: number;
 }
@@ -454,16 +454,13 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
                   <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-0">
                     Description
                   </th>
-                  <th className="px-2 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                  <th className="px-2 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
                     Qté
                   </th>
-                  <th className="px-2 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-                    Unité
-                  </th>
-                  <th className="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                  <th className="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                     Prix unit. (€)
                   </th>
-                  <th className="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                  <th className="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                     Total (€)
                   </th>
                 </tr>
@@ -480,9 +477,6 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
                       <td className="px-2 sm:px-4 py-3 text-center text-sm text-gray-500 whitespace-nowrap">
                         {ligne.quantite}
                       </td>
-                      <td className="px-2 sm:px-4 py-3 text-center text-sm text-gray-500 whitespace-nowrap">
-                        {ligne.unite || 'unité'}
-                      </td>
                       <td className="px-2 sm:px-4 py-3 text-right text-sm text-gray-500 whitespace-nowrap">
                         {Number(ligne.prixUnitaire).toFixed(2)}
                       </td>
@@ -493,7 +487,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-4 py-3 text-center text-gray-500">
+                    <td colSpan={4} className="px-4 py-3 text-center text-gray-500">
                       Aucune ligne de facturation disponible
                     </td>
                   </tr>
@@ -501,7 +495,7 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={3} className="px-2 sm:px-4 py-3"></td>
+                  <td colSpan={2} className="px-2 sm:px-4 py-3"></td>
                   <td className="px-2 sm:px-4 py-3 text-right font-medium">Total:</td>
                   <td className="px-2 sm:px-4 py-3 text-right font-bold">{total.toFixed(2)} €</td>
                 </tr>

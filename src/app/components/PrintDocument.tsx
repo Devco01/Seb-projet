@@ -128,7 +128,24 @@ export default function PrintDocument({
   const logoPath = entreprise.logo || entreprise.logoUrl;
 
   const documentType = type === 'devis' ? 'DEVIS' : type === 'facture' ? 'FACTURE' : 'REÇU DE PAIEMENT';
-  const documentTitle = type === 'devis' ? 'DEVIS N°' : type === 'facture' ? 'FACTURE N°' : 'REÇU N°';
+  
+  // Format uniforme pour tous les documents : "Type N° Référence"
+  const getDocumentTitle = () => {
+    if (type === 'devis') {
+      return `Devis N° ${reference}`;
+    } else if (type === 'facture') {
+      // Détecter si c'est une facture d'acompte
+      if (reference && reference.startsWith('A')) {
+        return `Facture d'acompte N° ${reference}`;
+      }
+      return `Facture N° ${reference}`;
+    } else {
+      // Pour les reçus de paiement
+      return `Reçu de paiement N° ${reference}`;
+    }
+  };
+  
+  const documentTitle = getDocumentTitle();
 
   const printStyles = `
     @page {
@@ -325,6 +342,25 @@ export default function PrintDocument({
       font-size: 9px;
       color: #777;
     }
+    .page-break {
+      page-break-before: always;
+      margin-top: 0;
+    }
+    .page-content {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .table-section {
+      flex: 1;
+    }
+    .page-number {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 9px;
+      color: #666;
+    }
   `;
 
   return (
@@ -358,7 +394,7 @@ export default function PrintDocument({
           </div>
           
           <div className="document-title">
-            {documentType}
+            {documentTitle}
           </div>
           
           <div className="company-info">
@@ -387,7 +423,7 @@ export default function PrintDocument({
 
         <div className="document-info">
           <div className="document-left">
-            <div className="document-ref">{documentTitle} {reference}</div>
+            <div className="document-ref">{documentTitle}</div>
             <div style={{ 
               fontSize: '12px', 
               marginBottom: '8px',
@@ -460,113 +496,194 @@ export default function PrintDocument({
             </div>
           </div>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th style={{ width: '45%' }}>Description</th>
-                <th className="text-center" style={{ width: '12%' }}>Qté</th>
-                <th className="text-center" style={{ width: '10%' }}>Unité</th>
-                <th className="text-right" style={{ width: '16%' }}>Prix unit.</th>
-                <th className="text-right" style={{ width: '17%' }}>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lines.map((line, index) => (
-                <tr key={index}>
-                  <td className="description">{line.description}</td>
-                  <td className="text-center">{line.quantite}</td>
-                  <td className="text-center">{line.unite || '-'}</td>
-                  <td className="text-right">{formatMontant(line.prixUnitaire)} €</td>
-                  <td className="text-right">{formatMontant(line.total)} €</td>
-                </tr>
-              ))}
-              {/* Lignes vides pour l'aspect visuel */}
-              {lines.length < 5 && Array(5 - lines.length).fill(0).map((_, index) => (
-                <tr key={`empty-${index}`}>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                  <td>&nbsp;</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={3} style={{ borderTop: '1px solid #ddd' }}></td>
-                <td className="total-row" style={{ 
-                  textAlign: 'right',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  padding: '8px 6px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {notes && notes.includes('FACTURE D\'ACOMPTE') ? 'MONTANT ACOMPTE' : 'TOTAL'}
-                </td>
-                <td className="total-value" style={{
-                  textAlign: 'right',
-                  fontWeight: 'bold',
-                  borderTop: '2px solid #444',
-                  borderBottom: '2px solid #444',
-                  fontSize: '12px',
-                  padding: '8px 6px'
-                }}>{formatMontant(total)} €</td>
-              </tr>
-              {/* Afficher le reste à payer pour les factures d'acompte */}
-              {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('- Montant restant à payer:') && (
-                (() => {
-                  const montantRestantMatch = notes.match(/- Montant restant à payer: ([\d,]+\.?\d*) €/);
-                  const montantRestant = montantRestantMatch ? parseFloat(montantRestantMatch[1].replace(',', '')) : null;
-                  
-                  return montantRestant ? (
-                    <tr>
-                      <td colSpan={3}></td>
-                      <td style={{ 
-                        fontWeight: 'bold', 
-                        backgroundColor: '#3b82f6',
-                        color: '#ffffff',
-                        fontSize: '12px',
-                        padding: '8px 6px',
-                        textAlign: 'right',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        RESTE À PAYER
-                      </td>
-                      <td style={{ 
-                        fontWeight: 'bold',
-                        backgroundColor: '#3b82f6',
-                        color: '#ffffff',
-                        fontSize: '12px',
-                        padding: '8px 6px',
-                        textAlign: 'right'
-                      }}>
-                        {formatMontant(montantRestant)} €
-                      </td>
-                    </tr>
-                  ) : null;
-                })()
-              )}
-            </tfoot>
-          </table>
+          (() => {
+            // Configuration de pagination : max 12 lignes par page
+            const LINES_PER_PAGE = 12;
+            const chunks = [];
+            
+            // Diviser les lignes en chunks
+            for (let i = 0; i < lines.length; i += LINES_PER_PAGE) {
+              chunks.push(lines.slice(i, i + LINES_PER_PAGE));
+            }
+            
+            // Si aucune ligne, créer au moins un chunk vide
+            if (chunks.length === 0) {
+              chunks.push([]);
+            }
+
+            return chunks.map((chunk, pageIndex) => (
+              <div key={pageIndex} className={pageIndex === 0 ? "page-content" : "page-break page-content"}>
+                {/* En-tête répété sur chaque page (sauf la première où il est déjà affiché) */}
+                {pageIndex > 0 && (
+                  <div className="header" style={{ marginBottom: '20px' }}>
+                    <div className="company-logo">
+                      {logoPath ? (
+                        <img
+                          src={logoPath}
+                          alt={`Logo ${nomEntreprise}`}
+                          style={{ 
+                            maxWidth: '100%', 
+                            maxHeight: '80px', 
+                            objectFit: 'contain',
+                            display: 'block'
+                          }}
+                        />
+                      ) : (
+                        <div style={{ 
+                          fontSize: '16px', 
+                          fontWeight: 'bold', 
+                          color: '#1e40af',
+                          padding: '8px 0'
+                        }}>
+                          {nomEntreprise}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="document-title">
+                      {documentTitle} (suite)
+                    </div>
+                    
+                    <div className="company-info">
+                      <div style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '11px' }}>
+                        {nomEntreprise}
+                      </div>
+                      <div style={{ marginBottom: '1px', fontSize: '10px' }}>{adresse}</div>
+                      <div style={{ marginBottom: '6px', fontSize: '10px' }}>{codePostal} {ville}</div>
+                      <div style={{ marginBottom: '1px', fontSize: '10px' }}>Email: {entreprise.email}</div>
+                      {entreprise.siret && <div style={{ fontSize: '9px' }}>SIRET: {entreprise.siret}</div>}
+                    </div>
+                  </div>
+                )}
+
+                <div className="table-section">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '50%' }}>Description</th>
+                        <th className="text-center" style={{ width: '15%' }}>Qté</th>
+                        <th className="text-right" style={{ width: '17%' }}>Prix unit.</th>
+                        <th className="text-right" style={{ width: '18%' }}>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {chunk.map((line, index) => (
+                        <tr key={pageIndex * LINES_PER_PAGE + index}>
+                          <td className="description">{line.description}</td>
+                          <td className="text-center">{line.quantite}</td>
+                          <td className="text-right">{formatMontant(line.prixUnitaire)} €</td>
+                          <td className="text-right">{formatMontant(line.total)} €</td>
+                        </tr>
+                      ))}
+                      
+                      {/* Lignes vides pour l'aspect visuel seulement sur la première page si pas assez de lignes */}
+                      {pageIndex === 0 && chunk.length < 5 && Array(5 - chunk.length).fill(0).map((_, index) => (
+                        <tr key={`empty-${index}`}>
+                          <td>&nbsp;</td>
+                          <td>&nbsp;</td>
+                          <td>&nbsp;</td>
+                          <td>&nbsp;</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    
+                    {/* Total seulement sur la dernière page */}
+                    {pageIndex === chunks.length - 1 && (
+                      <tfoot>
+                        <tr>
+                          <td colSpan={2} style={{ borderTop: '1px solid #ddd' }}></td>
+                          <td className="total-row" style={{ 
+                            textAlign: 'right',
+                            fontWeight: 'bold',
+                            fontSize: '12px',
+                            padding: '8px 6px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {notes && notes.includes('FACTURE D\'ACOMPTE') ? 'MONTANT ACOMPTE' : 'TOTAL'}
+                          </td>
+                          <td className="total-value" style={{
+                            textAlign: 'right',
+                            fontWeight: 'bold',
+                            borderTop: '2px solid #444',
+                            borderBottom: '2px solid #444',
+                            fontSize: '12px',
+                            padding: '8px 6px'
+                          }}>{formatMontant(total)} €</td>
+                        </tr>
+                        {/* Afficher le reste à payer pour les factures d'acompte */}
+                        {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('- Montant restant à payer:') && (
+                          (() => {
+                            const montantRestantMatch = notes.match(/- Montant restant à payer: ([\d,]+\.?\d*) €/);
+                            const montantRestant = montantRestantMatch ? parseFloat(montantRestantMatch[1].replace(',', '')) : null;
+                            
+                            return montantRestant ? (
+                              <tr>
+                                <td colSpan={2}></td>
+                                <td style={{ 
+                                  fontWeight: 'bold', 
+                                  backgroundColor: '#3b82f6',
+                                  color: '#ffffff',
+                                  fontSize: '12px',
+                                  padding: '8px 6px',
+                                  textAlign: 'right',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  RESTE À PAYER
+                                </td>
+                                <td style={{ 
+                                  fontWeight: 'bold',
+                                  backgroundColor: '#3b82f6',
+                                  color: '#ffffff',
+                                  fontSize: '12px',
+                                  padding: '8px 6px',
+                                  textAlign: 'right'
+                                }}>
+                                  {formatMontant(montantRestant)} €
+                                </td>
+                              </tr>
+                            ) : null;
+                          })()
+                        )}
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+                
+                {/* Legal notice sur la dernière page */}
+                {pageIndex === chunks.length - 1 && (
+                  <div className="legal-notice">
+                    {type === 'devis' && (
+                      <div>Devis à retourner daté et signé avec la mention &quot;bon pour accord&quot;</div>
+                    )}
+                    {type === 'facture' && (
+                      <div>Merci pour votre confiance</div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Numéro de page */}
+                {chunks.length > 1 && (
+                  <div className="page-number">
+                    Page {pageIndex + 1} / {chunks.length}
+                  </div>
+                )}
+              </div>
+            ));
+          })()
         )}
 
 
 
 
 
-        <div className="legal-notice">
-          {type === 'devis' && (
-            <div>Devis à retourner daté et signé avec la mention &quot;bon pour accord&quot;</div>
-          )}
-          {type === 'facture' && (
-            <div>Merci pour votre confiance</div>
-          )}
-          {type === 'paiement' && (
+        {/* Legal notice intégré dans la pagination pour les documents avec tableaux */}
+        {type === 'paiement' && (
+          <div className="legal-notice">
             <div>Ce document confirme la réception du paiement et sert de reçu</div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
