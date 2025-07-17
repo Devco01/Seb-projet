@@ -4,11 +4,10 @@ import { z } from "zod";
 import fs from "fs";
 import path from "path";
 
-// Schéma de validation avec les champs obligatoires
+// Schéma de validation avec les champs obligatoires (selon le schéma Prisma)
 const ParametresSchema = z.object({
   companyName: z.string().min(1, "Le nom de l'entreprise est requis"),
   email: z.string().email("Email invalide").min(1, "L'email est requis"),
-  paymentDelay: z.number().default(30),
   prefixeDevis: z.string().default("DEV-"),
   prefixeFacture: z.string().default("FACT-"),
   // Champs optionnels
@@ -17,8 +16,6 @@ const ParametresSchema = z.object({
   city: z.string().optional(),
   phone: z.string().optional(),
   siret: z.string().optional(),
-  mentionsLegalesDevis: z.string().optional(),
-  mentionsLegalesFacture: z.string().optional(),
   conditionsPaiement: z.string().optional(),
 });
 
@@ -39,7 +36,7 @@ export async function GET() {
   console.log("[API] GET /api/parametres - Début");
   try {
     // Rechercher les paramètres dans la base de données
-    const parametres = await prisma.parametres.findFirst();
+    const parametres = await prisma.parametres.findFirst() as any;
     console.log("[API] Paramètres trouvés:", parametres ? "oui" : "non");
 
     if (!parametres) {
@@ -74,7 +71,6 @@ export async function POST(request: NextRequest) {
     const validationData = {
       companyName: String(data.companyName || ""),
       email: String(data.email || ""),
-      paymentDelay: parseInt(String(data.paymentDelay || "30")),
       prefixeDevis: String(data.prefixeDevis || "DEV-"),
       prefixeFacture: String(data.prefixeFacture || "FACT-"),
       // Champs optionnels avec valeurs par défaut vides
@@ -83,8 +79,6 @@ export async function POST(request: NextRequest) {
       city: String(data.city || ""),
       phone: String(data.phone || ""),
       siret: String(data.siret || ""),
-      mentionsLegalesDevis: String(data.mentionsLegalesDevis || ""),
-      mentionsLegalesFacture: String(data.mentionsLegalesFacture || ""),
       conditionsPaiement: String(data.conditionsPaiement || ""),
     };
 
@@ -123,29 +117,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si des paramètres existent déjà
-    const existingParametres = await prisma.parametres.findFirst();
+    const existingParametres = await prisma.parametres.findFirst() as any;
     console.log("[API] Paramètres existants:", existingParametres ? "oui" : "non");
 
-    // Créer un objet prismaData avec tous les champs
-    const prismaData = {
+    // Créer un objet prismaData avec tous les champs (utiliser les vrais noms de la base de données)
+    const prismaData: any = {
       companyName: validationData.companyName,
       email: validationData.email,
-      paymentDelay: validationData.paymentDelay,
-      prefixeDevis: validationData.prefixeDevis,
-      prefixeFacture: validationData.prefixeFacture,
+      phone: validationData.phone,
       address: validationData.address,
       zipCode: validationData.zipCode,
       city: validationData.city,
-      phone: validationData.phone,
       siret: validationData.siret,
-      mentionsLegalesDevis: validationData.mentionsLegalesDevis || null,
-      mentionsLegalesFacture: validationData.mentionsLegalesFacture || null,
+      prefixeDevis: validationData.prefixeDevis,
+      prefixeFacture: validationData.prefixeFacture,
       conditionsPaiement: validationData.conditionsPaiement || null,
     };
 
     // Ajouter le logo s'il est présent
     if (logoUrl) {
-      // @ts-expect-error - Le champ logoUrl existe dans le schéma Prisma mais TypeScript ne le reconnaît pas
       prismaData.logoUrl = logoUrl;
     }
 
