@@ -171,10 +171,52 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
   const nombreAcomptesRestants = Math.max(0, 4 - acomptesExistants.length);
 
   // Fonction pour convertir le devis en facture
-  const handleConvertToInvoice = () => {
+  const handleConvertToInvoice = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir convertir ce devis en facture ?')) {
-      alert('Devis converti en facture avec succès !');
-      router.push('/factures');
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/devis/${params.id}/convertir`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const responseText = await response.text();
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          throw new Error(`Réponse invalide du serveur: ${responseText}`);
+        }
+
+        if (response.ok) {
+          toast.success('Devis converti en facture avec succès !');
+          console.log('Facture créée:', data);
+          
+          // Rediriger vers la facture créée
+          if (data.factureId) {
+            router.push(`/factures/${data.factureId}`);
+          } else {
+            router.push('/factures');
+          }
+        } else {
+          console.error('Erreur lors de la conversion:', data);
+          toast.error(data.message || 'Erreur lors de la conversion du devis');
+          
+          // Si le devis a déjà été converti, rediriger vers la facture existante
+          if (data.factureId && data.message?.includes('déjà été converti')) {
+            setTimeout(() => {
+              router.push(`/factures/${data.factureId}`);
+            }, 2000);
+          }
+        }
+      } catch (error) {
+        console.error('Exception lors de la conversion:', error);
+        toast.error(`Erreur: ${error instanceof Error ? error.message : 'Une erreur inconnue est survenue'}`);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -425,9 +467,11 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
             </button>
             <button 
               onClick={handleConvertToInvoice}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center"
+              disabled={isLoading}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center disabled:opacity-50"
             >
-              <FaExchangeAlt className="mr-2" /> Convertir en facture
+              {isLoading ? <FaSpinner className="animate-spin mr-2" /> : <FaExchangeAlt className="mr-2" />}
+              Convertir en facture
             </button>
             <button 
               onClick={handleDelete}
