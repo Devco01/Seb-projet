@@ -6,8 +6,16 @@ export async function GET() {
   try {
     console.log('Tentative de récupération des clients...');
     
-    // Récupérer tous les clients sans création de clients fictifs
+    // Récupérer tous les clients avec les compteurs de devis et factures
     const clients = await prisma.client.findMany({
+      include: {
+        _count: {
+          select: {
+            devis: true,
+            factures: true
+          }
+        }
+      },
       orderBy: {
         nom: 'asc',
       },

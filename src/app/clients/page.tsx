@@ -55,14 +55,18 @@ export default function Clients() {
       
       const data = await response.json();
       console.log('Clients récupérés:', data);
+      console.log('Premier client avec compteurs:', data[0]);
       
-      // Formater les données
-      const formattedClients = Array.isArray(data) ? data.map((client: Client) => ({
+      // Formater les données avec les vrais compteurs
+      const formattedClients = Array.isArray(data) ? data.map((client: any) => ({
         ...client,
-        nbDevis: 0, // Par défaut
-        nbFactures: 0, // Par défaut
+        nbDevis: client._count?.devis || 0,
+        nbFactures: client._count?.factures || 0,
         createdAt: client.createdAt ? new Date(client.createdAt).toLocaleDateString('fr-FR') : 'N/A'
       })) : [];
+      
+      console.log('Clients formatés:', formattedClients);
+      console.log('Total devis calculé:', formattedClients.reduce((sum, client) => sum + (client.nbDevis || 0), 0));
       
       setClientsData(formattedClients);
       setClients(formattedClients);
