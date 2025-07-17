@@ -267,7 +267,7 @@ function DevisFormContent() {
   }
 
   return (
-    <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
+    <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto min-h-screen overflow-y-auto">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">{pageTitle}</h1>
@@ -304,6 +304,18 @@ function DevisFormContent() {
       )}
 
       <div className="print:hidden">
+        {/* Message d'aide */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-medium text-blue-800 mb-2">💡 Comment créer votre devis</h3>
+          <ul className="text-sm text-blue-700 space-y-1">
+            <li>• Sélectionnez votre client dans la liste déroulante</li>
+            <li>• Ajoutez autant de lignes que nécessaire avec le bouton "Ajouter une ligne"</li>
+            <li>• Chaque ligne peut contenir une description, quantité et prix unitaire</li>
+            <li>• Le total se calcule automatiquement</li>
+            <li>• Vous pouvez ajouter des conditions et des notes en bas du formulaire</li>
+          </ul>
+        </div>
+
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
@@ -366,7 +378,7 @@ function DevisFormContent() {
           
           {lignes.map((ligne, index) => (
             <div key={index} className="grid grid-cols-12 gap-2 mb-4 items-center">
-              <div className="col-span-6">
+              <div className="col-span-5">
                 <label className={`block text-gray-700 text-sm mb-1 ${index === 0 ? 'font-medium' : 'sr-only'}`}>
                   Description
                 </label>
@@ -407,7 +419,7 @@ function DevisFormContent() {
                   required
                 />
               </div>
-              <div className="col-span-1">
+              <div className="col-span-2">
                 <label className={`block text-gray-700 text-sm mb-1 ${index === 0 ? 'font-medium' : 'sr-only'}`}>
                   Total (€)
                 </label>
@@ -418,15 +430,33 @@ function DevisFormContent() {
                   readOnly
                 />
               </div>
-              <div className="col-span-1 flex items-center justify-center">
-                <button
-                  type="button"
-                  onClick={() => handleSupprimerLigne(index)}
-                  className={`text-red-500 p-2 rounded-full hover:bg-red-100 ${lignes.length === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={lignes.length === 1}
-                >
-                  <FaTrash />
-                </button>
+              <div className="col-span-1 flex items-center justify-center space-x-1">
+                {index === 0 && (
+                  <div className="w-full text-center mb-1">
+                    <label className="block text-gray-700 text-sm font-medium">
+                      Actions
+                    </label>
+                  </div>
+                )}
+                <div className={`flex space-x-1 ${index === 0 ? 'mt-1' : ''}`}>
+                  <button
+                    type="button"
+                    onClick={handleAjouterLigne}
+                    className="text-blue-500 p-2 rounded-full hover:bg-blue-100"
+                    title="Ajouter une ligne après celle-ci"
+                  >
+                    <FaPlus />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSupprimerLigne(index)}
+                    className={`text-red-500 p-2 rounded-full hover:bg-red-100 ${lignes.length === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={lignes.length === 1}
+                    title={lignes.length === 1 ? 'Impossible de supprimer la dernière ligne' : 'Supprimer cette ligne'}
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -435,10 +465,13 @@ function DevisFormContent() {
             <button
               type="button"
               onClick={handleAjouterLigne}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg flex items-center text-sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg flex items-center font-medium shadow-md transition-colors"
             >
               <FaPlus className="mr-2" /> Ajouter une ligne
             </button>
+            <p className="text-sm text-gray-500 mt-2">
+              Vous pouvez ajouter autant de lignes que nécessaire pour votre devis
+            </p>
           </div>
           
           <div className="flex flex-col md:flex-row md:justify-between mb-6">
@@ -478,13 +511,24 @@ function DevisFormContent() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Nombre de lignes:</span>
-                    <span>{lignes.length}</span>
+                    <span className="font-medium text-blue-600">{lignes.length}</span>
                   </div>
                   
-                  <div className="flex justify-between font-bold">
-                    <span>Total:</span>
-                    <span>{lignes.reduce((sum, ligne) => sum + ligne.total, 0).toFixed(2)} €</span>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Total des quantités:</span>
+                    <span>{lignes.reduce((sum, ligne) => sum + ligne.quantite, 0)}</span>
                   </div>
+                  
+                  <hr className="my-2" />
+                  
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total:</span>
+                    <span className="text-blue-600">{lignes.reduce((sum, ligne) => sum + ligne.total, 0).toFixed(2)} €</span>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 mt-2">
+                    Cliquez sur "Ajouter une ligne" pour plus d'entrées
+                  </p>
                 </div>
               </div>
             </div>

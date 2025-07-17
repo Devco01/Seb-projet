@@ -50,6 +50,75 @@ export default function RootLayout({
             },
           }}
         />
+        <Script id="chromebook-scroll-fix" strategy="afterInteractive">
+          {`
+            // Détection et correction du scroll pour Chromebook
+            function fixChromebookScroll() {
+              const isChromebook = navigator.userAgent.includes('CrOS');
+              const isChrome = navigator.userAgent.includes('Chrome');
+              
+              if (isChromebook || isChrome) {
+                // Force les propriétés de scroll sur les éléments principaux
+                document.documentElement.style.overflowY = 'auto';
+                document.documentElement.style.height = 'auto';
+                document.documentElement.style.minHeight = '100%';
+                
+                document.body.style.overflowY = 'auto';
+                document.body.style.height = 'auto';
+                document.body.style.minHeight = '100vh';
+                document.body.style.position = 'relative';
+                
+                // Correction pour les conteneurs Next.js
+                const nextRoot = document.getElementById('__next');
+                if (nextRoot) {
+                  nextRoot.style.overflowY = 'auto';
+                  nextRoot.style.height = 'auto';
+                  nextRoot.style.minHeight = '100vh';
+                }
+                
+                // Correction pour les éléments main
+                const mains = document.querySelectorAll('main');
+                mains.forEach(main => {
+                  main.style.overflowY = 'auto';
+                  main.style.height = 'auto';
+                  main.style.minHeight = '100vh';
+                });
+                
+                console.log('Corrections scroll Chromebook appliquées');
+              }
+            }
+            
+            // Appliquer les corrections
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', fixChromebookScroll);
+            } else {
+              fixChromebookScroll();
+            }
+            
+            // Réappliquer après navigation (pour Next.js)
+            if (typeof window !== 'undefined') {
+              window.addEventListener('popstate', fixChromebookScroll);
+              
+              // Observer les changements de DOM pour Next.js
+              const observer = new MutationObserver(function(mutations) {
+                let shouldFix = false;
+                mutations.forEach(function(mutation) {
+                  if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                    shouldFix = true;
+                  }
+                });
+                if (shouldFix) {
+                  setTimeout(fixChromebookScroll, 100);
+                }
+              });
+              
+              observer.observe(document.body, {
+                childList: true,
+                subtree: true
+              });
+            }
+          `}
+        </Script>
         <Script id="print-handler" strategy="afterInteractive">
           {`
             window.preparePrint = function() {
