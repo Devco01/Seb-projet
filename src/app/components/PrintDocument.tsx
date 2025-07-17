@@ -271,6 +271,14 @@ export default function PrintDocument({
       word-wrap: break-word;
       overflow-wrap: break-word;
       hyphens: auto;
+      vertical-align: top;
+      line-height: 1.4;
+    }
+    .table td.description {
+      white-space: normal;
+      word-break: break-word;
+      max-width: 0;
+      min-width: 200px;
     }
     .table td.text-right {
       text-align: right;
@@ -279,17 +287,23 @@ export default function PrintDocument({
       text-align: center;
     }
     .table tfoot td {
-      padding: 8px;
+      padding: 8px 6px;
+      font-size: 12px;
+      vertical-align: middle;
     }
     .table tfoot .total-row {
       text-align: right;
       font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .table tfoot .total-value {
       text-align: right;
       font-weight: bold;
       border-top: 2px solid #444;
       border-bottom: 2px solid #444;
+      white-space: nowrap;
     }
     .payment-receipt {
       text-align: center;
@@ -449,17 +463,17 @@ export default function PrintDocument({
           <table className="table">
             <thead>
               <tr>
-                <th style={{ width: '50%' }}>Description</th>
-                <th className="text-center">Quantité</th>
-                <th className="text-center">Unité</th>
-                <th className="text-right">Prix unitaire</th>
-                <th className="text-right">Total</th>
+                <th style={{ width: '45%' }}>Description</th>
+                <th className="text-center" style={{ width: '12%' }}>Qté</th>
+                <th className="text-center" style={{ width: '10%' }}>Unité</th>
+                <th className="text-right" style={{ width: '16%' }}>Prix unit.</th>
+                <th className="text-right" style={{ width: '17%' }}>Total</th>
               </tr>
             </thead>
             <tbody>
               {lines.map((line, index) => (
                 <tr key={index}>
-                  <td>{line.description}</td>
+                  <td className="description">{line.description}</td>
                   <td className="text-center">{line.quantite}</td>
                   <td className="text-center">{line.unite || '-'}</td>
                   <td className="text-right">{formatMontant(line.prixUnitaire)} €</td>
@@ -479,9 +493,26 @@ export default function PrintDocument({
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={3}></td>
-                <td className="total-row">{notes && notes.includes('FACTURE D\'ACOMPTE') ? 'MONTANT DE CET ACOMPTE' : 'TOTAL'}</td>
-                <td className="total-value">{formatMontant(total)} €</td>
+                <td colSpan={3} style={{ borderTop: '1px solid #ddd' }}></td>
+                <td className="total-row" style={{ 
+                  textAlign: 'right',
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  padding: '8px 6px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {notes && notes.includes('FACTURE D\'ACOMPTE') ? 'MONTANT ACOMPTE' : 'TOTAL'}
+                </td>
+                <td className="total-value" style={{
+                  textAlign: 'right',
+                  fontWeight: 'bold',
+                  borderTop: '2px solid #444',
+                  borderBottom: '2px solid #444',
+                  fontSize: '12px',
+                  padding: '8px 6px'
+                }}>{formatMontant(total)} €</td>
               </tr>
               {/* Afficher le reste à payer pour les factures d'acompte */}
               {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('- Montant restant à payer:') && (
@@ -490,14 +521,16 @@ export default function PrintDocument({
                   const montantRestant = montantRestantMatch ? parseFloat(montantRestantMatch[1].replace(',', '')) : null;
                   
                   return montantRestant ? (
-                    <tr style={{ backgroundColor: '#dbeafe' }}>
+                    <tr>
                       <td colSpan={3}></td>
                       <td style={{ 
                         fontWeight: 'bold', 
                         backgroundColor: '#3b82f6',
                         color: '#ffffff',
-                        fontSize: '16px',
-                        padding: '10px'
+                        fontSize: '12px',
+                        padding: '8px 6px',
+                        textAlign: 'right',
+                        whiteSpace: 'nowrap'
                       }}>
                         RESTE À PAYER
                       </td>
@@ -505,8 +538,8 @@ export default function PrintDocument({
                         fontWeight: 'bold',
                         backgroundColor: '#3b82f6',
                         color: '#ffffff',
-                        fontSize: '16px',
-                        padding: '10px',
+                        fontSize: '12px',
+                        padding: '8px 6px',
                         textAlign: 'right'
                       }}>
                         {formatMontant(montantRestant)} €
