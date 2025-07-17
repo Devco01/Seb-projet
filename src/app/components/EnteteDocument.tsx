@@ -90,7 +90,7 @@ export default function EnteteDocument({ title, subtitle, showLegalInfo = true }
           <img 
             src={logoPath} 
             alt={`Logo ${nomEntreprise}`} 
-            className="h-16 object-contain max-w-full"
+            className="h-16 max-w-xs object-contain print:max-w-full"
           />
         ) : (
           <h3 className="text-xl font-bold text-blue-800">{nomEntreprise}</h3>
