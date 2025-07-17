@@ -25,13 +25,19 @@ export interface PrintDocumentProps {
 }
 
 interface ParametresEntreprise {
-  companyName: string;
-  address: string;
-  zipCode: string;
-  city: string;
+  nomEntreprise?: string;
+  companyName?: string;
+  adresse?: string;
+  address?: string;
+  codePostal?: string;
+  zipCode?: string;
+  ville?: string;
+  city?: string;
+  telephone?: string;
   phone?: string;
   email: string;
   siret?: string;
+  logo?: string;
   logoUrl?: string;
 }
 
@@ -97,16 +103,29 @@ export default function PrintDocument({
 
   // Paramètres par défaut si rien n'est configuré
   const defaultParams: ParametresEntreprise = {
+    nomEntreprise: 'Mon Entreprise',
     companyName: 'Mon Entreprise',
+    adresse: '123 Rue Example',
     address: '123 Rue Example',
+    codePostal: '75000',
     zipCode: '75000',
+    ville: 'Paris',
     city: 'Paris',
     email: 'contact@exemple.fr',
+    telephone: '01 23 45 67 89',
     phone: '01 23 45 67 89',
     siret: '000 000 000 00000'
   };
 
   const entreprise = parametres || defaultParams;
+  
+  // Normaliser les champs pour compatibilité
+  const nomEntreprise = entreprise.nomEntreprise || entreprise.companyName || defaultParams.companyName;
+  const adresse = entreprise.adresse || entreprise.address || defaultParams.address;
+  const codePostal = entreprise.codePostal || entreprise.zipCode || defaultParams.zipCode;
+  const ville = entreprise.ville || entreprise.city || defaultParams.city;
+  const telephone = entreprise.telephone || entreprise.phone || defaultParams.phone;
+  const logoPath = entreprise.logo || entreprise.logoUrl;
 
   const documentType = type === 'devis' ? 'DEVIS' : type === 'facture' ? 'FACTURE' : 'REÇU DE PAIEMENT';
   const documentTitle = type === 'devis' ? 'DEVIS N°' : type === 'facture' ? 'FACTURE N°' : 'REÇU N°';
@@ -140,7 +159,8 @@ export default function PrintDocument({
       display: block !important;
       width: 100%;
       background-color: white;
-      padding: 10mm;
+      padding: 15mm;
+      box-sizing: border-box;
     }
     .container {
       max-width: 100%;
@@ -149,45 +169,78 @@ export default function PrintDocument({
     .header {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 15px;
+      align-items: flex-start;
+      margin-bottom: 20px;
       border-bottom: 2px solid #ddd;
       padding-bottom: 15px;
+      min-height: 100px;
     }
     .company-logo {
       flex: 1;
+      max-width: 200px;
+    }
+    .company-logo img {
+      max-width: 100%;
+      max-height: 100px;
+      object-fit: contain;
     }
     .document-title {
       flex: 1;
       text-align: center;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .company-info {
       flex: 1;
       text-align: right;
       font-size: 11px;
+      line-height: 1.4;
+      max-width: 200px;
     }
     .document-info {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 15px;
+      align-items: flex-start;
+      margin-bottom: 25px;
+      gap: 20px;
+    }
+    .document-left {
+      flex: 1;
+      max-width: 300px;
     }
     .document-ref {
-      border: 1px solid #ddd;
+      border: 2px solid #1e40af;
+      background-color: #f8fafc;
       display: inline-block;
-      padding: 5px 10px;
-      margin-bottom: 10px;
+      padding: 8px 15px;
+      margin-bottom: 15px;
       font-weight: bold;
+      font-size: 14px;
+      border-radius: 4px;
     }
     .client-info {
+      flex: 1;
       text-align: right;
+      max-width: 300px;
     }
     .client-title {
       font-weight: bold;
-      margin-bottom: 5px;
-      border-bottom: 1px solid #444;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #1e40af;
       display: inline-block;
-      padding-bottom: 2px;
+      padding-bottom: 4px;
+      font-size: 12px;
+      color: #1e40af;
+    }
+    .client-details {
+      background-color: #f8fafc;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      line-height: 1.5;
     }
     .table {
       width: 100%;
@@ -261,16 +314,26 @@ export default function PrintDocument({
       <div className="printOnly container">
         <div className="header">
           <div className="company-logo">
-            {entreprise.logoUrl ? (
-              <Image
-                src={entreprise.logoUrl}
-                alt={`Logo ${entreprise.companyName}`}
-                width={200}
-                height={80}
-                style={{ maxHeight: '80px', objectFit: 'contain' }}
+            {logoPath ? (
+              <img
+                src={logoPath}
+                alt={`Logo ${nomEntreprise}`}
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '100px', 
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
               />
             ) : (
-              <div style={{ fontSize: '20px', fontWeight: 'bold' }}>{entreprise.companyName}</div>
+              <div style={{ 
+                fontSize: '18px', 
+                fontWeight: 'bold', 
+                color: '#1e40af',
+                padding: '10px 0'
+              }}>
+                {nomEntreprise}
+              </div>
             )}
           </div>
           
@@ -279,30 +342,82 @@ export default function PrintDocument({
           </div>
           
           <div className="company-info">
-            <div style={{ fontWeight: 'semibold' }}>{entreprise.companyName}</div>
-            <div>{entreprise.address}</div>
-            <div>{entreprise.zipCode} {entreprise.city}</div>
-            <div>Tél: {entreprise.phone}</div>
-            <div>Email: {entreprise.email}</div>
-            {entreprise.siret && <div>SIRET: {entreprise.siret}</div>}
-            <div style={{ marginTop: '5px', fontWeight: 'medium' }}>Auto-entrepreneur</div>
+            <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '12px' }}>
+              {nomEntreprise}
+            </div>
+            <div style={{ marginBottom: '2px' }}>{adresse}</div>
+            <div style={{ marginBottom: '8px' }}>{codePostal} {ville}</div>
+            {telephone && <div style={{ marginBottom: '2px' }}>Tél: {telephone}</div>}
+            <div style={{ marginBottom: '2px' }}>Email: {entreprise.email}</div>
+            {entreprise.siret && <div style={{ marginBottom: '8px' }}>SIRET: {entreprise.siret}</div>}
+            <div style={{ 
+              marginTop: '8px', 
+              fontWeight: 'bold',
+              fontSize: '10px',
+              color: '#666',
+              padding: '4px 8px',
+              border: '1px solid #ddd',
+              borderRadius: '3px',
+              display: 'inline-block'
+            }}>
+              Auto-entrepreneur
+            </div>
           </div>
         </div>
 
         <div className="document-info">
-          <div>
+          <div className="document-left">
             <div className="document-ref">{documentTitle} {reference}</div>
-            <div><span style={{ fontWeight: 'semibold' }}>Date:</span> {formatDateFr(date)}</div>
-            {echeance && <div><span style={{ fontWeight: 'semibold' }}>Échéance:</span> {formatDateFr(echeance)}</div>}
+            <div style={{ 
+              fontSize: '12px', 
+              marginBottom: '8px',
+              lineHeight: '1.5'
+            }}>
+              <div style={{ marginBottom: '4px' }}>
+                <span style={{ fontWeight: 'bold' }}>Date :</span> {formatDateFr(date)}
+              </div>
+              {echeance && (
+                <div>
+                  <span style={{ fontWeight: 'bold' }}>
+                    {type === 'devis' ? 'Validité :' : 'Échéance :'}
+                  </span> {formatDateFr(echeance)}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="client-info">
             <div className="client-title">CLIENT</div>
-            <div style={{ fontWeight: 'semibold' }}>{clientName}</div>
-            {clientAddress && <div>{clientAddress}</div>}
-            {clientZipCity && <div>{clientZipCity}</div>}
-            {clientEmail && <div>Email: {clientEmail}</div>}
-            {clientPhone && <div>Tél: {clientPhone}</div>}
+            <div className="client-details">
+              <div style={{ 
+                fontWeight: 'bold', 
+                fontSize: '13px', 
+                marginBottom: '6px',
+                color: '#1e40af'
+              }}>
+                {clientName}
+              </div>
+              {clientAddress && (
+                <div style={{ marginBottom: '3px', fontSize: '11px' }}>
+                  {clientAddress}
+                </div>
+              )}
+              {clientZipCity && (
+                <div style={{ marginBottom: '6px', fontSize: '11px' }}>
+                  {clientZipCity}
+                </div>
+              )}
+              {clientEmail && (
+                <div style={{ marginBottom: '3px', fontSize: '11px' }}>
+                  Email: {clientEmail}
+                </div>
+              )}
+              {clientPhone && (
+                <div style={{ fontSize: '11px' }}>
+                  Tél: {clientPhone}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

@@ -400,6 +400,17 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
           </div>
         )}
 
+        {/* Message d'aide pour la configuration */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 print:hidden">
+          <h3 className="text-lg font-medium text-amber-800 mb-2">📄 Améliorer la prévisualisation</h3>
+          <ul className="text-sm text-amber-700 space-y-1">
+            <li>• Pour afficher votre logo sur les devis, allez dans <strong>Paramètres → Logo de l'entreprise</strong></li>
+            <li>• Configurez vos informations d'entreprise dans <strong>Paramètres → Informations générales</strong></li>
+            <li>• Vérifiez l'aperçu avec le bouton <strong>&quot;Imprimer&quot;</strong> ci-dessous</li>
+            <li>• Les devis s'affichent en format professionnel avec votre identité visuelle</li>
+          </ul>
+        </div>
+
         {/* Actions */}
         <div className="bg-white rounded-lg shadow-md p-6 print:hidden">
           <div className="flex flex-wrap gap-2 mb-4">

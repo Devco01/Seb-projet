@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import cloudinary from '@/lib/cloudinary';
-import { Readable } from 'stream';
+import fs from 'fs';
+import path from 'path';
 
 // POST /api/parametres/logo - Télécharger un logo
 export async function POST(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { message: 'Aucun fichier fourni' },
+        { error: 'Aucun fichier fourni' },
         { status: 400 }
       );
     }
@@ -19,99 +19,92 @@ export async function POST(request: NextRequest) {
     // Vérifier le type de fichier
     if (!file.type.startsWith('image/')) {
       return NextResponse.json(
-        { message: 'Le fichier doit être une image' },
+        { error: 'Le fichier doit être une image' },
         { status: 400 }
       );
     }
 
-    // Convertir le fichier en buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    // Uploader l'image sur Cloudinary
-    const uploadOptions = {
-      folder: 'facturepro/logos',
-      public_id: `logo_${Date.now()}`,
-      resource_type: 'image' as 'image' | 'video' | 'raw' | 'auto'
-    };
-
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        uploadOptions,
-        (error, result) => {
-          if (error) {
-            console.error('Erreur Cloudinary:', error);
-            reject(error);
-            return;
-          }
-          resolve(result);
-        }
-      );
-
-      // Créer un stream lisible à partir du buffer
-      const readableInstanceStream = new Readable({
-        read() {
-          this.push(buffer);
-          this.push(null);
-        }
-      });
-
-      readableInstanceStream.pipe(uploadStream);
-    });
-
-    // @ts-expect-error - Type incomplet pour le résultat de Cloudinary
-    const logoUrl = result?.secure_url;
-    
-    if (!logoUrl) {
+    // Vérifier la taille du fichier (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json(
-        { message: 'Erreur lors de l\'upload sur Cloudinary' },
-        { status: 500 }
+        { error: 'Le fichier est trop volumineux (max 2MB)' },
+        { status: 400 }
       );
     }
 
-    console.log('Logo uploadé avec succès:', logoUrl);
-    
-    // Mettre à jour le champ logo dans les paramètres
     try {
-      const parametres = await prisma.parametres.findFirst();
+      // Convertir le fichier en buffer
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
       
-      if (parametres) {
-        await prisma.parametres.update({
-          where: { id: parametres.id },
-          data: { logoUrl: logoUrl }
-        });
-      } else {
-        await prisma.parametres.create({
-          data: {
-            companyName: 'Mon Entreprise',
-            address: '1 rue de l\'exemple',
-            zipCode: '75000',
-            city: 'Paris',
-            email: 'contact@monentreprise.fr',
-            siret: '00000000000000',
-            conditionsPaiement: 'Paiement à 30 jours',
-            prefixeDevis: 'D-',
-            prefixeFacture: 'F-',
-            logoUrl: logoUrl
-          },
-        });
+      // Créer le répertoire uploads s'il n'existe pas
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
       }
-    } catch (dbError) {
-      console.error('Erreur base de données:', dbError);
+
+      // Générer un nom de fichier unique
+      const fileExtension = file.name.split('.').pop() || 'png';
+      const fileName = `logo_${Date.now()}.${fileExtension}`;
+      const filePath = path.join(uploadDir, fileName);
+      
+      // Sauvegarder le fichier
+      fs.writeFileSync(filePath, buffer);
+      
+      // URL relative pour accès web
+      const logoUrl = `/uploads/${fileName}`;
+      
+      console.log('Logo sauvegardé localement:', logoUrl);
+    
+      // Mettre à jour le champ logo dans les paramètres
+      try {
+        const parametres = await prisma.parametres.findFirst();
+        
+        if (parametres) {
+          await prisma.parametres.update({
+            where: { id: parametres.id },
+            data: { logoUrl: logoUrl } as any
+          });
+        } else {
+          await prisma.parametres.create({
+            data: {
+              companyName: 'Mon Entreprise',
+              address: '1 rue de l\'exemple',
+              zipCode: '75000',
+              city: 'Paris',
+              email: 'contact@monentreprise.fr',
+              phone: '01 23 45 67 89',
+              siret: '00000000000000',
+              conditionsPaiement: 'Paiement à 30 jours',
+              prefixeDevis: 'D-',
+              prefixeFacture: 'F-',
+              logoUrl: logoUrl
+            } as any,
+          });
+        }
+      } catch (dbError) {
+        console.error('Erreur base de données:', dbError);
+        return NextResponse.json(
+          { error: 'Erreur lors de la mise à jour des paramètres' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ 
+        message: 'Logo téléchargé avec succès',
+        logoUrl: logoUrl
+      });
+    } catch (uploadError) {
+      console.error('Erreur lors de l\'upload du logo:', uploadError);
       return NextResponse.json(
-        { message: 'Erreur lors de la mise à jour des paramètres' },
+        { error: 'Erreur lors de l\'upload du logo' },
         { status: 500 }
       );
     }
-
-    return NextResponse.json({ 
-      message: 'Logo téléchargé avec succès',
-      logoUrl: logoUrl
-    });
   } catch (error) {
     console.error('Erreur lors du téléchargement du logo:', error);
     return NextResponse.json(
-      { message: 'Erreur lors du téléchargement du logo' },
+      { error: 'Erreur lors du téléchargement du logo' },
       { status: 500 }
     );
   }
@@ -121,26 +114,27 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   try {
     // Récupérer les paramètres actuels
-    const parametres = await prisma.parametres.findFirst();
+    const parametres = await prisma.parametres.findFirst() as any;
     
     if (!parametres || !parametres.logoUrl) {
       return NextResponse.json(
-        { message: 'Aucun logo trouvé' },
+        { error: 'Aucun logo trouvé' },
         { status: 404 }
       );
     }
 
-    // Supprimer l'image sur Cloudinary
-    if (parametres.logoUrl.includes('cloudinary')) {
+    // Supprimer le fichier local s'il existe
+    if (parametres.logoUrl && parametres.logoUrl.startsWith('/uploads/')) {
       try {
-        // Extraire l'ID public
-        const parts = parametres.logoUrl.split('/');
-        const filename = parts[parts.length - 1];
-        const publicId = `facturepro/logos/${filename.split('.')[0]}`;
+        const filename = parametres.logoUrl.replace('/uploads/', '');
+        const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
         
-        await cloudinary.uploader.destroy(publicId);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log('Fichier logo supprimé:', filePath);
+        }
       } catch (deleteError) {
-        console.error('Erreur lors de la suppression sur Cloudinary:', deleteError);
+        console.error('Erreur lors de la suppression du fichier:', deleteError);
         // On continue même si la suppression échoue
       }
     }
@@ -148,7 +142,7 @@ export async function DELETE() {
     // Mettre à jour la base de données
     await prisma.parametres.update({
       where: { id: parametres.id },
-      data: { logoUrl: null }
+      data: { logoUrl: null } as any
     });
 
     return NextResponse.json({ 
@@ -157,7 +151,7 @@ export async function DELETE() {
   } catch (error) {
     console.error('Erreur lors de la suppression du logo:', error);
     return NextResponse.json(
-      { message: 'Erreur lors de la suppression du logo' },
+      { error: 'Erreur lors de la suppression du logo' },
       { status: 500 }
     );
   }

@@ -44,26 +44,22 @@ export default function Parametres() {
         const data = await response.json();
         console.log('Paramètres chargés avec succès:', data);
         
-        setCompanyName(data.companyName || "");
-        setAddress(data.address || "");
-        setZipCode(data.zipCode || "");
-        setCity(data.city || "");
-        setPhone(data.phone || "");
+        // Utiliser les champs de la vraie base de données
+        setCompanyName(data.companyName || data.nomEntreprise || "");
+        setAddress(data.address || data.adresse || "");
+        setZipCode(data.zipCode || data.codePostal || "");
+        setCity(data.city || data.ville || "");
+        setPhone(data.phone || data.telephone || "");
         setEmail(data.email || "");
         setSiret(data.siret || "");
         
-        // Extraction du délai de paiement
-        if (data.paymentDelay) {
-          setPaymentDelay(String(data.paymentDelay));
-        }
-        
         // Préfixes
-        setPrefixeDevis(data.prefixeDevis || "D-");
-        setPrefixeFacture(data.prefixeFacture || "F-");
+        setPrefixeDevis(data.prefixeDevis || "DEV-");
+        setPrefixeFacture(data.prefixeFacture || "FACT-");
         
-        // Mettre à jour le logo s'il existe
-        if (data.logoUrl) {
-          setLogoUrl(data.logoUrl);
+        // Mettre à jour le logo s'il existe (champ 'logoUrl' de la base de données)
+        if (data.logoUrl || data.logo) {
+          setLogoUrl(data.logoUrl || data.logo);
         } else {
           setLogoUrl("/img/logo-placeholder.png");
         }
@@ -93,7 +89,6 @@ export default function Parametres() {
       formData.append("phone", phone);
       formData.append("email", email);
       formData.append("siret", siret);
-      formData.append("paymentDelay", paymentDelay);
       formData.append("prefixeDevis", prefixeDevis);
       formData.append("prefixeFacture", prefixeFacture);
       formData.append("conditionsPaiement", `Paiement à ${paymentDelay} jours`);
@@ -154,7 +149,9 @@ export default function Parametres() {
         }
       } else {
         const errorData = await response.json();
-        toast.error(errorData.error || "Erreur lors de la mise à jour du logo");
+        const errorMessage = errorData.error || errorData.message || "Erreur lors de la mise à jour du logo";
+        toast.error(errorMessage);
+        console.error('Erreur détaillée:', errorData);
       }
     } catch (error) {
       console.error('Erreur:', error);
@@ -220,6 +217,17 @@ export default function Parametres() {
       <div className="py-4">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-blue-800">Paramètres</h2>
         <p className="text-gray-500 mt-2">Configurez votre application de facturation</p>
+      </div>
+
+      {/* Message d'aide */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 className="text-lg font-medium text-blue-800 mb-2">ℹ️ Configuration de votre entreprise</h3>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• Remplissez au minimum le <strong>nom de l'entreprise</strong> et l'<strong>email</strong></li>
+          <li>• Ajoutez votre logo pour qu'il apparaisse sur vos devis et factures</li>
+          <li>• Ces informations s'afficheront automatiquement sur tous vos documents</li>
+          <li>• Vous pouvez modifier ces paramètres à tout moment</li>
+        </ul>
       </div>
       
       {/* Section informations de l'entreprise */}
