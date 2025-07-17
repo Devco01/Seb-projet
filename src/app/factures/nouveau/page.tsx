@@ -436,8 +436,6 @@ function FactureFormContent() {
         
         <form onSubmit={handleSubmit} className="print:block">
           <div className="print:hidden">
-            <EnteteDocument title="Facture" />
-            
             <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="client">
