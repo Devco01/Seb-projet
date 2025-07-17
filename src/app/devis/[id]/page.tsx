@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 interface DevisLigne {
   description: string;
   quantite: number;
-  unite: string;
+  unite?: string;
   prixUnitaire: number;
   total: number;
 }

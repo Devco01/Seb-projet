@@ -18,7 +18,7 @@ interface DocumentData {
   lines: Array<{
     description: string;
     quantite: number;
-    unite: string;
+    unite?: string;
     prixUnitaire: number;
     total: number;
   }>;
