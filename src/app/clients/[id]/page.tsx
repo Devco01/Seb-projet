@@ -65,8 +65,8 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
         // Adapter les données pour correspondre à notre interface
         const clientData: ClientData = {
           ...data,
-          devis: [], // Pour l'instant, pas de devis
-          factures: [], // Pour l'instant, pas de factures
+          devis: data.devis || [],
+          factures: data.factures || [],
           createdAt: data.createdAt ? new Date(data.createdAt).toISOString() : new Date().toISOString(),
           updatedAt: data.updatedAt ? new Date(data.updatedAt).toISOString() : new Date().toISOString()
         };

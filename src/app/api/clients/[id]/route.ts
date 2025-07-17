@@ -23,7 +23,15 @@ export async function GET(
     }
     
     const client = await prisma.client.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        devis: {
+          orderBy: { createdAt: 'desc' }
+        },
+        factures: {
+          orderBy: { createdAt: 'desc' }
+        }
+      }
     });
     
     if (!client) {
