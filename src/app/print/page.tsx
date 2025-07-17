@@ -50,11 +50,13 @@ function PrintContent() {
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const [printTriggered, setPrintTriggered] = useState(false);
 
-  // Styles CSS pour optimiser l'impression
+  // Styles CSS optimisés pour Chromebook
   const printStyles = `
     @page {
       size: A4;
-      margin: 0mm;
+      margin: 12mm;
+      marks: none;
+      bleed: 0;
     }
     @media print {
       html, body {
@@ -62,24 +64,47 @@ function PrintContent() {
         height: 297mm;
         margin: 0;
         padding: 0;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        font-family: "Arial", "Helvetica", sans-serif !important;
+        font-size: 12pt;
+        line-height: 1.4;
       }
       * {
         box-sizing: border-box;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
       .print-container {
         width: 100% !important;
+        max-width: 186mm !important;
         overflow: visible !important;
-        padding: 15mm;
+        margin: 0 auto;
+        padding: 0;
+        background: white;
+      }
+      img {
+        max-width: 100% !important;
+        height: auto !important;
+        image-rendering: -webkit-optimize-contrast;
       }
     }
     .print-container {
       width: 100%;
-      max-width: 210mm;
+      max-width: 186mm;
       margin: 0 auto;
       background: white;
-      min-height: 297mm;
+      min-height: 270mm;
+      padding: 5mm;
+      box-sizing: border-box;
+    }
+    @media screen {
+      body {
+        background: #f5f5f5;
+        margin: 0;
+        padding: 20px;
+      }
     }
   `;
 
@@ -140,17 +165,24 @@ function PrintContent() {
           setDocumentData(data as DocumentData);
           
           // Démarrer l'impression automatiquement après le chargement
+          // Délai optimisé pour Chromebook
           setTimeout(() => {
             if (!printTriggered) {
-              console.log('Lancement de l\'impression');
+              console.log('Lancement de l\'impression (optimisé Chromebook)');
               setPrintTriggered(true);
               
               // Appliquer la suppression de l'URL avant d'imprimer
               hideUrlForPrinting();
               
-              window.print();
+              // Forcer le focus sur la fenêtre avant impression (important pour Chromebook)
+              window.focus();
+              
+              // Méthode d'impression compatible Chromebook
+              requestAnimationFrame(() => {
+                window.print();
+              });
             }
-          }, 2000); // Délai augmenté à 2 secondes pour s'assurer que tout est bien chargé
+          }, 3000); // Délai augmenté à 3 secondes pour Chromebook
         } catch (parseError) {
           console.error('Erreur de parsing JSON:', parseError);
           setDebugInfo(`Erreur de parsing JSON: ${responseText}`);

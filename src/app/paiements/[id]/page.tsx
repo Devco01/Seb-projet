@@ -99,10 +99,25 @@ export default function DetailPaiement({ params }: { params: { id: string } }) {
     }
   };
 
-  // Fonction pour imprimer le paiement
+  // Fonction pour imprimer le paiement (optimisée Chromebook)
   const handlePrint = () => {
-    // Ouvrir la page d'impression dans une nouvelle fenêtre
-    window.open(`/print?type=paiement&id=${params.id}`, '_blank');
+    try {
+      // Méthode d'ouverture compatible Chromebook
+      const printWindow = window.open(`/print?type=paiement&id=${params.id}`, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+      
+      // Vérifier si la fenêtre s'est ouverte (popup non bloqué)
+      if (!printWindow || printWindow.closed || typeof printWindow.closed === 'undefined') {
+        // Fallback : ouvrir dans le même onglet si popup bloqué
+        window.location.href = `/print?type=paiement&id=${params.id}`;
+      } else {
+        // Forcer le focus sur la nouvelle fenêtre
+        printWindow.focus();
+      }
+    } catch (error) {
+      console.error('Erreur ouverture impression:', error);
+      // Fallback sécurisé
+      window.location.href = `/print?type=paiement&id=${params.id}`;
+    }
   };
 
   // Format d'affichage des montants

@@ -315,7 +315,7 @@ main {
   padding: 0.75rem 1.5rem;
 }
 
-/* Styles d'impression */
+/* Styles d'impression optimisés pour Chrome/Chromebook */
 @media print {
   /* Cacher les éléments non imprimables */
   .print\:hidden, 
@@ -337,33 +337,74 @@ main {
     visibility: visible !important;
   }
   
-  /* Configurer la page et supprimer l'URL du navigateur */
+  /* Configuration de page optimisée pour Chrome/Chromebook */
   @page {
     size: A4;
-    margin: 0mm; /* Marges à 0 pour supprimer l'URL du navigateur */
+    margin: 12mm; /* Marges minimales compatibles Chrome */
+    marks: none;
+    bleed: 0;
   }
   
   html {
     height: 100%;
+    font-size: 12pt; /* Taille fixe pour Chrome */
   }
   
-  /* Éviter les sauts de page indésirables */
+  /* Layout optimisé pour Chrome */
   #printable-document .printOnly {
     page-break-inside: avoid;
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: relative; /* Éviter position absolute sur Chrome */
     width: 100%;
-    padding: 15mm; /* Ajout de padding pour compenser les marges à 0 */
+    max-width: 186mm; /* Largeur A4 moins marges */
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
   }
   
-  /* Réinitialiser les styles par défaut */
+  /* Styles spécifiques Chrome/Chromebook */
   body {
     background-color: white !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
     margin: 0;
     padding: 0;
+    font-family: "Arial", "Helvetica", sans-serif !important;
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #000 !important;
+  }
+  
+  /* Forcer les couleurs et contrastes pour Chrome */
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Optimisation des images pour Chromebook */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  /* Éviter les problèmes de pagination sur Chrome */
+  table {
+    page-break-inside: auto !important;
+  }
+  
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+  
+  thead {
+    display: table-header-group !important;
+  }
+  
+  tfoot {
+    display: table-footer-group !important;
   }
 }
