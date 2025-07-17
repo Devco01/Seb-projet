@@ -9,7 +9,7 @@ interface Devis {
   id: number;
   numero: string;
   date: string;
-  montant: number;
+  totalTTC: number;
   statut: string;
 }
 
@@ -17,7 +17,7 @@ interface Facture {
   id: number;
   numero: string;
   date: string;
-  montant: number;
+  totalTTC: number;
   statut: string;
 }
 
@@ -61,6 +61,10 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
         
         const data = await response.json();
         console.log('Client récupéré:', data);
+        console.log('Nombre de devis reçus:', data.devis?.length || 0);
+        console.log('Nombre de factures reçues:', data.factures?.length || 0);
+        console.log('Devis data:', data.devis);
+        console.log('Factures data:', data.factures);
         
         // Adapter les données pour correspondre à notre interface
         const clientData: ClientData = {
@@ -273,7 +277,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                     <tr key={devis.id} className="border-t hover:bg-gray-50">
                       <td className="py-2 px-4">{devis.numero}</td>
                       <td className="py-2 px-4">{new Date(devis.date).toLocaleDateString('fr-FR')}</td>
-                      <td className="py-2 px-4">{devis.montant.toLocaleString('fr-FR')} €</td>
+                      <td className="py-2 px-4">{devis.totalTTC.toLocaleString('fr-FR')} €</td>
                       <td className="py-2 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           devis.statut === 'Accepté' ? 'bg-green-100 text-green-800' :
@@ -315,7 +319,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                     <tr key={facture.id} className="border-t hover:bg-gray-50">
                       <td className="py-2 px-4">{facture.numero}</td>
                       <td className="py-2 px-4">{new Date(facture.date).toLocaleDateString('fr-FR')}</td>
-                      <td className="py-2 px-4">{facture.montant.toLocaleString('fr-FR')} €</td>
+                      <td className="py-2 px-4">{facture.totalTTC.toLocaleString('fr-FR')} €</td>
                       <td className="py-2 px-4">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           facture.statut === 'Payée' ? 'bg-green-100 text-green-800' :
