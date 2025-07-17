@@ -8,7 +8,8 @@ import {
   FaSearch, 
   FaEye,
   FaPaintBrush,
-  FaTrashAlt
+  FaTrashAlt,
+  FaEdit
 } from "react-icons/fa";
 
 interface DevisItem {
@@ -365,6 +366,13 @@ export default function Devis() {
                         title="Voir le détail"
                       >
                         <FaEye />
+                      </Link>
+                      <Link 
+                        href={`/devis/${devis.id}/modifier`}
+                        className="text-amber-600 hover:text-amber-900"
+                        title="Modifier le devis"
+                      >
+                        <FaEdit />
                       </Link>
                       <button
                         className="text-red-600 hover:text-red-900"

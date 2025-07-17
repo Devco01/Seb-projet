@@ -23,16 +23,27 @@
 }
 
 /* Styles de base */
+html {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--background);
   color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
-  height: 100%;
+  min-height: 100%;
   width: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Correction spécifique pour Chromebook */
+  -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -46,6 +57,67 @@ p, span, div {
 
 main {
   background-color: #f5f7fa;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Corrections spécifiques pour Chromebook et Chrome OS */
+@supports (-webkit-appearance: none) {
+  html, body {
+    overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Assurer que les containers peuvent scroller */
+  main, #__next, [data-nextjs-scroll-focus-boundary] {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+}
+
+/* Corrections pour les problèmes de scroll sur Chrome OS */
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-resolution: .001dpcm) {
+  body {
+    overflow-y: scroll !important;
+    height: auto !important;
+    min-height: 100vh;
+  }
+  
+  main {
+    overflow-y: visible !important;
+    height: auto !important;
+  }
+}
+
+/* Force le scroll sur tous les conteneurs principaux - Correction Chromebook */
+* {
+  scrollbar-width: auto;
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 6px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Assurer que les conteneurs de contenu peuvent scroller */
+.space-y-6, [class*="space-y"], [class*="max-w"] {
+  overflow-y: visible !important;
+  height: auto !important;
 }
 
 /* Styles pour les écrans tactiles */
@@ -64,6 +136,12 @@ main {
   button, a, [role="button"] {
     min-height: 44px;
     min-width: 44px;
+  }
+  
+  /* Corrections spécifiques mobile pour le scroll */
+  body, html {
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 }
 

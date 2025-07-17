@@ -1,358 +1,548 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import MainLayout from '../../../components/MainLayout';
-import { FaPlus, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
+import { useState, useEffect, Suspense } from 'react';
+import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface LigneDevis {
   description: string;
   quantite: number;
   prixUnitaire: number;
   total: number;
-  unite?: string;
 }
 
-// Données fictives pour un devis existant
-const devisExistant = {
-  id: 1,
-  numero: 'D-2023-056',
-  client: 'Dupont SAS',
-  date: '2023-06-20',
-  validite: '2023-07-20',
-  statut: 'En attente',
-  lignes: [
-    {
-      description: 'Peinture murs intérieurs - Salon',
-      quantite: 45,
-      unite: 'm²',
-      prixUnitaire: 25,
-      total: 1125
-    },
-    {
-      description: 'Peinture plafond - Salon',
-      quantite: 20,
-      unite: 'm²',
-      prixUnitaire: 30,
-      total: 600
-    },
-    {
-      description: 'Préparation des surfaces',
-      quantite: 1,
-      unite: 'forfait',
-      prixUnitaire: 350,
-      total: 350
-    }
-  ],
-  conditions: 'Paiement à 30 jours à compter de la date de facturation.',
-  notes: 'Devis valable pour une durée de 30 jours. Les travaux pourront commencer 2 semaines après acceptation du devis.'
+type Client = {
+  id: number;
+  nom: string;
+  email?: string;
 };
 
-export default function ModifierDevis({ params }: { params: { id: string } }) {
-  const [client, setClient] = useState('');
+// Composant qui utilise useRouter
+function ModifierDevisContent({ params }: { params: { id: string } }) {
+  const router = useRouter();
+  const devisId = params.id;
+  
+  const [clientId, setClientId] = useState('');
   const [date, setDate] = useState('');
   const [validite, setValidite] = useState('');
-  const [lignes, setLignes] = useState<LigneDevis[]>([]);
-  const [conditions, setConditions] = useState('');
+  const [lignes, setLignes] = useState<LigneDevis[]>([
+    { description: '', quantite: 1, prixUnitaire: 0, total: 0 }
+  ]);
+  const [conditions, setConditions] = useState('Ce devis est valable 30 jours à compter de sa date d\'émission.');
   const [notes, setNotes] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingDevis, setIsLoadingDevis] = useState(true);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [numeroDevis, setNumeroDevis] = useState('');
 
-  // Clients fictifs pour le dropdown
-  const clients = [
-    { id: 1, nom: 'Dupont SAS' },
-    { id: 2, nom: 'Martin Construction' },
-    { id: 3, nom: 'Dubois SARL' },
-    { id: 4, nom: 'Résidences du Parc' },
-  ];
-
-  // Chargement des données du devis
+  // Récupérer les clients depuis l'API
   useEffect(() => {
-    // Simulation d'un appel API pour récupérer les données du devis
-    setTimeout(() => {
-      setClient(devisExistant.client);
-      setDate(devisExistant.date);
-      setValidite(devisExistant.validite);
-      setLignes(devisExistant.lignes);
-      setConditions(devisExistant.conditions);
-      setNotes(devisExistant.notes);
-      setIsLoading(false);
-    }, 500);
-  }, [params.id]);
+    const fetchClients = async () => {
+      try {
+        const response = await fetch('/api/clients');
+        if (!response.ok) {
+          throw new Error('Erreur lors de la récupération des clients');
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setClients(data);
+        } else {
+          console.error('Les données clients reçues ne sont pas un tableau:', data);
+          setClients([]);
+        }
+      } catch (err) {
+        console.error('Erreur:', err);
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        setClients([]);
+      }
+    };
 
-  // Mise à jour d'une ligne
+    fetchClients();
+  }, []);
+
+  // Charger les données du devis
+  useEffect(() => {
+    if (devisId) {
+      const fetchDevis = async () => {
+        try {
+          setIsLoadingDevis(true);
+          const response = await fetch(`/api/devis/${devisId}`);
+          if (!response.ok) {
+            throw new Error(`Erreur lors du chargement du devis: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('Devis chargé pour modification:', data);
+          
+          // Formatage des dates
+          const formatDateForInput = (dateString: string) => {
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+          };
+          
+          // Mise à jour des états avec les données du devis
+          setClientId(data.clientId?.toString() || '');
+          setDate(formatDateForInput(data.date));
+          setValidite(formatDateForInput(data.validite));
+          setNumeroDevis(data.numero || '');
+          
+          if (data.conditions) {
+            setConditions(data.conditions);
+          }
+          
+          if (data.notes) {
+            setNotes(data.notes);
+          }
+          
+          // Traitement des lignes
+          let lignesData = [];
+          if (data.lignes) {
+            // Si les lignes sont stockées en format JSON string, les parser
+            if (typeof data.lignes === 'string') {
+              try {
+                lignesData = JSON.parse(data.lignes);
+              } catch (e) {
+                console.error('Erreur lors du parsing des lignes du devis:', e);
+                lignesData = [];
+              }
+            } else if (Array.isArray(data.lignes)) {
+              lignesData = data.lignes;
+            }
+            
+            if (lignesData.length > 0) {
+              const formattedLignes = lignesData.map((ligne: {
+                description?: string;
+                quantite?: number;
+                prixUnitaire?: number;
+                unite?: string;
+              }) => {
+                const quantite = ligne.quantite || 0;
+                const prixUnitaire = ligne.prixUnitaire || 0;
+                
+                return {
+                  description: ligne.description || '',
+                  quantite: quantite,
+                  prixUnitaire: prixUnitaire,
+                  total: Number((quantite * prixUnitaire).toFixed(2))
+                };
+              });
+              
+              setLignes(formattedLignes);
+            }
+          }
+          
+        } catch (err) {
+          console.error('Erreur lors du chargement du devis:', err);
+          setError(`Impossible de charger le devis: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
+        } finally {
+          setIsLoadingDevis(false);
+        }
+      };
+      
+      fetchDevis();
+    }
+  }, [devisId]);
+
+  // Fonction pour gérer les changements dans les lignes de devis
   const handleLigneChange = (index: number, field: keyof LigneDevis, value: string | number) => {
     const newLignes = [...lignes];
     
-    if (field === 'description' || field === 'unite') {
-      newLignes[index][field] = value as string;
-    } else {
-      newLignes[index][field] = Number(value);
-    }
-    
-    // Recalcul du total de la ligne
     if (field === 'quantite' || field === 'prixUnitaire') {
-      const quantite = newLignes[index].quantite;
-      const prixUnitaire = newLignes[index].prixUnitaire;
+      // Convertir en nombre
+      const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
+      newLignes[index][field] = numValue;
       
-      const total = quantite * prixUnitaire;
-      
-      newLignes[index].total = total;
+      // Calculer le total
+      newLignes[index].total = newLignes[index].quantite * newLignes[index].prixUnitaire;
+    } else {
+      // Pour les autres champs (comme description)
+      newLignes[index][field] = value as never;
     }
     
     setLignes(newLignes);
   };
 
-  // Ajout d'une nouvelle ligne
+  // Fonction pour ajouter une ligne au devis
   const handleAjouterLigne = () => {
-    setLignes([...lignes, { description: '', quantite: 1, prixUnitaire: 0, total: 0, unite: 'm²' }]);
+    setLignes([...lignes, { description: '', quantite: 1, prixUnitaire: 0, total: 0 }]);
   };
 
-  // Suppression d'une ligne
+  // Fonction pour supprimer une ligne du devis
   const handleSupprimerLigne = (index: number) => {
-    const newLignes = [...lignes];
-    newLignes.splice(index, 1);
-    setLignes(newLignes);
+    if (lignes.length > 1) {
+      setLignes(lignes.filter((_, i) => i !== index));
+    }
   };
 
-  // Calcul du total
-  const total = lignes.reduce((sum, ligne) => {
-    return sum + (ligne.quantite * ligne.prixUnitaire);
-  }, 0);
-
-  // Soumission du formulaire
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fonction de soumission pour modifier le devis
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Ici, vous enverriez les données à votre API
-    alert('Devis modifié avec succès !');
-    
-    // Redirection vers la page de détail du devis
-    window.location.href = `/devis/${params.id}`;
+    setIsLoading(true);
+    setError('');
+
+    // Vérification des données
+    if (!clientId) {
+      setError('Veuillez sélectionner un client');
+      setIsLoading(false);
+      return;
+    }
+
+    // Vérifier que les lignes ont des descriptions
+    if (lignes.some(ligne => !ligne.description.trim())) {
+      setError('Veuillez remplir la description de toutes les lignes');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Préparer les données du devis
+      const devisData = {
+        clientId: parseInt(clientId),
+        date,
+        validite,
+        lignes: lignes,
+        conditions,
+        notes
+      };
+
+      // Envoyer les données au serveur pour modification
+      const response = await fetch(`/api/devis/${devisId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(devisData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la modification du devis');
+      }
+
+      const data = await response.json();
+      setSuccessMessage('Devis modifié avec succès!');
+      
+      // Redirection après 2 secondes
+      setTimeout(() => {
+        router.push(`/devis/${devisId}`);
+      }, 2000);
+    } catch (err) {
+      console.error('Erreur:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (isLoading) {
+  // Afficher un état de chargement
+  if (isLoadingDevis) {
     return (
-      <MainLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Chargement du devis...</p>
-          </div>
-        </div>
-      </MainLayout>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="ml-3 text-gray-600">Chargement du devis...</p>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="mb-6 flex justify-between items-center">
+    <div className="space-y-6 px-4 sm:px-6 pb-16 max-w-7xl mx-auto">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Modifier le devis {devisExistant.numero}</h1>
-          <p className="text-gray-600">Modifiez les informations du devis</p>
+          <h1 className="text-3xl font-bold">Modifier devis {numeroDevis}</h1>
+          <p className="text-gray-600">Modifiez les détails du devis</p>
         </div>
-        <div className="flex space-x-2">
-          <Link 
-            href={`/devis/${params.id}`} 
+        <div className="flex space-x-2 mt-4 sm:mt-0">
+          <Link
+            href={`/devis/${devisId}`}
             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center"
           >
             <FaTimes className="mr-2" /> Annuler
           </Link>
-          <button 
+          <button
             onClick={handleSubmit}
+            disabled={isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
           >
-            <FaSave className="mr-2" /> Enregistrer
+            {isLoading ? <FaSpinner className="mr-2 animate-spin" /> : <FaSave className="mr-2" />}
+            Enregistrer
           </button>
         </div>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+          {successMessage}
+        </div>
+      )}
+
+      {/* Message d'aide */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+        <h3 className="text-lg font-medium text-amber-800 mb-2">✏️ Modification du devis</h3>
+        <ul className="text-sm text-amber-700 space-y-1">
+          <li>• Vous pouvez modifier toutes les informations du devis</li>
+          <li>• Ajoutez ou supprimez des lignes selon vos besoins</li>
+          <li>• Les modifications seront sauvegardées après validation</li>
+          <li>• Pensez à vérifier le total avant d'enregistrer</li>
+        </ul>
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Client
+            <label className="block text-gray-700 font-medium mb-2" htmlFor="client">
+              Client <span className="text-red-500">*</span>
             </label>
             <select
-              value={client}
-              onChange={(e) => setClient(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              id="client"
+              name="client"
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="">Sélectionnez un client</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.nom}>
-                  {c.nom}
-                </option>
-              ))}
+              <option value="">Sélectionner un client</option>
+              {Array.isArray(clients) ? 
+                clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.nom}
+                  </option>
+                )) : 
+                <option value="" disabled>Erreur lors du chargement des clients</option>
+              }
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Validité
-              </label>
-              <input
-                type="date"
-                value={validite}
-                onChange={(e) => setValidite(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+          
+          <div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="date">
+                  Date du devis
+                </label>
+                <input
+                  type="date"
+                  id="date"
+                  name="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="validite">
+                  Date de validité
+                </label>
+                <input
+                  type="date"
+                  id="validite"
+                  name="validite"
+                  value={validite}
+                  onChange={(e) => setValidite(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
         </div>
 
+        <h2 className="text-xl font-bold mb-4 border-b pb-2">Lignes du devis</h2>
+        
+        {lignes.map((ligne, index) => (
+          <div key={index} className="grid grid-cols-12 gap-2 mb-4 items-center">
+            <div className="col-span-5">
+              <label className={`block text-gray-700 text-sm mb-1 ${index === 0 ? 'font-medium' : 'sr-only'}`}>
+                Description
+              </label>
+              <input
+                type="text"
+                value={ligne.description}
+                onChange={(e) => handleLigneChange(index, 'description', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Description du service ou produit"
+                required
+              />
+            </div>
+            <div className="col-span-2">
+              <label className={`block text-gray-700 text-sm mb-1 ${index === 0 ? 'font-medium' : 'sr-only'}`}>
+                Quantité
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="1"
+                value={ligne.quantite}
+                onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="col-span-2">
+              <label className={`block text-gray-700 text-sm mb-1 ${index === 0 ? 'font-medium' : 'sr-only'}`}>
+                Prix unitaire (€)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={ligne.prixUnitaire}
+                onChange={(e) => handleLigneChange(index, 'prixUnitaire', e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="col-span-2">
+              <label className={`block text-gray-700 text-sm mb-1 ${index === 0 ? 'font-medium' : 'sr-only'}`}>
+                Total (€)
+              </label>
+              <input
+                type="number"
+                value={ligne.total}
+                className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2"
+                readOnly
+              />
+            </div>
+            <div className="col-span-1 flex items-center justify-center space-x-1">
+              {index === 0 && (
+                <div className="w-full text-center mb-1">
+                  <label className="block text-gray-700 text-sm font-medium">
+                    Actions
+                  </label>
+                </div>
+              )}
+              <div className={`flex space-x-1 ${index === 0 ? 'mt-1' : ''}`}>
+                <button
+                  type="button"
+                  onClick={handleAjouterLigne}
+                  className="text-blue-500 p-2 rounded-full hover:bg-blue-100"
+                  title="Ajouter une ligne après celle-ci"
+                >
+                  <FaPlus />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSupprimerLigne(index)}
+                  className={`text-red-500 p-2 rounded-full hover:bg-red-100 ${lignes.length === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={lignes.length === 1}
+                  title={lignes.length === 1 ? 'Impossible de supprimer la dernière ligne' : 'Supprimer cette ligne'}
+                >
+                  <FaTrash />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-medium">Prestations</h2>
-            <button
-              type="button"
-              onClick={handleAjouterLigne}
-              className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
-            >
-              <FaPlus className="mr-1" /> Ajouter une ligne
-            </button>
+          <button
+            type="button"
+            onClick={handleAjouterLigne}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg flex items-center font-medium shadow-md transition-colors"
+          >
+            <FaPlus className="mr-2" /> Ajouter une ligne
+          </button>
+          <p className="text-sm text-gray-500 mt-2">
+            Vous pouvez ajouter autant de lignes que nécessaire pour votre devis
+          </p>
+        </div>
+        
+        <div className="flex flex-col md:flex-row md:justify-between mb-6">
+          <div className="w-full md:w-1/2 mb-6 md:mb-0 md:pr-4">
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2" htmlFor="conditions">
+                Conditions
+              </label>
+              <textarea
+                id="conditions"
+                name="conditions"
+                value={conditions}
+                onChange={(e) => setConditions(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 font-medium mb-2" htmlFor="notes">
+                Notes
+              </label>
+              <textarea
+                id="notes"
+                name="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+              />
+            </div>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quantité
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Unité
-                  </th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prix unitaire (€)
-                  </th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total (€)
-                  </th>
-                  <th className="px-4 py-2">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {lignes.map((ligne, index) => (
-                  <tr key={index}>
-                    <td className="px-4 py-2">
-                      <input
-                        type="text"
-                        value={ligne.description}
-                        onChange={(e) => handleLigneChange(index, 'description', e.target.value)}
-                        className="w-full border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="Description"
-                        required
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        min="1"
-                        value={ligne.quantite}
-                        onChange={(e) => handleLigneChange(index, 'quantite', e.target.value)}
-                        className="w-20 border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        required
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="text"
-                        value={ligne.unite}
-                        onChange={(e) => handleLigneChange(index, 'unite', e.target.value)}
-                        className="w-16 border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        placeholder="m²"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={ligne.prixUnitaire}
-                        onChange={(e) => handleLigneChange(index, 'prixUnitaire', e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        value={ligne.total.toFixed(2)}
-                        className="w-full border rounded-lg px-3 py-2 bg-gray-50"
-                        readOnly
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      {lignes.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleSupprimerLigne(index)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <FaTrash />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-gray-50">
-                <tr>
-                  <td colSpan={3} className="px-4 py-2"></td>
-                  <td className="px-4 py-2 text-right font-medium">Total:</td>
-                  <td className="px-4 py-2 font-bold">{total.toFixed(2)} €</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
+          <div className="w-full md:w-1/2 md:pl-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium mb-3">Récapitulatif</h3>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Nombre de lignes:</span>
+                  <span className="font-medium text-blue-600">{lignes.length}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Total des quantités:</span>
+                  <span>{lignes.reduce((sum, ligne) => sum + ligne.quantite, 0)}</span>
+                </div>
+                
+                <hr className="my-2" />
+                
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total:</span>
+                  <span className="text-blue-600">{lignes.reduce((sum, ligne) => sum + ligne.total, 0).toFixed(2)} €</span>
+                </div>
+                
+                <p className="text-xs text-gray-500 mt-2">
+                  Cliquez sur "Ajouter une ligne" pour plus d'entrées
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Conditions de paiement
-            </label>
-            <textarea
-              value={conditions}
-              onChange={(e) => setConditions(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-            ></textarea>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notes
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={3}
-              placeholder="Notes ou informations supplémentaires..."
-            ></textarea>
-          </div>
+        
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
+          >
+            {isLoading ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
+            Enregistrer les modifications
+          </button>
         </div>
       </form>
-    </MainLayout>
+    </div>
+  );
+}
+
+// Composant de chargement pour le Suspense
+function ModifierDevisLoading() {
+  return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <p className="ml-3 text-gray-600">Chargement du formulaire de modification...</p>
+    </div>
+  );
+}
+
+// Composant principal enveloppé dans Suspense
+export default function ModifierDevis({ params }: { params: { id: string } }) {
+  return (
+    <Suspense fallback={<ModifierDevisLoading />}>
+      <ModifierDevisContent params={params} />
+    </Suspense>
   );
 } 
