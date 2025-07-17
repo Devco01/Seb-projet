@@ -351,7 +351,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
 
   return (
     <>
-      <div className="space-y-6 pb-16 px-4 sm:px-6 max-w-7xl mx-auto">
+      <div className="space-y-6 pb-16 px-2 sm:px-4 lg:px-6 max-w-full mx-auto">
         {/* Header avec titre et actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
           <div className="flex items-center space-x-4">
@@ -400,16 +400,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
           </div>
         )}
 
-        {/* Message d'aide pour la configuration */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 print:hidden">
-          <h3 className="text-lg font-medium text-amber-800 mb-2">📄 Améliorer la prévisualisation</h3>
-          <ul className="text-sm text-amber-700 space-y-1">
-            <li>• Pour afficher votre logo sur les devis, allez dans <strong>Paramètres → Logo de l'entreprise</strong></li>
-            <li>• Configurez vos informations d'entreprise dans <strong>Paramètres → Informations générales</strong></li>
-            <li>• Vérifiez l'aperçu avec le bouton <strong>&quot;Imprimer&quot;</strong> ci-dessous</li>
-            <li>• Les devis s'affichent en format professionnel avec votre identité visuelle</li>
-          </ul>
-        </div>
+
 
         {/* Actions */}
         <div className="bg-white rounded-lg shadow-md p-6 print:hidden">
@@ -557,20 +548,20 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
           </div>
 
           {/* Tableau des lignes */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-0">
                     Description
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quantité
+                  <th className="px-2 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                    Qté
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prix unitaire
+                  <th className="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    Prix unit.
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-4 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Total
                   </th>
                 </tr>
@@ -578,16 +569,18 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
               <tbody className="bg-white divide-y divide-gray-200">
                 {devis.lignes.map((ligne: DevisLigne, index: number) => (
                   <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {ligne.description}
+                    <td className="px-2 sm:px-4 lg:px-6 py-4 text-sm text-gray-900 break-words max-w-0">
+                      <div className="overflow-hidden">
+                        {ligne.description}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-2 sm:px-4 py-4 text-center text-sm text-gray-500 whitespace-nowrap">
                       {ligne.quantite} {ligne.unite}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-2 sm:px-4 py-4 text-right text-sm text-gray-500 whitespace-nowrap">
                       {parseFloat(ligne.prixUnitaire.toString()).toFixed(2)} €
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    <td className="px-2 sm:px-4 lg:px-6 py-4 text-right text-sm text-gray-900 font-medium whitespace-nowrap">
                       {(parseFloat(ligne.quantite.toString()) * parseFloat(ligne.prixUnitaire.toString())).toFixed(2)} €
                     </td>
                   </tr>

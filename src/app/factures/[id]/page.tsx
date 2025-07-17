@@ -447,23 +447,23 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
 
         <div className="mb-8">
           <h2 className="text-lg font-bold mb-4">Prestations</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          <div className="overflow-x-auto border border-gray-200 rounded-lg">
+            <table className="w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-0">
                     Description
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quantité
+                  <th className="px-2 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+                    Qté
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                     Unité
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prix unitaire (€)
+                  <th className="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    Prix unit. (€)
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Total (€)
                   </th>
                 </tr>
@@ -472,19 +472,21 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
                 {Array.isArray(facture.lignes) && facture.lignes.length > 0 ? (
                   facture.lignes.map((ligne, index) => (
                     <tr key={index}>
-                      <td className="px-4 py-3 whitespace-normal">
-                        {ligne.description || 'Article sans description'}
+                      <td className="px-2 sm:px-4 py-3 text-sm text-gray-900 break-words max-w-0">
+                        <div className="overflow-hidden">
+                          {ligne.description || 'Article sans description'}
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 sm:px-4 py-3 text-center text-sm text-gray-500 whitespace-nowrap">
                         {ligne.quantite}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 sm:px-4 py-3 text-center text-sm text-gray-500 whitespace-nowrap">
                         {ligne.unite || 'unité'}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-2 sm:px-4 py-3 text-right text-sm text-gray-500 whitespace-nowrap">
                         {Number(ligne.prixUnitaire).toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-right font-medium">
+                      <td className="px-2 sm:px-4 py-3 text-right text-sm text-gray-900 font-medium whitespace-nowrap">
                         {Number(ligne.total).toFixed(2)}
                       </td>
                     </tr>
@@ -499,9 +501,9 @@ export default function DetailFacture({ params }: { params: { id: string } }) {
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={3} className="px-4 py-3"></td>
-                  <td className="px-4 py-3 text-right font-medium">Total:</td>
-                  <td className="px-4 py-3 text-right font-bold">{total.toFixed(2)} €</td>
+                  <td colSpan={3} className="px-2 sm:px-4 py-3"></td>
+                  <td className="px-2 sm:px-4 py-3 text-right font-medium">Total:</td>
+                  <td className="px-2 sm:px-4 py-3 text-right font-bold">{total.toFixed(2)} €</td>
                 </tr>
               </tfoot>
             </table>

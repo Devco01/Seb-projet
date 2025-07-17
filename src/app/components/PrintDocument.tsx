@@ -165,6 +165,8 @@ export default function PrintDocument({
     .container {
       max-width: 100%;
       overflow: visible !important;
+      word-wrap: break-word;
+      hyphens: auto;
     }
     .header {
       display: flex;
@@ -246,6 +248,7 @@ export default function PrintDocument({
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 15px;
+      table-layout: fixed;
     }
     .table th {
       background-color: #f5f5f5;
@@ -265,6 +268,9 @@ export default function PrintDocument({
       padding: 6px;
       border-bottom: 1px solid #ddd;
       font-size: 12px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
     }
     .table td.text-right {
       text-align: right;
