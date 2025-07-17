@@ -40,6 +40,10 @@ export async function GET(
         { status: 404 }
       );
     }
+
+    console.log(`Client ${id} récupéré avec ${client.devis?.length || 0} devis et ${client.factures?.length || 0} factures`);
+    console.log('Devis:', client.devis);
+    console.log('Factures:', client.factures);
     
     return NextResponse.json(client);
   } catch (error) {
