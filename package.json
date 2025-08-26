@@ -40,7 +40,7 @@
     "cssnano": "^7.0.6",
     "dotenv-cli": "^8.0.0",
     "html2canvas": "^1.4.1",
-    "jspdf": "^3.0.1",
+    "jspdf": "^3.0.2",
     "next": "^15.2.4",
     "next-auth": "^4.24.11",
     "node-fetch": "^3.3.2",
