@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import fs from 'fs';
-import path from 'path';
+import { uploadImage, deleteImage } from '@/lib/cloudinary';
 
 // POST /api/parametres/logo - Télécharger un logo
 export async function POST(request: NextRequest) {
@@ -33,28 +32,23 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Vérifier que Cloudinary est configuré
+      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+        console.error('Variables d\'environnement Cloudinary manquantes');
+        return NextResponse.json(
+          { error: 'Configuration Cloudinary manquante. Veuillez configurer CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY et CLOUDINARY_API_SECRET.' },
+          { status: 500 }
+        );
+      }
+
       // Convertir le fichier en buffer
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       
-      // Créer le répertoire uploads s'il n'existe pas
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      // Générer un nom de fichier unique
-      const fileExtension = file.name.split('.').pop() || 'png';
-      const fileName = `logo_${Date.now()}.${fileExtension}`;
-      const filePath = path.join(uploadDir, fileName);
+      // Uploader sur Cloudinary
+      const logoUrl = await uploadImage(buffer, 'logos');
       
-      // Sauvegarder le fichier
-      fs.writeFileSync(filePath, buffer);
-      
-      // URL relative pour accès web
-      const logoUrl = `/uploads/${fileName}`;
-      
-      console.log('Logo sauvegardé localement:', logoUrl);
+      console.log('Logo sauvegardé sur Cloudinary:', logoUrl);
     
       // Mettre à jour le champ logo dans les paramètres
       try {
@@ -123,18 +117,13 @@ export async function DELETE() {
       );
     }
 
-    // Supprimer le fichier local s'il existe
-    if (parametres.logoUrl && parametres.logoUrl.startsWith('/uploads/')) {
+    // Supprimer l'image de Cloudinary si c'est une URL Cloudinary
+    if (parametres.logoUrl && parametres.logoUrl.includes('cloudinary')) {
       try {
-        const filename = parametres.logoUrl.replace('/uploads/', '');
-        const filePath = path.join(process.cwd(), 'public', 'uploads', filename);
-        
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log('Fichier logo supprimé:', filePath);
-        }
+        await deleteImage(parametres.logoUrl);
+        console.log('Logo supprimé de Cloudinary:', parametres.logoUrl);
       } catch (deleteError) {
-        console.error('Erreur lors de la suppression du fichier:', deleteError);
+        console.error('Erreur lors de la suppression sur Cloudinary:', deleteError);
         // On continue même si la suppression échoue
       }
     }
