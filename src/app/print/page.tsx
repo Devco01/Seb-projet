@@ -50,8 +50,8 @@ function PrintContent() {
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const [printTriggered, setPrintTriggered] = useState(false);
 
-  // Styles CSS optimisés pour Chromebook
-  const printStyles = `
+  // Styles CSS optimisés pour tous les OS (Chromebook, macOS, Windows)
+const printStyles = `
     @page {
       size: A4;
       margin: 12mm;
@@ -67,9 +67,11 @@ function PrintContent() {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
-        font-family: "Arial", "Helvetica", sans-serif !important;
+        font-family: "Arial", "Helvetica", "SF Pro Display", sans-serif !important;
         font-size: 12pt;
         line-height: 1.4;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
       * {
         box-sizing: border-box;
@@ -174,10 +176,10 @@ function PrintContent() {
               // Appliquer la suppression de l'URL avant d'imprimer
               hideUrlForPrinting();
               
-              // Forcer le focus sur la fenêtre avant impression (important pour Chromebook)
+              // Forcer le focus sur la fenêtre avant impression (important pour tous OS)
               window.focus();
               
-              // Méthode d'impression compatible Chromebook
+              // Méthode d'impression universelle (Chromebook, macOS, Windows)
               requestAnimationFrame(() => {
                 window.print();
               });
