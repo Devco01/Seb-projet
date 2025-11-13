@@ -35,7 +35,7 @@
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
-    "cloudinary": "^2.6.0",
+    "cloudinary": "^2.7.0",
     "clsx": "^2.1.1",
     "cssnano": "^7.0.6",
     "dotenv-cli": "^8.0.0",
