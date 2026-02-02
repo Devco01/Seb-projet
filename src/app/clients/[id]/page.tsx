@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { FaEdit, FaTrash, FaFileInvoiceDollar, FaFileContract, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -39,7 +39,8 @@ interface ClientData {
   factures?: Facture[];
 }
 
-export default function ClientDetailPage({ params }: { params: { id: string } }) {
+export default function ClientDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [client, setClient] = useState<ClientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { FaEdit, FaTrash, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint, FaInfoCircle } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -58,7 +58,8 @@ declare global {
   }
 }
 
-export default function DetailFacture({ params }: { params: { id: string } }) {
+export default function DetailFacture(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [facture, setFacture] = useState<Facture | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

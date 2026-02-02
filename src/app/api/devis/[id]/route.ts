@@ -2,16 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 type RouteParams = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 // GET /api/devis/[id] - Récupérer un devis spécifique
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, props: RouteParams) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     
@@ -56,10 +54,8 @@ export async function GET(
 }
 
 // PUT /api/devis/[id] - Mettre à jour un devis
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PUT(request: NextRequest, props: RouteParams) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     
@@ -146,10 +142,8 @@ export async function PUT(
 }
 
 // DELETE /api/devis/[id] - Supprimer un devis
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, props: RouteParams) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     console.log(`Tentative de suppression du devis avec ID: ${id}`);

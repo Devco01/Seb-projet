@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // PUT /api/factures/[id]/paid - Marquer une facture comme payée
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     // Convertir l'ID en nombre
     const id = parseInt(params.id, 10);

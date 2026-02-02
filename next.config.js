@@ -1,26 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  experimental: {
-    // Suppression de l'option obsolète
-    // serverExternalPackages: ['@prisma/client'],
+  turbopack: {
+    root: __dirname,
   },
   typescript: {
     ignoreBuildErrors: true,
     tsconfigPath: "./tsconfig.json"
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
   trailingSlash: true,
   distDir: '.next',
   images: {
-    domains: [
-      'localhost', 
-      'uqrfexlvdhctmpfewzbj.blob.vercel-storage.com',
-      'res.cloudinary.com'
-    ],
     remotePatterns: [
       {
         protocol: 'http',
@@ -38,17 +29,6 @@ const nextConfig = {
       },
     ],
   },
-  // Configuration explicite du port
-  serverRuntimeConfig: {
-    PORT: 3001
-  },
-  publicRuntimeConfig: {
-    PORT: 3001
-  },
-  // Suppression de la configuration obsolète
-  // devServer: {
-  //   port: 3001
-  // }
 };
 
 module.exports = nextConfig;
