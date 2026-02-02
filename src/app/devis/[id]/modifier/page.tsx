@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, use } from 'react';
 import { FaPlus, FaTrash, FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -539,7 +539,8 @@ function ModifierDevisLoading() {
 }
 
 // Composant principal enveloppé dans Suspense
-export default function ModifierDevis({ params }: { params: { id: string } }) {
+export default function ModifierDevis(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   return (
     <Suspense fallback={<ModifierDevisLoading />}>
       <ModifierDevisContent params={params} />

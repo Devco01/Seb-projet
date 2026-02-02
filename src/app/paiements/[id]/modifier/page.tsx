@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, use } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { FaSave, FaTimes } from 'react-icons/fa';
 import Link from 'next/link';
 
-export default function ModifierPaiementPage({ params }: { params: { id: string } }) {
+export default function ModifierPaiementPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center h-64">

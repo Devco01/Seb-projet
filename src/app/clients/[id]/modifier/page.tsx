@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import MainLayout from '../../../components/MainLayout';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
@@ -21,7 +21,8 @@ type Client = {
   updatedAt: string;
 };
 
-export default function ModifierClient({ params }: { params: { id: string } }) {
+export default function ModifierClient(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const [formData, setFormData] = useState({
     nom: '',

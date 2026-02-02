@@ -6,7 +6,7 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
-    "lint": "next lint",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "setup": "npx prisma generate && npx prisma db push",
     "seed": "node --experimental-modules prisma/seed.mjs",
     "reset-db": "npx prisma migrate reset --force",
@@ -40,8 +40,8 @@
     "cssnano": "^7.0.6",
     "dotenv-cli": "^8.0.0",
     "html2canvas": "^1.4.1",
-    "jspdf": "^4.0.0",
-    "next": "^15.5.8",
+    "jspdf": "^4.1.0",
+    "next": "^16.1.6",
     "next-auth": "^4.24.12",
     "node-fetch": "^3.3.2",
     "postcss": "^8.5.3",
@@ -61,7 +61,7 @@
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "eslint": "^9",
-    "eslint-config-next": "^15.5.8",
+    "eslint-config-next": "^16.1.6",
     "glob": "10.5.0",
     "js-yaml": "4.1.1",
     "ts-node": "^10.9.2",
@@ -69,6 +69,8 @@
   },
   "overrides": {
     "glob": "10.5.0",
-    "js-yaml": "4.1.1"
+    "js-yaml": "4.1.1",
+    "lodash": ">=4.17.23",
+    "undici": ">=6.23.0"
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { FaEnvelope, FaEdit, FaTrash, FaExchangeAlt, FaArrowLeft, FaPrint, FaFileInvoiceDollar, FaPlus, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -62,7 +62,8 @@ declare global {
   }
 }
 
-export default function DetailDevis({ params }: { params: { id: string } }) {
+export default function DetailDevis(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [devis, setDevis] = useState<Devis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -357,7 +358,7 @@ export default function DetailDevis({ params }: { params: { id: string } }) {
     }
   };
 
-    // Fonction pour créer des boutons d'acompte prédéfinis (montants suggérés)
+  // Fonction pour créer des boutons d'acompte prédéfinis (montants suggérés)
   const handleCreateAcomptePredefini = async (montant: number) => {
     if (confirm(`Voulez-vous créer une facture d'acompte de ${montant.toFixed(2)}€ pour ce devis ?`)) {
       setIsLoading(true);

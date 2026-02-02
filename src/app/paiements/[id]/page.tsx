@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { FaEdit, FaTrash, FaFileInvoiceDollar, FaArrowLeft, FaPrint } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -38,7 +38,8 @@ declare global {
   }
 }
 
-export default function DetailPaiement({ params }: { params: { id: string } }) {
+export default function DetailPaiement(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const [paiement, setPaiement] = useState<Paiement | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

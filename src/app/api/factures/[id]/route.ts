@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/factures/[id] - Récupérer une facture par son ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     
@@ -52,10 +50,8 @@ export async function GET(
 }
 
 // PUT /api/factures/[id] - Mettre à jour une facture
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     
@@ -154,10 +150,8 @@ export async function PUT(
 }
 
 // DELETE /api/factures/[id] - Supprimer une facture
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     console.log(`Tentative de suppression de la facture avec ID: ${id}`);

@@ -2,16 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 type RouteParams = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 // GET /api/clients/[id] - Récupérer un client spécifique
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, props: RouteParams) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     
@@ -56,10 +54,8 @@ export async function GET(
 }
 
 // PUT /api/clients/[id] - Mettre à jour un client
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PUT(request: NextRequest, props: RouteParams) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     
@@ -124,10 +120,8 @@ export async function PUT(
 }
 
 // DELETE /api/clients/[id] - Supprimer un client
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, props: RouteParams) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     console.log(`Tentative de suppression du client avec ID: ${id}`);

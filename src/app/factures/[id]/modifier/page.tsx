@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, use } from 'react';
 import { FaPlus, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,7 +14,8 @@ interface LigneFacture {
   unite?: string;
 }
 
-export default function ModifierFacture({ params }: { params: { id: string } }) {
+export default function ModifierFacture(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   return (
     <Suspense fallback={
       <div className="flex justify-center items-center h-64">

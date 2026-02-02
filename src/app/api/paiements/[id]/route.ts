@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/paiements/[id] - Récupérer un paiement par son ID
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     
@@ -42,10 +40,8 @@ export async function GET(
 }
 
 // PUT /api/paiements/[id] - Mettre à jour un paiement
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     
@@ -146,10 +142,8 @@ export async function PUT(
 }
 
 // DELETE /api/paiements/[id] - Supprimer un paiement
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const id = parseInt(params.id);
     console.log(`Tentative de suppression du paiement avec ID: ${id}`);
