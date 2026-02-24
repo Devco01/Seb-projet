@@ -10,6 +10,7 @@ import {
   FaTrashAlt,
   FaEuroSign
 } from "react-icons/fa";
+import TutorialBanner from "../components/TutorialBanner";
 
 export default function Paiements() {
   interface Paiement {
@@ -170,6 +171,16 @@ export default function Paiements() {
           Enregistrer un paiement
         </Link>
       </div>
+
+      <TutorialBanner
+        title="Tutoriel rapide : page Paiements"
+        steps={[
+          "Cliquez sur « Enregistrer un paiement » pour ajouter un nouveau règlement lié à une facture.",
+          "Utilisez la barre de recherche pour filtrer par client, facture, notes ou référence de paiement.",
+          "Consultez les encadrés en haut de page pour voir le total encaissé et le détail des virements bancaires.",
+          "Cliquez sur la référence du paiement pour voir le détail, ou sur les liens client/facture pour naviguer rapidement."
+        ]}
+      />
 
       {/* Barre de recherche */}
       <div className="relative mb-4">

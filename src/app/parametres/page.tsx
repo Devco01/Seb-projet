@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { FaBuilding, FaEuroSign, FaSave, FaImage, FaUpload, FaSpinner } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import useTutorialPreference from '../../hooks/useTutorialPreference';
 
 export default function Parametres() {
   // États pour les différents paramètres
@@ -21,6 +22,7 @@ export default function Parametres() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showTutorials, setShowTutorials } = useTutorialPreference();
 
   // Charger les paramètres au chargement de la page
   useEffect(() => {
@@ -228,6 +230,28 @@ export default function Parametres() {
           <li>• Ces informations s'afficheront automatiquement sur tous vos documents</li>
           <li>• Vous pouvez modifier ces paramètres à tout moment</li>
         </ul>
+      </div>
+
+      {/* Préférences d'affichage */}
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Préférences d&apos;affichage</h3>
+        <p className="text-sm text-gray-500 mb-3">
+          Activez ou désactivez les petits tutoriels visibles sur les pages Clients, Devis, Factures et Paiements.
+        </p>
+        <label className="inline-flex items-center space-x-3">
+          <input
+            type="checkbox"
+            className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+            checked={showTutorials}
+            onChange={(e) => setShowTutorials(e.target.checked)}
+          />
+          <span className="text-sm text-gray-700">
+            Afficher les tutoriels d&apos;aide sur les pages principales
+          </span>
+        </label>
+        <p className="mt-2 text-xs text-gray-500">
+          Vous pouvez aussi masquer ces tutoriels directement depuis chaque page via le bouton &laquo; Masquer ces tutoriels &raquo;.
+        </p>
       </div>
       
       {/* Section informations de l'entreprise */}
