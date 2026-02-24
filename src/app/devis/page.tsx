@@ -173,14 +173,13 @@ export default function Devis() {
           Nouveau devis
         </Link>
       </div>
-
       <TutorialBanner
         title="Tutoriel rapide : page Devis"
         steps={[
           "Cliquez sur « Nouveau devis » pour créer un devis pour un client.",
           "Utilisez la barre de recherche pour retrouver un devis par numéro ou par nom de client.",
           "Utilisez les boutons de filtre (Tous, En attente, Acceptés, Refusés) pour n’afficher qu’un type de devis.",
-          "Cliquez sur le numéro de devis pour ouvrir le détail, puis utilisez le bouton d’impression ou de PDF pour l’envoyer à votre client."
+          "Cliquez sur le numéro de devis pour ouvrir le détail, puis utilisez le bouton d’impression ou de PDF pour l’imprimer."
         ]}
       />
 

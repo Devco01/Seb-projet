@@ -1,6 +1,6 @@
 # 📊 Application de Facturation Pro
 
-> Application web moderne de gestion commerciale pour auto-entrepreneurs et petites entreprises
+> Application web de facturation et gestion commerciale : clients, devis, factures, paiements et paramètres d’entreprise. Conçue pour un **usage mono-utilisateur** (un seul compte, une seule entreprise). Déploiement Vercel + base hébergée (ex. Vercel Postgres / Neon) — le dépôt reste lié au compte pour le déploiement et la BDD.
 
 ## 🚀 Fonctionnalités
 
