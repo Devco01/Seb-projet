@@ -15,6 +15,7 @@ import {
   FaMapMarkerAlt,
   FaCalendarAlt
 } from "react-icons/fa";
+import TutorialBanner from "../components/TutorialBanner";
 
 interface Client {
   id: number;
@@ -198,6 +199,16 @@ export default function Clients() {
           Nouveau client
         </Link>
       </div>
+
+      <TutorialBanner
+        title="Tutoriel rapide : page Clients"
+        steps={[
+          "Utilisez la barre de recherche pour retrouver rapidement un client par nom, email ou adresse.",
+          "Cliquez sur le bouton « Nouveau client » pour créer une nouvelle fiche.",
+          "Cliquez sur l’icône en forme d’œil pour voir le détail d’un client.",
+          "Depuis la fiche d’un client, vous pouvez accéder à ses devis, factures et paiements associés."
+        ]}
+      />
 
       {/* Barre de recherche */}
       <div className="relative mb-4">

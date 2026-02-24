@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import MainLayout from '../../../components/MainLayout';
 import { FaSave, FaTimes, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -122,8 +121,7 @@ export default function ModifierClient(props: { params: Promise<{ id: string }> 
   };
 
   return (
-    <MainLayout>
-      <div className="mb-6 flex justify-between items-center">
+    <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Modifier le client</h1>
           <p className="text-gray-600">Mettez à jour les informations du client</p>
@@ -296,6 +294,6 @@ export default function ModifierClient(props: { params: Promise<{ id: string }> 
           </div>
         </form>
       )}
-    </MainLayout>
+    </div>
   );
-} 
+}

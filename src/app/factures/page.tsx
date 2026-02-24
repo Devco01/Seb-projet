@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { FaPlus, FaSearch, FaEye, FaEdit, FaTrashAlt, FaFilePdf } from "react-icons/fa";
+import TutorialBanner from "../components/TutorialBanner";
 
 export default function Factures() {
   // Types nécessaires pour les factures
@@ -176,6 +177,16 @@ export default function Factures() {
           Nouvelle facture
         </Link>
       </div>
+
+      <TutorialBanner
+        title="Tutoriel rapide : page Factures"
+        steps={[
+          "Cliquez sur « Nouvelle facture » pour créer une facture à partir d’un client et/ou d’un devis.",
+          "Utilisez la barre de recherche pour retrouver une facture par numéro ou par client.",
+          "Filtrez visuellement les factures grâce aux badges de statut (Payée, En attente, En retard).",
+          "Cliquez sur le numéro de facture pour ouvrir le détail, puis utilisez le bouton d’impression ou de PDF pour générer le document à envoyer."
+        ]}
+      />
 
       {/* Barre de recherche */}
       <div className="relative mb-4">
