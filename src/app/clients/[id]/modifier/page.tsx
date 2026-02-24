@@ -121,7 +121,8 @@ export default function ModifierClient(props: { params: Promise<{ id: string }> 
   };
 
   return (
-    <div className="mb-6 flex justify-between items-center">
+    <>
+      <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Modifier le client</h1>
           <p className="text-gray-600">Mettez à jour les informations du client</p>
@@ -294,6 +295,6 @@ export default function ModifierClient(props: { params: Promise<{ id: string }> 
           </div>
         </form>
       )}
-    </div>
+    </>
   );
 }
