@@ -41,7 +41,7 @@ function FactureFormContent() {
   const [lignes, setLignes] = useState<LigneFacture[]>([
     { description: '', quantite: 1, prixUnitaire: 0, total: 0 }
   ]);
-  const [conditions, setConditions] = useState('Paiement à 30 jours à compter de la date de facturation.');
+  const [conditions, setConditions] = useState('');
   const [notes, setNotes] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [devisList, setDevisList] = useState<Devis[]>([]);
@@ -315,7 +315,10 @@ function FactureFormContent() {
         
         // Mettre à jour les conditions et notes
         if (devis.conditions) {
-          setConditions(devis.conditions);
+          const sansValable30 = devis.conditions
+            .replace(/\s*Ce devis est valable 30 jours[^.]*\.?\s*/gi, ' ')
+            .trim();
+          setConditions(sansValable30 || '');
         }
         
         if (devis.notes) {
@@ -593,14 +596,9 @@ function FactureFormContent() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t font-medium">
+                    <tr className="border-t font-bold">
                       <td colSpan={3} className="p-2 text-right">Total HT:</td>
                       <td className="p-2 text-right">{totalHT.toFixed(2)} €</td>
-                      <td></td>
-                    </tr>
-                    <tr className="border-t font-bold">
-                      <td colSpan={3} className="p-2 text-right">Total TTC:</td>
-                      <td className="p-2 text-right">{totalTTC.toFixed(2)} €</td>
                       <td></td>
                     </tr>
                   </tfoot>
@@ -609,19 +607,6 @@ function FactureFormContent() {
             </div>
             
             <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="conditions">
-                  Conditions de paiement
-                </label>
-                <textarea
-                  id="conditions"
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  rows={3}
-                  value={conditions}
-                  onChange={(e) => setConditions(e.target.value)}
-                ></textarea>
-              </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="notes">
                   Notes
@@ -694,16 +679,11 @@ function FactureFormContent() {
                     </tbody>
                     <tfoot>
                       <tr className="font-bold border-t">
-                        <td colSpan={3} className="py-2 text-right">Total TTC:</td>
-                        <td className="py-2 text-right">{totalTTC.toFixed(2)} €</td>
+                        <td colSpan={3} className="py-2 text-right">Total HT:</td>
+                        <td className="py-2 text-right">{totalHT.toFixed(2)} €</td>
                       </tr>
                     </tfoot>
                   </table>
-                  
-                  <div className="mb-4">
-                    <h3 className="font-bold mb-1">Conditions de paiement:</h3>
-                    <p>{conditions}</p>
-                  </div>
                   
                   {notes && (
                     <div>

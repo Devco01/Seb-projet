@@ -309,10 +309,7 @@ export default function Factures() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-gray-900">
-                      {formatMontant(facture.totalTTC)}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      HT: {formatMontant(facture.totalHT)}
+                      {formatMontant(facture.totalHT ?? facture.totalTTC)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -367,8 +364,7 @@ export default function Factures() {
                   <p>Échéance: {formatDate(facture.echeance)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-gray-900">{formatMontant(facture.totalTTC)}</p>
-                  <p>HT: {formatMontant(facture.totalHT)}</p>
+                  <p className="font-medium text-gray-900">{formatMontant(facture.totalHT ?? facture.totalTTC)}</p>
                 </div>
               </div>
               <div className="flex justify-between items-center border-t border-gray-200 pt-3">

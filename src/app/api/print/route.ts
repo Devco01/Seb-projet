@@ -60,7 +60,8 @@ export async function GET(request: NextRequest) {
         clientEmail: data.client?.email || '',
         clientPhone: data.client?.telephone || '',
         lines: lignes,
-        total: data.totalTTC || 0,
+        total: data.totalHT ?? data.totalTTC ?? 0,
+        totalHT: data.totalHT ?? data.totalTTC ?? 0,
         notes: data.notes || '',
         conditionsPaiement: data.conditions || '',
       };
@@ -120,7 +121,8 @@ export async function GET(request: NextRequest) {
         clientEmail: data.client?.email || '',
         clientPhone: data.client?.telephone || '',
         lines: lignes,
-        total: data.totalTTC || 0,
+        total: data.totalHT ?? data.totalTTC ?? 0,
+        totalHT: data.totalHT ?? data.totalTTC ?? 0,
         notes: data.notes || '',
         conditionsPaiement: data.conditions || '',
       };

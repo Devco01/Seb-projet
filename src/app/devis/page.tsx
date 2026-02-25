@@ -280,7 +280,7 @@ export default function Devis() {
             <div>
               <p className="text-sm font-medium text-gray-500">Montant total</p>
               <p className="text-xl sm:text-2xl font-bold text-gray-800">
-                {formatAmount(devis.reduce((sum, d) => sum + d.totalTTC, 0))}
+                {formatAmount(devis.reduce((sum, d) => sum + (d.totalHT ?? d.totalTTC), 0))}
               </p>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
@@ -356,7 +356,7 @@ export default function Devis() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {formatAmount(devis.totalTTC)}
+                      {formatAmount(devis.totalHT ?? devis.totalTTC)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
