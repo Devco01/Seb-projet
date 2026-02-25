@@ -512,20 +512,15 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
               <tfoot className="bg-gray-50">
                 <tr>
                   <td colSpan={2} className="px-2 sm:px-4 py-3"></td>
-                  <td className="px-2 sm:px-4 py-3 text-right font-medium">Total:</td>
-                  <td className="px-2 sm:px-4 py-3 text-right font-bold">{total.toFixed(2)} €</td>
+                  <td className="px-2 sm:px-4 py-3 text-right font-medium">Total HT :</td>
+                  <td className="px-2 sm:px-4 py-3 text-right font-bold">{(facture.totalHT ?? total).toFixed(2)} €</td>
                 </tr>
               </tfoot>
             </table>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h2 className="text-lg font-bold mb-2">Conditions de paiement</h2>
-            <p className="text-gray-700">{facture.conditions}</p>
-          </div>
-          <div>
+        <div className="mt-6">
             <h2 className="text-lg font-bold mb-2">Notes</h2>
             {/* Pour les factures d'acompte, on filtre le récapitulatif qui sera affiché séparément */}
             {facture.notes?.includes('FACTURE D\'ACOMPTE') ? (
@@ -546,7 +541,6 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
             ) : (
               <p className="text-gray-700">{facture.notes}</p>
             )}
-          </div>
         </div>
       </div>
       
@@ -563,7 +557,8 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
           clientEmail={facture.client.email}
           clientPhone={facture.client.telephone}
           lines={facture.lignes}
-          total={total}
+          total={facture.totalHT ?? total}
+          totalHT={facture.totalHT ?? total}
           notes={facture.notes}
         />
       </div>

@@ -23,6 +23,7 @@ interface DocumentData {
     total: number;
   }>;
   total: number;
+  totalHT?: number;
   notes?: string;
 }
 
@@ -297,6 +298,7 @@ const printStyles = `
           clientPhone={documentData.clientPhone}
           lines={documentData.lines}
           total={documentData.total}
+          totalHT={documentData.totalHT}
           notes={documentData.notes}
         />
       </div>

@@ -173,14 +173,13 @@ export default function Devis() {
           Nouveau devis
         </Link>
       </div>
-
       <TutorialBanner
         title="Tutoriel rapide : page Devis"
         steps={[
           "Cliquez sur « Nouveau devis » pour créer un devis pour un client.",
           "Utilisez la barre de recherche pour retrouver un devis par numéro ou par nom de client.",
           "Utilisez les boutons de filtre (Tous, En attente, Acceptés, Refusés) pour n’afficher qu’un type de devis.",
-          "Cliquez sur le numéro de devis pour ouvrir le détail, puis utilisez le bouton d’impression ou de PDF pour l’envoyer à votre client."
+          "Cliquez sur le numéro de devis pour ouvrir le détail, puis utilisez le bouton d’impression ou de PDF pour l’imprimer."
         ]}
       />
 
@@ -281,7 +280,7 @@ export default function Devis() {
             <div>
               <p className="text-sm font-medium text-gray-500">Montant total</p>
               <p className="text-xl sm:text-2xl font-bold text-gray-800">
-                {formatAmount(devis.reduce((sum, d) => sum + d.totalTTC, 0))}
+                {formatAmount(devis.reduce((sum, d) => sum + (d.totalHT ?? d.totalTTC), 0))}
               </p>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
@@ -357,7 +356,7 @@ export default function Devis() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {formatAmount(devis.totalTTC)}
+                      {formatAmount(devis.totalHT ?? devis.totalTTC)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

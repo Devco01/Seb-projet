@@ -31,7 +31,7 @@ function DevisFormContent() {
   const [lignes, setLignes] = useState<LigneDevis[]>([
     { description: '', quantite: 1, prixUnitaire: 0, total: 0 }
   ]);
-  const [conditions, setConditions] = useState('Ce devis est valable 30 jours à compter de sa date d\'émission.');
+  const [conditions, setConditions] = useState('');
   const [notes, setNotes] = useState('');
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);

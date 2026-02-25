@@ -652,8 +652,8 @@ export default function DetailDevis(props: { params: Promise<{ id: string }> }) 
           {/* Total */}
           <div className="mt-6 pt-6 border-t border-gray-200">
             <div className="flex justify-between text-lg font-bold">
-              <span>Total:</span>
-              <span>{total.toFixed(2)} €</span>
+              <span>Total HT :</span>
+              <span>{(devis.totalHT ?? total).toFixed(2)} €</span>
             </div>
           </div>
         </div>
@@ -706,7 +706,8 @@ export default function DetailDevis(props: { params: Promise<{ id: string }> }) 
           clientEmail={devis.client.email}
           clientPhone={devis.client.telephone}
           lines={devis.lignes}
-          total={total}
+          total={devis.totalHT ?? total}
+          totalHT={devis.totalHT ?? total}
           notes={devis.notes}
         />
       </div>

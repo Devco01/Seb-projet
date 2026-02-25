@@ -21,6 +21,7 @@ export interface PrintDocumentProps {
     total: number;
   }[];
   total: number;
+  totalHT?: number;
   notes?: string;
 }
 
@@ -53,6 +54,7 @@ export default function PrintDocument({
   clientPhone,
   lines,
   total,
+  totalHT,
   notes
 }: PrintDocumentProps) {
   const [parametres, setParametres] = useState<ParametresEntreprise | null>(null);
@@ -337,7 +339,7 @@ export default function PrintDocument({
 
     
     .legal-notice {
-      margin-top: 20px;
+      margin-top: 12px;
       text-align: center;
       font-size: 9px;
       color: #777;
@@ -347,9 +349,17 @@ export default function PrintDocument({
       margin-top: 0;
     }
     .page-content {
-      min-height: 80vh;
+      min-height: 0;
       display: flex;
       flex-direction: column;
+    }
+    @media print {
+      .page-content {
+        min-height: 0 !important;
+      }
+      .page-content-keep-together {
+        page-break-inside: avoid;
+      }
     }
     .table-section {
       flex: 1;
@@ -556,6 +566,7 @@ export default function PrintDocument({
                   </div>
                 )}
 
+                <div className="page-content-keep-together">
                 <div className="table-section">
                   <table className="table">
                     <thead>
@@ -590,28 +601,52 @@ export default function PrintDocument({
                     {/* Total seulement sur la dernière page */}
                     {pageIndex === chunks.length - 1 && (
                       <tfoot>
-                        <tr>
-                          <td colSpan={2} style={{ borderTop: '1px solid #ddd' }}></td>
-                          <td className="total-row" style={{ 
-                            textAlign: 'right',
-                            fontWeight: 'bold',
-                            fontSize: '12px',
-                            padding: '8px 6px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
-                            {notes && notes.includes('FACTURE D\'ACOMPTE') ? 'MONTANT ACOMPTE' : 'TOTAL'}
-                          </td>
-                          <td className="total-value" style={{
-                            textAlign: 'right',
-                            fontWeight: 'bold',
-                            borderTop: '2px solid #444',
-                            borderBottom: '2px solid #444',
-                            fontSize: '12px',
-                            padding: '8px 6px'
-                          }}>{formatMontant(total)} €</td>
-                        </tr>
+                        {(type === 'devis' || type === 'facture') && (
+                          <tr>
+                            <td colSpan={2} style={{ borderTop: '1px solid #ddd' }}></td>
+                            <td className="total-row" style={{ 
+                              textAlign: 'right',
+                              fontWeight: 'bold',
+                              fontSize: '12px',
+                              padding: '8px 6px',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              Total HT
+                            </td>
+                            <td className="total-value" style={{
+                              textAlign: 'right',
+                              fontWeight: 'bold',
+                              borderTop: '2px solid #444',
+                              borderBottom: '2px solid #444',
+                              fontSize: '12px',
+                              padding: '8px 6px'
+                            }}>
+                              {formatMontant(totalHT ?? total)} €
+                            </td>
+                          </tr>
+                        )}
+                        {type !== 'devis' && type !== 'facture' && (
+                          <tr>
+                            <td colSpan={2} style={{ borderTop: '1px solid #ddd' }}></td>
+                            <td className="total-row" style={{ 
+                              textAlign: 'right',
+                              fontWeight: 'bold',
+                              fontSize: '12px',
+                              padding: '8px 6px',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {notes && notes.includes('FACTURE D\'ACOMPTE') ? 'MONTANT ACOMPTE' : 'TOTAL'}
+                            </td>
+                            <td className="total-value" style={{
+                              textAlign: 'right',
+                              fontWeight: 'bold',
+                              borderTop: '2px solid #444',
+                              borderBottom: '2px solid #444',
+                              fontSize: '12px',
+                              padding: '8px 6px'
+                            }}>{formatMontant(total)} €</td>
+                          </tr>
+                        )}
                         {/* Afficher le reste à payer pour les factures d'acompte */}
                         {notes && notes.includes('FACTURE D\'ACOMPTE') && notes.includes('- Montant restant à payer:') && (
                           (() => {
@@ -651,7 +686,14 @@ export default function PrintDocument({
                   </table>
                 </div>
                 
-                {/* Legal notice sur la dernière page */}
+                {/* Footer devis : "Bon pour acceptation" sur chaque page */}
+                {type === 'devis' && (
+                  <div className="legal-notice" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ddd' }}>
+                    Bon pour acceptation
+                  </div>
+                )}
+                
+                {/* Legal notice sur la dernière page (devis suite, facture) */}
                 {pageIndex === chunks.length - 1 && (
                   <div className="legal-notice">
                     {type === 'devis' && (
@@ -662,6 +704,7 @@ export default function PrintDocument({
                     )}
                   </div>
                 )}
+                </div>
                 
                 {/* Numéro de page */}
                 {chunks.length > 1 && (
@@ -681,7 +724,8 @@ export default function PrintDocument({
         {/* Legal notice intégré dans la pagination pour les documents avec tableaux */}
         {type === 'paiement' && (
           <div className="legal-notice">
-            <div>Ce document confirme la réception du paiement et sert de reçu</div>
+            <div>Ce document confirme la réception du paiement et sert de reçu.</div>
+            <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Merci pour votre confiance.</div>
           </div>
         )}
       </div>
