@@ -595,8 +595,8 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
         <PrintDocument 
           type="facture"
           reference={facture.numero}
-          date={facture.dateOriginale || facture.date}
-          echeance={facture.echeanceOriginale || facture.echeance}
+          date={facture.date}
+          echeance={facture.echeance}
           clientName={facture.client.nom}
           clientAddress={facture.client.adresse}
           clientZipCity={`${facture.client.codePostal} ${facture.client.ville}`}

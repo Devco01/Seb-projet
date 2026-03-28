@@ -317,7 +317,7 @@ export default function DetailPaiement(props: { params: Promise<{ id: string }> 
         <PrintDocument 
           type="paiement"
           reference={paiement.reference}
-          date={paiement.dateOriginale || paiement.date}
+          date={paiement.date ? formatDate(paiement.date) : ''}
           clientName={paiement.client?.nom || `Client #${paiement.clientId}`}
           clientEmail={paiement.client?.email}
           lines={[{

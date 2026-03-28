@@ -105,10 +105,18 @@ export default function PrintDocument({
     fetchParametres();
   }, []);
 
+  /**
+   * Affichage des dates pour impression / PDF.
+   * - Accepte ISO, jj/mm/aaaa, jj.mm.aaaa, jj-mm-aaaa.
+   * - Normalise les espaces insécables (U+202F) que renvoie souvent toLocaleDateString('fr-FR').
+   * - Si le parsing échoue mais qu’il reste du texte, on l’affiche tel quel (évite champs vides).
+   */
   const formatDateFr = (dateStr?: string) => {
-    if (!dateStr?.trim()) return 'Non spécifiée';
+    if (dateStr == null || String(dateStr).trim() === '') return 'Non spécifiée';
 
-    const s = dateStr.trim();
+    const raw = String(dateStr).trim();
+    const s = raw.replace(/\u202f|\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+
     try {
       const fromIso = new Date(s);
       if (!isNaN(fromIso.getTime())) {
@@ -118,12 +126,15 @@ export default function PrintDocument({
           year: 'numeric',
         });
       }
-      const fr = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s);
-      if (fr) {
-        const d = Number(fr[1]);
-        const m = Number(fr[2]);
-        const y = Number(fr[3]);
-        const parsed = new Date(y, m - 1, d);
+      const frSlash = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s);
+      const frDot = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(s);
+      const frDash = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(s);
+      const m = frSlash || frDot || frDash;
+      if (m) {
+        const d = Number(m[1]);
+        const mo = Number(m[2]);
+        const y = Number(m[3]);
+        const parsed = new Date(y, mo - 1, d);
         if (!isNaN(parsed.getTime())) {
           return parsed.toLocaleDateString('fr-FR', {
             day: '2-digit',
@@ -132,9 +143,9 @@ export default function PrintDocument({
           });
         }
       }
-      return 'Date invalide';
+      return raw.length > 0 ? raw : 'Date invalide';
     } catch {
-      return 'Format de date incorrect';
+      return raw.length > 0 ? raw : 'Format de date incorrect';
     }
   };
 
@@ -561,14 +572,31 @@ export default function PrintDocument({
                         <div className="print-doc-dates-box">
                           <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
                             <div style={{ marginBottom: '4px' }}>
-                              <span style={{ fontWeight: 'bold' }}>Date :</span> {formatDateFr(date)}
+                              <span style={{ fontWeight: 'bold' }}>Date :</span>{' '}
+                              <span
+                                style={{
+                                  color: '#111827',
+                                  WebkitTextFillColor: '#111827',
+                                  fontSize: '12px',
+                                }}
+                              >
+                                {formatDateFr(date)}
+                              </span>
                             </div>
                             {echeance && (
                               <div>
                                 <span style={{ fontWeight: 'bold' }}>
                                   {type === 'devis' ? 'Validité :' : 'Échéance :'}
                                 </span>{' '}
-                                {formatDateFr(echeance)}
+                                <span
+                                  style={{
+                                    color: '#111827',
+                                    WebkitTextFillColor: '#111827',
+                                    fontSize: '12px',
+                                  }}
+                                >
+                                  {formatDateFr(echeance)}
+                                </span>
                               </div>
                             )}
                           </div>

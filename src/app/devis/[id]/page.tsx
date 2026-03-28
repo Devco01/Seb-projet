@@ -743,8 +743,8 @@ export default function DetailDevis(props: { params: Promise<{ id: string }> }) 
         <PrintDocument 
           type="devis"
           reference={devis.numero}
-          date={devis.dateOriginale || devis.date}
-          echeance={devis.validiteOriginale || devis.validite}
+          date={devis.date}
+          echeance={devis.validite}
           clientName={devis.client.nom}
           clientAddress={devis.client.adresse}
           clientZipCity={`${devis.client.codePostal} ${devis.client.ville}`}
