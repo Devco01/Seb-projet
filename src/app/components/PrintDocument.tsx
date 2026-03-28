@@ -224,6 +224,10 @@ export default function PrintDocument({
       border-bottom: 2px solid #ddd;
       padding-bottom: 15px;
       min-height: 100px;
+      gap: 8px;
+    }
+    .header > * {
+      min-width: 0;
     }
     .company-logo {
       flex: 1;
@@ -237,11 +241,13 @@ export default function PrintDocument({
     .document-title {
       flex: 1;
       text-align: center;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 0 4px;
+      overflow-wrap: anywhere;
     }
     .company-info {
       flex: 1;
@@ -249,6 +255,7 @@ export default function PrintDocument({
       font-size: 11px;
       line-height: 1.4;
       max-width: 200px;
+      overflow-wrap: anywhere;
     }
     .document-info {
       display: flex;
@@ -275,6 +282,8 @@ export default function PrintDocument({
       flex: 1;
       text-align: right;
       max-width: 300px;
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
     .client-title {
       font-weight: bold;
@@ -404,7 +413,7 @@ export default function PrintDocument({
       word-break: break-word;
     }
     .table-section {
-      flex: 1;
+      flex: 0 1 auto;
     }
     .page-number {
       position: absolute;
@@ -469,11 +478,9 @@ export default function PrintDocument({
             const showNotesConditions =
               (conditions?.trim() || notesPrint);
 
-            /** Feuille PDF séparée : devis (légal) ou notes — évite la découpe au milieu du texte. Facture sans notes : « Merci » reste sur la dernière page tableau. */
-            const hasFooterSheet = showNotesConditions || type === 'devis';
-            const totalPages = chunks.length + (hasFooterSheet ? 1 : 0);
+            const totalPages = chunks.length;
 
-            const sheets = chunks.map((chunk, pageIndex) => (
+            return chunks.map((chunk, pageIndex) => (
               <div
                 key={pageIndex}
                 data-pdf-sheet
@@ -737,7 +744,47 @@ export default function PrintDocument({
                   </table>
                 </div>
 
-                {pageIndex === chunks.length - 1 && type === 'facture' && !showNotesConditions && (
+                {pageIndex === chunks.length - 1 && showNotesConditions && (
+                  <div className="print-notes-conditions">
+                    {conditions?.trim() && (
+                      <>
+                        <strong>Conditions</strong>
+                        {'\n'}
+                        {conditions.trim()}
+                        {notesPrint ? '\n\n' : ''}
+                      </>
+                    )}
+                    {notesPrint && (
+                      <>
+                        <strong>Commentaires / notes</strong>
+                        {'\n'}
+                        {notesPrint}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {pageIndex === chunks.length - 1 && type === 'devis' && (
+                  <>
+                    <div
+                      className="legal-notice"
+                      style={{
+                        marginTop: showNotesConditions ? '12px' : 0,
+                        paddingTop: showNotesConditions ? '12px' : 0,
+                        borderTop: showNotesConditions ? '1px solid #ddd' : 'none',
+                      }}
+                    >
+                      Bon pour acceptation
+                    </div>
+                    <div className="legal-notice">
+                      <div>
+                        Devis à retourner daté et signé avec la mention &quot;bon pour accord&quot;
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {pageIndex === chunks.length - 1 && type === 'facture' && (
                   <div className="legal-notice">
                     <div>Merci pour votre confiance</div>
                   </div>
@@ -745,7 +792,6 @@ export default function PrintDocument({
 
                 </div>
                 
-                {/* Numéro de page (feuilles tableau uniquement ; notes/légal sur feuille dédiée pour le PDF) */}
                 {totalPages > 1 && (
                   <div className="page-number">
                     Page {pageIndex + 1} / {totalPages}
@@ -753,68 +799,6 @@ export default function PrintDocument({
                 )}
               </div>
             ));
-
-            return (
-              <>
-                {sheets}
-                {hasFooterSheet && (
-                  <div
-                    key="footer-sheet"
-                    data-pdf-sheet
-                    className="page-break page-content"
-                  >
-                    {showNotesConditions && (
-                      <div className="print-notes-conditions">
-                        {conditions?.trim() && (
-                          <>
-                            <strong>Conditions</strong>
-                            {'\n'}
-                            {conditions.trim()}
-                            {notesPrint ? '\n\n' : ''}
-                          </>
-                        )}
-                        {notesPrint && (
-                          <>
-                            <strong>Commentaires / notes</strong>
-                            {'\n'}
-                            {notesPrint}
-                          </>
-                        )}
-                      </div>
-                    )}
-                    {type === 'devis' && (
-                      <>
-                        <div
-                          className="legal-notice"
-                          style={{
-                            marginTop: showNotesConditions ? '12px' : 0,
-                            paddingTop: showNotesConditions ? '12px' : 0,
-                            borderTop: showNotesConditions ? '1px solid #ddd' : 'none',
-                          }}
-                        >
-                          Bon pour acceptation
-                        </div>
-                        <div className="legal-notice">
-                          <div>
-                            Devis à retourner daté et signé avec la mention &quot;bon pour accord&quot;
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    {type === 'facture' && (
-                      <div className="legal-notice">
-                        <div>Merci pour votre confiance</div>
-                      </div>
-                    )}
-                    {totalPages > 1 && (
-                      <div className="page-number">
-                        Page {totalPages} / {totalPages}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            );
           })()
         )}
       </div>
