@@ -66,14 +66,15 @@ function DevisFormContent() {
     fetchClients();
   }, []);
 
-  // Calcul de la date de validité par défaut (30 jours après la date actuelle)
+  // Validité par défaut (+30 j) — uniquement pour un **nouveau** devis (pas en modification : ?id=)
   useEffect(() => {
+    if (devisId) return;
     if (!validite) {
       const dateObj = new Date();
       dateObj.setDate(dateObj.getDate() + 30);
       setValidite(dateObj.toISOString().split('T')[0]);
     }
-  }, [validite]);
+  }, [validite, devisId]);
 
   // Charger les données du devis si un ID est fourni
   useEffect(() => {
