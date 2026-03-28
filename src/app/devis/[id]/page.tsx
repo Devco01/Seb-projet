@@ -239,18 +239,10 @@ export default function DetailDevis(props: { params: Promise<{ id: string }> }) 
         typeof navigator.share === 'function' &&
         navigator.canShare?.({ files: [file] })
       ) {
-        await navigator.share({
-          files: [file],
-          title: `Devis ${devis.numero}`,
-          text: `Veuillez trouver ci-joint notre devis ${devis.numero}.`,
-        });
+        await navigator.share({ files: [file] });
         toast.success('Partage ouvert — choisissez Mail pour joindre le PDF', { id: t });
       } else {
-        const subject = encodeURIComponent(`Devis ${devis.numero}`);
-        const body = encodeURIComponent(
-          `Bonjour,\n\nVeuillez trouver ci-joint notre devis ${devis.numero} (PDF joint depuis votre dossier Téléchargements).\n\nCordialement,`
-        );
-        const mailtoUrl = `mailto:${devis.client.email}?subject=${subject}&body=${body}`;
+        const mailtoUrl = `mailto:${devis.client.email}`;
         const mailLink = document.createElement('a');
         mailLink.href = mailtoUrl;
         mailLink.rel = 'noopener noreferrer';
