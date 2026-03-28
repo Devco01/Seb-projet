@@ -239,10 +239,14 @@ export default function DetailDevis(props: { params: Promise<{ id: string }> }) 
         typeof navigator.share === 'function' &&
         navigator.canShare?.({ files: [file] })
       ) {
-        await navigator.share({ files: [file] });
+        await navigator.share({
+          files: [file],
+          title: `Devis N° ${devis.numero}`,
+        });
         toast.success('Partage ouvert — choisissez Mail pour joindre le PDF', { id: t });
       } else {
-        const mailtoUrl = `mailto:${devis.client.email}`;
+        const mailSubject = encodeURIComponent(`Devis N° ${devis.numero}`);
+        const mailtoUrl = `mailto:${devis.client.email}?subject=${mailSubject}`;
         const mailLink = document.createElement('a');
         mailLink.href = mailtoUrl;
         mailLink.rel = 'noopener noreferrer';

@@ -339,10 +339,14 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
         typeof navigator.share === 'function' &&
         navigator.canShare?.({ files: [file] })
       ) {
-        await navigator.share({ files: [file] });
+        await navigator.share({
+          files: [file],
+          title: `Facture N° ${facture.numero}`,
+        });
         toast.success('Partage ouvert — choisissez Mail pour joindre le PDF', { id: t });
       } else {
-        const mailtoUrl = `mailto:${facture.client.email}`;
+        const mailSubject = encodeURIComponent(`Facture N° ${facture.numero}`);
+        const mailtoUrl = `mailto:${facture.client.email}?subject=${mailSubject}`;
         const mailLink = document.createElement('a');
         mailLink.href = mailtoUrl;
         mailLink.rel = 'noopener noreferrer';
