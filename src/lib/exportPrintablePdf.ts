@@ -107,20 +107,23 @@ export async function exportPrintableToPdf(): Promise<Blob> {
 
     for (const sheet of sheets) {
       const rect = sheet.getBoundingClientRect();
-      const cw = Math.ceil(Math.max(sheet.scrollWidth, sheet.offsetWidth, rect.width, 1));
-      const ch = Math.ceil(Math.max(sheet.scrollHeight, sheet.offsetHeight, rect.height, 1));
+      const parent = sheet.parentElement;
+      const parentW = parent ? Math.max(parent.scrollWidth, parent.offsetWidth, parent.getBoundingClientRect().width) : 0;
+      /** Marge de sécurité : width/height trop justes rognent souvent les bords (logo, colonne droite). */
+      const cw = Math.ceil(
+        Math.max(sheet.scrollWidth, sheet.offsetWidth, rect.width, parentW, 1) + 32
+      );
+      const ch = Math.ceil(Math.max(sheet.scrollHeight, sheet.offsetHeight, rect.height, 1) + 16);
 
       let scale = 1.65;
       if (ch * scale > MAX_CANVAS_EDGE_PX) scale = MAX_CANVAS_EDGE_PX / ch;
       if (cw * scale > MAX_CANVAS_EDGE_PX) scale = Math.min(scale, MAX_CANVAS_EDGE_PX / cw);
 
-      const winW = Math.max(cw + 48, 900);
-      const winH = Math.max(ch + 48, 400);
+      const winW = Math.max(Math.ceil(cw + 160), 1200);
+      const winH = Math.max(Math.ceil(ch + 160), 600);
 
       const canvas = await html2canvas(sheet, {
         scale,
-        width: cw,
-        height: ch,
         windowWidth: winW,
         windowHeight: winH,
         useCORS: true,
@@ -129,6 +132,14 @@ export async function exportPrintableToPdf(): Promise<Blob> {
         backgroundColor: '#ffffff',
         foreignObjectRendering: false,
         imageTimeout: 15000,
+        onclone: (_doc, cloned) => {
+          if (!(cloned instanceof HTMLElement)) return;
+          cloned.style.overflow = 'visible';
+          cloned.style.width = `${cw}px`;
+          cloned.style.minWidth = `${cw}px`;
+          cloned.style.maxWidth = 'none';
+          cloned.style.boxSizing = 'border-box';
+        },
       });
 
       if (!canvas.width || !canvas.height) {
