@@ -268,14 +268,12 @@ export default function PrintDocument({
       flex: 1;
       max-width: 300px;
     }
-    .document-ref {
+    .document-meta {
       border: 2px solid #1e40af;
       background-color: #f8fafc;
       display: inline-block;
-      padding: 8px 15px;
-      margin-bottom: 15px;
-      font-weight: bold;
-      font-size: 14px;
+      padding: 10px 15px;
+      margin-bottom: 0;
       border-radius: 4px;
     }
     .client-info {
@@ -547,19 +545,20 @@ export default function PrintDocument({
                     </div>
                     <div className="document-info">
                       <div className="document-left">
-                        <div className="document-ref">{documentTitle}</div>
-                        <div style={{ fontSize: '12px', marginBottom: '8px', lineHeight: '1.5' }}>
-                          <div style={{ marginBottom: '4px' }}>
-                            <span style={{ fontWeight: 'bold' }}>Date :</span> {formatDateFr(date)}
-                          </div>
-                          {echeance && (
-                            <div>
-                              <span style={{ fontWeight: 'bold' }}>
-                                {type === 'devis' ? 'Validité :' : 'Échéance :'}
-                              </span>{' '}
-                              {formatDateFr(echeance)}
+                        <div className="document-meta">
+                          <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
+                            <div style={{ marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 'bold' }}>Date :</span> {formatDateFr(date)}
                             </div>
-                          )}
+                            {echeance && (
+                              <div>
+                                <span style={{ fontWeight: 'bold' }}>
+                                  {type === 'devis' ? 'Validité :' : 'Échéance :'}
+                                </span>{' '}
+                                {formatDateFr(echeance)}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="client-info">
