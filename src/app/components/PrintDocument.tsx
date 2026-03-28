@@ -23,6 +23,32 @@ export interface PrintDocumentProps {
   total: number;
   totalHT?: number;
   notes?: string;
+  /** Conditions générales / paiement — affichées sur la dernière page à l’impression */
+  conditions?: string;
+}
+
+/** Commentaires et notes utiles à l’impression (sans lignes techniques de récapitulatif acompte). */
+export function formatNotesForPrint(notes?: string): string {
+  if (!notes?.trim()) return '';
+  const text = notes;
+  if (
+    text.includes('RÉCAPITULATIF DES MONTANTS:') ||
+    text.includes("FACTURE D'ACOMPTE")
+  ) {
+    return text
+      .split('\n')
+      .filter((line) => {
+        if (!line.trim()) return false;
+        if (line.includes('RÉCAPITULATIF DES MONTANTS:')) return false;
+        if (line.includes('- Montant total du devis:')) return false;
+        if (line.includes('- Montant de cet acompte:')) return false;
+        if (line.includes('- Montant restant à payer:')) return false;
+        return true;
+      })
+      .join('\n')
+      .trim();
+  }
+  return text.trim();
 }
 
 interface ParametresEntreprise {
@@ -55,7 +81,8 @@ export default function PrintDocument({
   lines,
   total,
   totalHT,
-  notes
+  notes,
+  conditions
 }: PrintDocumentProps) {
   const [parametres, setParametres] = useState<ParametresEntreprise | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,8 +183,10 @@ export default function PrintDocument({
     }
     @media print {
       html, body {
-        width: 210mm;
-        height: 297mm;
+        width: 100%;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
         margin: 0;
         padding: 0;
         -webkit-print-color-adjust: exact;
@@ -357,9 +386,22 @@ export default function PrintDocument({
       .page-content {
         min-height: 0 !important;
       }
+      /* auto : évite qu’un bloc énorme soit traité comme une seule page (Safari / WebKit) */
       .page-content-keep-together {
-        page-break-inside: avoid;
+        page-break-inside: auto;
+        break-inside: auto;
       }
+    }
+    .print-notes-conditions {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: #fafafa;
+      font-size: 11px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     .table-section {
       flex: 1;
@@ -520,6 +562,10 @@ export default function PrintDocument({
             if (chunks.length === 0) {
               chunks.push([]);
             }
+
+            const notesPrint = formatNotesForPrint(notes);
+            const showNotesConditions =
+              (conditions?.trim() || notesPrint);
 
             return chunks.map((chunk, pageIndex) => (
               <div key={pageIndex} className={pageIndex === 0 ? "page-content" : "page-break page-content"}>
@@ -685,6 +731,26 @@ export default function PrintDocument({
                     )}
                   </table>
                 </div>
+
+                {pageIndex === chunks.length - 1 && showNotesConditions && (
+                  <div className="print-notes-conditions">
+                    {conditions?.trim() && (
+                      <>
+                        <strong>Conditions</strong>
+                        {'\n'}
+                        {conditions.trim()}
+                        {notesPrint ? '\n\n' : ''}
+                      </>
+                    )}
+                    {notesPrint && (
+                      <>
+                        <strong>Commentaires / notes</strong>
+                        {'\n'}
+                        {notesPrint}
+                      </>
+                    )}
+                  </div>
+                )}
                 
                 {/* Footer devis : "Bon pour acceptation" sur chaque page */}
                 {type === 'devis' && (
