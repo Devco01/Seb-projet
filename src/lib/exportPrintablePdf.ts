@@ -5,6 +5,13 @@ import type { jsPDF } from 'jspdf';
 /** Limite conservative largeur/hauteur canvas (navigateurs ~16k, on reste en dessous). */
 const MAX_CANVAS_EDGE_PX = 8192;
 
+/** Marges intérieures (mm) : évite le rognage aux bords du lecteur PDF + léger jeu sur la largeur. */
+const PDF_MARGIN_MM = 2.5;
+
+/**
+ * Insère la capture sur une page A4 : si la hauteur dépasse la zone utile, réduction homogène
+ * (une seule page, pas de découpe verticale — la découpe coupait au milieu des phrases).
+ */
 function addCanvasToPdf(
   pdf: jsPDF,
   canvas: HTMLCanvasElement,
@@ -12,36 +19,28 @@ function addCanvasToPdf(
   pageHeight: number,
   isFirstPage: boolean
 ): void {
-  const imgW = pageWidth;
-  const imgHmm = (canvas.height * imgW) / canvas.width;
+  const innerW = pageWidth - 2 * PDF_MARGIN_MM;
+  const innerH = pageHeight - 2 * PDF_MARGIN_MM;
 
-  if (imgHmm <= pageHeight + 0.5) {
-    if (!isFirstPage) pdf.addPage();
-    const data = canvasToJpeg(canvas);
-    pdf.addImage(data, 'JPEG', 0, 0, imgW, imgHmm);
-    return;
+  let drawW = innerW;
+  let drawHmm = (canvas.height * drawW) / canvas.width;
+
+  let scaledDown = false;
+  if (drawHmm > innerH + 0.25) {
+    scaledDown = true;
+    drawHmm = innerH;
+    drawW = (canvas.width * drawHmm) / canvas.height;
   }
 
-  /** Découpe verticale si une feuille logique dépasse une page A4 (ex. beaucoup de texte). */
-  let yPx = 0;
-  let first = isFirstPage;
-  const pxPerPage = (pageHeight / imgHmm) * canvas.height;
+  const x = PDF_MARGIN_MM + (innerW - drawW) / 2;
+  /** Si tout tient en hauteur : alignement haut (moins de blanc artificiel). Si réduit : centrage vertical. */
+  const y = scaledDown
+    ? PDF_MARGIN_MM + (innerH - drawHmm) / 2
+    : PDF_MARGIN_MM;
 
-  while (yPx < canvas.height) {
-    const slicePx = Math.min(Math.ceil(pxPerPage), canvas.height - yPx);
-    const sliceCanvas = document.createElement('canvas');
-    sliceCanvas.width = canvas.width;
-    sliceCanvas.height = slicePx;
-    const ctx = sliceCanvas.getContext('2d');
-    if (!ctx) throw new Error('Impossible de préparer l’image pour le PDF.');
-    ctx.drawImage(canvas, 0, yPx, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
-    const sliceHmm = (slicePx / canvas.height) * imgHmm;
-    const data = canvasToJpeg(sliceCanvas);
-    if (!first) pdf.addPage();
-    first = false;
-    pdf.addImage(data, 'JPEG', 0, 0, imgW, sliceHmm);
-    yPx += slicePx;
-  }
+  if (!isFirstPage) pdf.addPage();
+  const data = canvasToJpeg(canvas);
+  pdf.addImage(data, 'JPEG', x, y, drawW, drawHmm);
 }
 
 function canvasToJpeg(canvas: HTMLCanvasElement): string {
@@ -135,10 +134,9 @@ export async function exportPrintableToPdf(): Promise<Blob> {
         onclone: (_doc, cloned) => {
           if (!(cloned instanceof HTMLElement)) return;
           cloned.style.overflow = 'visible';
-          cloned.style.width = `${cw}px`;
-          cloned.style.minWidth = `${cw}px`;
-          cloned.style.maxWidth = 'none';
           cloned.style.boxSizing = 'border-box';
+          cloned.style.minWidth = `${Math.ceil(rect.width + 24)}px`;
+          cloned.style.maxWidth = 'none';
         },
       });
 
