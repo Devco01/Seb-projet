@@ -84,8 +84,8 @@ export default function PrintDocument({
   notes,
   conditions
 }: PrintDocumentProps) {
+  /** Ne pas bloquer le rendu : l’impression / première ouverture fenêtre sinon page vide tant que l’API répond. */
   const [parametres, setParametres] = useState<ParametresEntreprise | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchParametres = async () => {
@@ -99,8 +99,6 @@ export default function PrintDocument({
         }
       } catch (error) {
         console.error('Erreur:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -108,14 +106,33 @@ export default function PrintDocument({
   }, []);
 
   const formatDateFr = (dateStr?: string) => {
-    if (!dateStr) return 'Non spécifiée';
-    
+    if (!dateStr?.trim()) return 'Non spécifiée';
+
+    const s = dateStr.trim();
     try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
-        return 'Date invalide';
+      const fromIso = new Date(s);
+      if (!isNaN(fromIso.getTime())) {
+        return fromIso.toLocaleDateString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
       }
-      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const fr = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s);
+      if (fr) {
+        const d = Number(fr[1]);
+        const m = Number(fr[2]);
+        const y = Number(fr[3]);
+        const parsed = new Date(y, m - 1, d);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toLocaleDateString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          });
+        }
+      }
+      return 'Date invalide';
     } catch {
       return 'Format de date incorrect';
     }
@@ -125,10 +142,6 @@ export default function PrintDocument({
     const valeur = Number(montant);
     return isNaN(valeur) ? '0.00' : valeur.toFixed(2);
   };
-
-  if (loading) {
-    return <div className="print:hidden">Chargement...</div>;
-  }
 
   // Paramètres par défaut si rien n'est configuré
   const defaultParams: ParametresEntreprise = {
@@ -268,7 +281,7 @@ export default function PrintDocument({
       flex: 1;
       max-width: 300px;
     }
-    .document-meta {
+    .print-doc-dates-box {
       border: 2px solid #1e40af;
       background-color: #f8fafc;
       display: inline-block;
@@ -545,7 +558,7 @@ export default function PrintDocument({
                     </div>
                     <div className="document-info">
                       <div className="document-left">
-                        <div className="document-meta">
+                        <div className="print-doc-dates-box">
                           <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
                             <div style={{ marginBottom: '4px' }}>
                               <span style={{ fontWeight: 'bold' }}>Date :</span> {formatDateFr(date)}

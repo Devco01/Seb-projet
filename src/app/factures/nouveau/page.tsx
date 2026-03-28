@@ -123,14 +123,15 @@ function FactureFormContent() {
     fetchDevis();
   }, []);
 
-  // Calcul de la date d'échéance par défaut (30 jours après la date actuelle)
+  // Échéance par défaut (+30 j) — uniquement pour une **nouvelle** facture (pas en modification)
   useEffect(() => {
+    if (factureId) return;
     if (!echeance) {
       const dateObj = new Date();
       dateObj.setDate(dateObj.getDate() + 30);
       setEcheance(dateObj.toISOString().split('T')[0]);
     }
-  }, [echeance]);
+  }, [echeance, factureId]);
 
   // Charger la facture à modifier si ID passé en paramètre
   useEffect(() => {

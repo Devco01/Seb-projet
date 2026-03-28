@@ -188,7 +188,7 @@ const printStyles = `
                 window.print();
               });
             }
-          }, 3000); // Délai augmenté à 3 secondes pour Chromebook
+          }, 900); // Laisser le temps au layout + logo (PrintDocument ne bloque plus sur /api/parametres)
         } catch (parseError) {
           console.error('Erreur de parsing JSON:', parseError);
           setDebugInfo(`Erreur de parsing JSON: ${responseText}`);
