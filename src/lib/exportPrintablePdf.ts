@@ -75,16 +75,22 @@ export async function exportPrintableToPdf(): Promise<Blob> {
 
   if (wrapper) {
     wrapper.classList.remove('hidden');
-    wrapper.style.cssText = `${wrapperPrevStyle}display:block !important;visibility:visible !important;position:fixed !important;left:-100vw !important;top:0 !important;width:min(210mm,100vw) !important;max-width:210mm !important;z-index:2147483645 !important;pointer-events:none !important;overflow:visible !important;`;
+    /* Pas de left:-100vw ni min(210mm,100vw) : ça réduit la largeur utile et html2canvas coupe les bords. */
+    wrapper.style.cssText = `${wrapperPrevStyle}display:block !important;visibility:visible !important;position:fixed !important;left:0 !important;top:0 !important;width:210mm !important;min-width:210mm !important;max-width:none !important;opacity:0.02 !important;z-index:2147483645 !important;pointer-events:none !important;overflow:visible !important;box-sizing:border-box !important;`;
   }
 
   el.classList.remove('hidden');
-  el.style.cssText = `${prevCssText}display:block !important;visibility:visible !important;position:fixed !important;left:-100vw !important;top:0 !important;width:210mm !important;max-width:210mm !important;background:#fff !important;z-index:2147483646 !important;pointer-events:none !important;`;
+  el.style.cssText = `${prevCssText}display:block !important;visibility:visible !important;position:fixed !important;left:0 !important;top:0 !important;width:210mm !important;min-width:210mm !important;max-width:none !important;opacity:0.02 !important;background:#fff !important;z-index:2147483646 !important;pointer-events:none !important;overflow:visible !important;box-sizing:border-box !important;`;
+
+  const prevHtmlOverflow = document.documentElement.style.overflow;
+  const prevBodyOverflow = document.body.style.overflow;
+  document.documentElement.style.overflow = 'visible';
+  document.body.style.overflow = 'visible';
 
   await new Promise<void>((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   });
-  await new Promise((r) => setTimeout(r, 250));
+  await new Promise((r) => setTimeout(r, 300));
 
   try {
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
@@ -100,17 +106,23 @@ export async function exportPrintableToPdf(): Promise<Blob> {
     let firstPage = true;
 
     for (const sheet of sheets) {
-      const cw = Math.max(sheet.scrollWidth, sheet.offsetWidth, 1);
-      const ch = Math.max(sheet.scrollHeight, sheet.offsetHeight, 1);
+      const rect = sheet.getBoundingClientRect();
+      const cw = Math.ceil(Math.max(sheet.scrollWidth, sheet.offsetWidth, rect.width, 1));
+      const ch = Math.ceil(Math.max(sheet.scrollHeight, sheet.offsetHeight, rect.height, 1));
 
-      let scale = 1.75;
+      let scale = 1.65;
       if (ch * scale > MAX_CANVAS_EDGE_PX) scale = MAX_CANVAS_EDGE_PX / ch;
       if (cw * scale > MAX_CANVAS_EDGE_PX) scale = Math.min(scale, MAX_CANVAS_EDGE_PX / cw);
+
+      const winW = Math.max(cw + 48, 900);
+      const winH = Math.max(ch + 48, 400);
 
       const canvas = await html2canvas(sheet, {
         scale,
         width: cw,
         height: ch,
+        windowWidth: winW,
+        windowHeight: winH,
         useCORS: true,
         allowTaint: false,
         logging: false,
@@ -130,6 +142,8 @@ export async function exportPrintableToPdf(): Promise<Blob> {
 
     return pdf.output('blob');
   } finally {
+    document.documentElement.style.overflow = prevHtmlOverflow;
+    document.body.style.overflow = prevBodyOverflow;
     el.style.cssText = prevCssText;
     el.className = prevClass;
     if (wrapper) {
