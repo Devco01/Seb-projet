@@ -112,7 +112,7 @@ export async function exportPrintableToPdf(): Promise<Blob> {
       const cw = Math.ceil(
         Math.max(sheet.scrollWidth, sheet.offsetWidth, rect.width, parentW, 1) + 32
       );
-      const ch = Math.ceil(Math.max(sheet.scrollHeight, sheet.offsetHeight, rect.height, 1) + 16);
+      const ch = Math.ceil(Math.max(sheet.scrollHeight, sheet.offsetHeight, rect.height, 1) + 48);
 
       let scale = 1.65;
       if (ch * scale > MAX_CANVAS_EDGE_PX) scale = MAX_CANVAS_EDGE_PX / ch;
@@ -137,6 +137,11 @@ export async function exportPrintableToPdf(): Promise<Blob> {
           cloned.style.boxSizing = 'border-box';
           cloned.style.minWidth = `${Math.ceil(rect.width + 24)}px`;
           cloned.style.maxWidth = 'none';
+          const pb = Math.max(
+            56,
+            parseFloat(getComputedStyle(cloned).paddingBottom) || 0
+          );
+          cloned.style.paddingBottom = `${pb}px`;
         },
       });
 

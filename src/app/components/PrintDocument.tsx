@@ -381,6 +381,8 @@ export default function PrintDocument({
       text-align: center;
       font-size: 9px;
       color: #777;
+      line-height: 1.65;
+      padding-bottom: 6px;
     }
     .page-break {
       page-break-before: always;
@@ -390,6 +392,7 @@ export default function PrintDocument({
       min-height: 0;
       display: flex;
       flex-direction: column;
+      overflow: visible;
     }
     @media print {
       .page-content {
@@ -428,6 +431,12 @@ export default function PrintDocument({
       overflow: visible;
       box-sizing: border-box;
       position: relative;
+      /**
+       * Le numéro de page est en position:absolute (hors flux) : sans marge basse,
+       * la hauteur « logique » du bloc s’arrête au dernier texte et html2canvas rogne
+       * souvent la moitié basse de la dernière ligne (descenders / métriques).
+       */
+      padding-bottom: 56px;
     }
   `;
 
