@@ -420,131 +420,26 @@ export default function PrintDocument({
       <style dangerouslySetInnerHTML={{ __html: printStyles }} />
       
       <div className="printOnly container">
-        <div className="header">
-          <div className="company-logo">
-            {logoPath ? (
-              <img
-                src={logoPath}
-                alt={`Logo ${nomEntreprise}`}
-                style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: '100px', 
-                  objectFit: 'contain',
-                  display: 'block'
-                }}
-              />
-            ) : (
-              <div style={{ 
-                fontSize: '18px', 
-                fontWeight: 'bold', 
-                color: '#1e40af',
-                padding: '10px 0'
-              }}>
-                {nomEntreprise}
-              </div>
-            )}
-          </div>
-          
-          <div className="document-title">
-            {documentTitle}
-          </div>
-          
-          <div className="company-info">
-            <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '12px' }}>
-              {nomEntreprise}
-            </div>
-            <div style={{ marginBottom: '2px' }}>{adresse}</div>
-            <div style={{ marginBottom: '8px' }}>{codePostal} {ville}</div>
-            {telephone && <div style={{ marginBottom: '2px' }}>Tél: {telephone}</div>}
-            <div style={{ marginBottom: '2px' }}>Email: {entreprise.email}</div>
-            {entreprise.siret && <div style={{ marginBottom: '8px' }}>SIRET: {entreprise.siret}</div>}
-            <div style={{ 
-              marginTop: '8px', 
-              fontWeight: 'bold',
-              fontSize: '10px',
-              color: '#666',
-              padding: '4px 8px',
-              border: '1px solid #ddd',
-              borderRadius: '3px',
-              display: 'inline-block'
-            }}>
-              Auto-entrepreneur
-            </div>
-          </div>
-        </div>
-
-        <div className="document-info">
-          <div className="document-left">
-            <div className="document-ref">{documentTitle}</div>
-            <div style={{ 
-              fontSize: '12px', 
-              marginBottom: '8px',
-              lineHeight: '1.5'
-            }}>
-              <div style={{ marginBottom: '4px' }}>
-                <span style={{ fontWeight: 'bold' }}>Date :</span> {formatDateFr(date)}
-              </div>
-              {echeance && (
-                <div>
-                  <span style={{ fontWeight: 'bold' }}>
-                    {type === 'devis' ? 'Validité :' : 'Échéance :'}
-                  </span> {formatDateFr(echeance)}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="client-info">
-            <div className="client-title">CLIENT</div>
-            <div className="client-details">
-              <div style={{ 
-                fontWeight: 'bold', 
-                fontSize: '13px', 
-                marginBottom: '6px',
-                color: '#1e40af'
-              }}>
-                {clientName}
-              </div>
-              {clientAddress && (
-                <div style={{ marginBottom: '3px', fontSize: '11px' }}>
-                  {clientAddress}
-                </div>
-              )}
-              {clientZipCity && (
-                <div style={{ marginBottom: '6px', fontSize: '11px' }}>
-                  {clientZipCity}
-                </div>
-              )}
-              {clientEmail && (
-                <div style={{ marginBottom: '3px', fontSize: '11px' }}>
-                  Email: {clientEmail}
-                </div>
-              )}
-              {clientPhone && (
-                <div style={{ fontSize: '11px' }}>
-                  Tél: {clientPhone}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        
-
         {type === 'paiement' ? (
-          <div className="payment-receipt">
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '15px' }}>REÇU DE PAIEMENT</h2>
-            <div>
-              <p style={{ fontSize: '16px', marginBottom: '10px' }}>
-                Nous accusons réception de votre paiement d&apos;un montant de
-              </p>
-              <p className="payment-amount">{formatMontant(total)} €</p>
-              <p style={{ fontSize: '16px' }}>
-                {lines[0]?.description}
-              </p>
-              <p style={{ fontSize: '16px' }}>
-                Méthode de paiement: {lines[0]?.unite || 'Non précisée'}
-              </p>
+          <div data-pdf-sheet>
+            <div className="payment-receipt">
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '15px' }}>REÇU DE PAIEMENT</h2>
+              <div>
+                <p style={{ fontSize: '16px', marginBottom: '10px' }}>
+                  Nous accusons réception de votre paiement d&apos;un montant de
+                </p>
+                <p className="payment-amount">{formatMontant(total)} €</p>
+                <p style={{ fontSize: '16px' }}>
+                  {lines[0]?.description}
+                </p>
+                <p style={{ fontSize: '16px' }}>
+                  Méthode de paiement: {lines[0]?.unite || 'Non précisée'}
+                </p>
+              </div>
+            </div>
+            <div className="legal-notice">
+              <div>Ce document confirme la réception du paiement et sert de reçu.</div>
+              <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Merci pour votre confiance.</div>
             </div>
           </div>
         ) : (
@@ -568,7 +463,106 @@ export default function PrintDocument({
               (conditions?.trim() || notesPrint);
 
             return chunks.map((chunk, pageIndex) => (
-              <div key={pageIndex} className={pageIndex === 0 ? "page-content" : "page-break page-content"}>
+              <div
+                key={pageIndex}
+                data-pdf-sheet
+                className={pageIndex === 0 ? "page-content" : "page-break page-content"}
+              >
+                {pageIndex === 0 && (
+                  <>
+                    <div className="header">
+                      <div className="company-logo">
+                        {logoPath ? (
+                          <img
+                            src={logoPath}
+                            alt={`Logo ${nomEntreprise}`}
+                            style={{
+                              maxWidth: '100%',
+                              maxHeight: '100px',
+                              objectFit: 'contain',
+                              display: 'block'
+                            }}
+                          />
+                        ) : (
+                          <div style={{
+                            fontSize: '18px',
+                            fontWeight: 'bold',
+                            color: '#1e40af',
+                            padding: '10px 0'
+                          }}>
+                            {nomEntreprise}
+                          </div>
+                        )}
+                      </div>
+                      <div className="document-title">{documentTitle}</div>
+                      <div className="company-info">
+                        <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '12px' }}>
+                          {nomEntreprise}
+                        </div>
+                        <div style={{ marginBottom: '2px' }}>{adresse}</div>
+                        <div style={{ marginBottom: '8px' }}>{codePostal} {ville}</div>
+                        {telephone && <div style={{ marginBottom: '2px' }}>Tél: {telephone}</div>}
+                        <div style={{ marginBottom: '2px' }}>Email: {entreprise.email}</div>
+                        {entreprise.siret && <div style={{ marginBottom: '8px' }}>SIRET: {entreprise.siret}</div>}
+                        <div style={{
+                          marginTop: '8px',
+                          fontWeight: 'bold',
+                          fontSize: '10px',
+                          color: '#666',
+                          padding: '4px 8px',
+                          border: '1px solid #ddd',
+                          borderRadius: '3px',
+                          display: 'inline-block'
+                        }}>
+                          Auto-entrepreneur
+                        </div>
+                      </div>
+                    </div>
+                    <div className="document-info">
+                      <div className="document-left">
+                        <div className="document-ref">{documentTitle}</div>
+                        <div style={{ fontSize: '12px', marginBottom: '8px', lineHeight: '1.5' }}>
+                          <div style={{ marginBottom: '4px' }}>
+                            <span style={{ fontWeight: 'bold' }}>Date :</span> {formatDateFr(date)}
+                          </div>
+                          {echeance && (
+                            <div>
+                              <span style={{ fontWeight: 'bold' }}>
+                                {type === 'devis' ? 'Validité :' : 'Échéance :'}
+                              </span>{' '}
+                              {formatDateFr(echeance)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="client-info">
+                        <div className="client-title">CLIENT</div>
+                        <div className="client-details">
+                          <div style={{
+                            fontWeight: 'bold',
+                            fontSize: '13px',
+                            marginBottom: '6px',
+                            color: '#1e40af'
+                          }}>
+                            {clientName}
+                          </div>
+                          {clientAddress && (
+                            <div style={{ marginBottom: '3px', fontSize: '11px' }}>{clientAddress}</div>
+                          )}
+                          {clientZipCity && (
+                            <div style={{ marginBottom: '6px', fontSize: '11px' }}>{clientZipCity}</div>
+                          )}
+                          {clientEmail && (
+                            <div style={{ marginBottom: '3px', fontSize: '11px' }}>Email: {clientEmail}</div>
+                          )}
+                          {clientPhone && (
+                            <div style={{ fontSize: '11px' }}>Tél: {clientPhone}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
                 {/* En-tête répété sur chaque page (sauf la première où il est déjà affiché) */}
                 {pageIndex > 0 && (
                   <div className="header" style={{ marginBottom: '20px' }}>
@@ -781,18 +775,6 @@ export default function PrintDocument({
               </div>
             ));
           })()
-        )}
-
-
-
-
-
-        {/* Legal notice intégré dans la pagination pour les documents avec tableaux */}
-        {type === 'paiement' && (
-          <div className="legal-notice">
-            <div>Ce document confirme la réception du paiement et sert de reçu.</div>
-            <div style={{ marginTop: '8px', fontWeight: 'bold' }}>Merci pour votre confiance.</div>
-          </div>
         )}
       </div>
     </div>
