@@ -18,17 +18,30 @@ export async function exportPrintableToPdf(): Promise<Blob> {
     throw new Error('Document imprimable introuvable. Rechargez la page et réessayez.');
   }
 
+  /*
+   * Le parent #print-content a souvent `hidden` (display:none) hors impression :
+   * tant qu’il est masqué, les dimensions du document sont 0×0 pour html2canvas.
+   */
+  const wrapper = document.getElementById('print-content');
+  const wrapperPrevClass = wrapper?.className ?? '';
+  const wrapperPrevStyle = wrapper?.style.cssText ?? '';
+
   const prevClass = el.className;
   const prevCssText = el.style.cssText;
 
+  if (wrapper) {
+    wrapper.classList.remove('hidden');
+    /* Hors viewport (pas opacity:0 : html2canvas peut alors rendre un canvas vide) */
+    wrapper.style.cssText = `${wrapperPrevStyle}display:block !important;visibility:visible !important;position:fixed !important;left:-100vw !important;top:0 !important;width:min(210mm,100vw) !important;max-width:210mm !important;z-index:2147483645 !important;pointer-events:none !important;overflow:visible !important;`;
+  }
+
   el.classList.remove('hidden');
-  /* Hors écran (left:-9999px) peut donner largeur 0 sous WebKit → canvas invalide */
-  el.style.cssText = `${prevCssText}display:block !important;visibility:visible !important;opacity:0 !important;position:fixed !important;left:0 !important;top:0 !important;width:210mm !important;max-width:210mm !important;background:#fff !important;z-index:2147483646 !important;pointer-events:none !important;`;
+  el.style.cssText = `${prevCssText}display:block !important;visibility:visible !important;position:fixed !important;left:-100vw !important;top:0 !important;width:210mm !important;max-width:210mm !important;background:#fff !important;z-index:2147483646 !important;pointer-events:none !important;`;
 
   await new Promise<void>((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   });
-  await new Promise((r) => setTimeout(r, 150));
+  await new Promise((r) => setTimeout(r, 200));
 
   try {
     const canvas = await html2canvas(el, {
@@ -83,5 +96,9 @@ export async function exportPrintableToPdf(): Promise<Blob> {
   } finally {
     el.style.cssText = prevCssText;
     el.className = prevClass;
+    if (wrapper) {
+      wrapper.style.cssText = wrapperPrevStyle;
+      wrapper.className = wrapperPrevClass;
+    }
   }
 }
