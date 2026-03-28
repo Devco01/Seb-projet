@@ -239,27 +239,29 @@ export default function DetailDevis(props: { params: Promise<{ id: string }> }) 
         typeof navigator.share === 'function' &&
         navigator.canShare?.({ files: [file] })
       ) {
-        await navigator.share({
-          files: [file],
-          title: `Devis ${devis.numero}`,
-          text: `Veuillez trouver ci-joint notre devis ${devis.numero}.`,
-        });
+        await navigator.share({ files: [file] });
         toast.success('Partage ouvert — choisissez Mail pour joindre le PDF', { id: t });
       } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = safeName;
-        a.rel = 'noopener';
-        a.click();
-        URL.revokeObjectURL(url);
-        const subject = encodeURIComponent(`Devis ${devis.numero}`);
-        const body = encodeURIComponent(
-          `Bonjour,\n\nVeuillez trouver ci-joint notre devis ${devis.numero} (fichier PDF téléchargé dans votre dossier Téléchargements).\n\nCordialement,`
-        );
-        window.location.href = `mailto:${devis.client.email}?subject=${subject}&body=${body}`;
+        const mailtoUrl = `mailto:${devis.client.email}`;
+        const mailLink = document.createElement('a');
+        mailLink.href = mailtoUrl;
+        mailLink.rel = 'noopener noreferrer';
+        document.body.appendChild(mailLink);
+        mailLink.click();
+        document.body.removeChild(mailLink);
+        setTimeout(() => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = safeName;
+          a.rel = 'noopener';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 400);
         toast.success(
-          'PDF téléchargé — joignez-le à l’e-mail qui s’ouvre (glisser-déposer depuis le Finder sur Mac)',
+          'Boîte mail ouverte — le PDF se télécharge pour le joindre à l’e-mail.',
           { id: t, duration: 6000 }
         );
       }
