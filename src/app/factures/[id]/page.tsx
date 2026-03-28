@@ -5,6 +5,7 @@ import { FaEdit, FaTrash, FaEnvelope, FaCheckCircle, FaArrowLeft, FaPrint, FaInf
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PrintDocument from '@/app/components/PrintDocument';
+import { toast } from 'react-hot-toast';
 
 // Interface pour les lignes de facture
 interface FactureLigne {
@@ -320,14 +321,51 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
     }
   };
 
-  // Fonction pour envoyer la facture par email
-  const handleSendEmail = () => {
-    if (facture && facture.client && facture.client.email) {
-      const subject = encodeURIComponent(`Facture ${facture.numero}`);
-      const body = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint notre facture ${facture.numero}.\n\nCordialement,`);
-      window.location.href = `mailto:${facture.client.email}?subject=${subject}&body=${body}`;
-    } else {
-      alert('Adresse email du client non disponible');
+  /** Envoie la facture par email : génère un PDF puis partage (Mail sur macOS) ou télécharge + mailto. */
+  const handleSendEmail = async () => {
+    if (!facture?.client?.email) {
+      toast.error('Adresse email du client non disponible');
+      return;
+    }
+    const t = toast.loading('Génération du PDF…');
+    try {
+      const { exportPrintableToPdf } = await import('@/lib/exportPrintablePdf');
+      const blob = await exportPrintableToPdf();
+      const safeName = `facture-${facture.numero.replace(/[^\w.-]+/g, '_')}.pdf`;
+      const file = new File([blob], safeName, { type: 'application/pdf' });
+
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        navigator.canShare?.({ files: [file] })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: `Facture ${facture.numero}`,
+          text: `Veuillez trouver ci-joint notre facture ${facture.numero}.`,
+        });
+        toast.success('Partage ouvert — choisissez Mail pour joindre le PDF', { id: t });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = safeName;
+        a.rel = 'noopener';
+        a.click();
+        URL.revokeObjectURL(url);
+        const subject = encodeURIComponent(`Facture ${facture.numero}`);
+        const body = encodeURIComponent(
+          `Bonjour,\n\nVeuillez trouver ci-joint notre facture ${facture.numero} (fichier PDF téléchargé).\n\nCordialement,`
+        );
+        window.location.href = `mailto:${facture.client.email}?subject=${subject}&body=${body}`;
+        toast.success(
+          'PDF téléchargé — joignez-le à l’e-mail qui s’ouvre (glisser-déposer depuis le Finder sur Mac)',
+          { id: t, duration: 6000 }
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error(e instanceof Error ? e.message : 'Impossible de générer le PDF', { id: t });
     }
   };
 
@@ -406,11 +444,13 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
           >
             <FaPrint className="mr-2" /> Imprimer
           </button>
-          <button 
+          <button
+            type="button"
             onClick={handleSendEmail}
             className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center"
+            title="Génère un PDF puis ouvre Mail (macOS) ou télécharge le fichier pour le joindre"
           >
-            <FaEnvelope className="mr-2" /> Email
+            <FaEnvelope className="mr-2" /> Envoyer par email
           </button>
           <Link 
             href={`/factures/nouveau?id=${params.id}`}
@@ -560,6 +600,7 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
           total={facture.totalHT ?? total}
           totalHT={facture.totalHT ?? total}
           notes={facture.notes}
+          conditions={facture.conditions}
         />
       </div>
 

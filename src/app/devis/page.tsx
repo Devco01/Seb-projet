@@ -179,7 +179,7 @@ export default function Devis() {
           "Cliquez sur « Nouveau devis » pour créer un devis pour un client.",
           "Utilisez la barre de recherche pour retrouver un devis par numéro ou par nom de client.",
           "Utilisez les boutons de filtre (Tous, En attente, Acceptés, Refusés) pour n’afficher qu’un type de devis.",
-          "Cliquez sur le numéro de devis pour ouvrir le détail, puis utilisez le bouton d’impression ou de PDF pour l’imprimer."
+          "Cliquez sur le numéro de devis pour ouvrir le détail, puis utilisez Imprimer ou Envoyer par email (PDF joint)."
         ]}
       />
 

@@ -25,6 +25,7 @@ interface DocumentData {
   total: number;
   totalHT?: number;
   notes?: string;
+  conditionsPaiement?: string;
 }
 
 // Composant de chargement pour le Suspense
@@ -61,8 +62,10 @@ const printStyles = `
     }
     @media print {
       html, body {
-        width: 210mm;
-        height: 297mm;
+        width: 100%;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
         margin: 0;
         padding: 0;
         -webkit-print-color-adjust: exact !important;
@@ -300,6 +303,7 @@ const printStyles = `
           total={documentData.total}
           totalHT={documentData.totalHT}
           notes={documentData.notes}
+          conditions={documentData.conditionsPaiement}
         />
       </div>
     </>
