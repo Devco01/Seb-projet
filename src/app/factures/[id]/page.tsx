@@ -346,20 +346,30 @@ export default function DetailFacture(props: { params: Promise<{ id: string }> }
         });
         toast.success('Partage ouvert — choisissez Mail pour joindre le PDF', { id: t });
       } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = safeName;
-        a.rel = 'noopener';
-        a.click();
-        URL.revokeObjectURL(url);
         const subject = encodeURIComponent(`Facture ${facture.numero}`);
         const body = encodeURIComponent(
-          `Bonjour,\n\nVeuillez trouver ci-joint notre facture ${facture.numero} (fichier PDF téléchargé).\n\nCordialement,`
+          `Bonjour,\n\nVeuillez trouver ci-joint notre facture ${facture.numero} (PDF joint depuis votre dossier Téléchargements).\n\nCordialement,`
         );
-        window.location.href = `mailto:${facture.client.email}?subject=${subject}&body=${body}`;
+        const mailtoUrl = `mailto:${facture.client.email}?subject=${subject}&body=${body}`;
+        const mailLink = document.createElement('a');
+        mailLink.href = mailtoUrl;
+        mailLink.rel = 'noopener noreferrer';
+        document.body.appendChild(mailLink);
+        mailLink.click();
+        document.body.removeChild(mailLink);
+        setTimeout(() => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = safeName;
+          a.rel = 'noopener';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 400);
         toast.success(
-          'PDF téléchargé — joignez-le à l’e-mail qui s’ouvre (glisser-déposer depuis le Finder sur Mac)',
+          'Boîte mail ouverte — le PDF se télécharge pour le joindre à l’e-mail.',
           { id: t, duration: 6000 }
         );
       }
