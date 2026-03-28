@@ -746,22 +746,21 @@ export default function PrintDocument({
                   </div>
                 )}
                 
-                {/* Footer devis : "Bon pour acceptation" sur chaque page */}
-                {type === 'devis' && (
-                  <div className="legal-notice" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ddd' }}>
-                    Bon pour acceptation
-                  </div>
-                )}
-                
-                {/* Legal notice sur la dernière page (devis suite, facture) */}
-                {pageIndex === chunks.length - 1 && (
-                  <div className="legal-notice">
-                    {type === 'devis' && (
+                {/* Devis : une seule zone « bon pour accord » en fin de document (évite doublon PDF + coupure au milieu) */}
+                {pageIndex === chunks.length - 1 && type === 'devis' && (
+                  <>
+                    <div className="legal-notice" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ddd' }}>
+                      Bon pour acceptation
+                    </div>
+                    <div className="legal-notice">
                       <div>Devis à retourner daté et signé avec la mention &quot;bon pour accord&quot;</div>
-                    )}
-                    {type === 'facture' && (
-                      <div>Merci pour votre confiance</div>
-                    )}
+                    </div>
+                  </>
+                )}
+
+                {pageIndex === chunks.length - 1 && type === 'facture' && (
+                  <div className="legal-notice">
+                    <div>Merci pour votre confiance</div>
                   </div>
                 )}
                 </div>
