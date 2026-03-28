@@ -131,15 +131,26 @@ export async function exportPrintableToPdf(): Promise<Blob> {
         backgroundColor: '#ffffff',
         foreignObjectRendering: false,
         imageTimeout: 15000,
-        onclone: (_doc, cloned) => {
+        onclone: (clonedDoc, cloned) => {
+          /**
+           * Le DOM réel est à opacity ~0 pour ne pas afficher l’aperçu pendant la capture.
+           * html2canvas applique cette opacité au rendu : le texte (dates, totaux…) disparaît dans le PDF.
+           */
+          clonedDoc.getElementById('print-content')?.style.setProperty('opacity', '1');
+          clonedDoc.getElementById('printable-document')?.style.setProperty('opacity', '1');
           if (!(cloned instanceof HTMLElement)) return;
+          let node: HTMLElement | null = cloned;
+          while (node) {
+            node.style.setProperty('opacity', '1');
+            node = node.parentElement;
+          }
           cloned.style.overflow = 'visible';
           cloned.style.boxSizing = 'border-box';
           cloned.style.minWidth = `${Math.ceil(rect.width + 24)}px`;
           cloned.style.maxWidth = 'none';
           const pb = Math.max(
             56,
-            parseFloat(getComputedStyle(cloned).paddingBottom) || 0
+            parseFloat(clonedDoc.defaultView?.getComputedStyle(cloned).paddingBottom ?? '0') || 0
           );
           cloned.style.paddingBottom = `${pb}px`;
         },
